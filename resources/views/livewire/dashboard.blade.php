@@ -10,7 +10,7 @@
             <div class="p-5">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        @svg('heroicons-printer', 'h-6 w-6 text-gray-400')
+                        @svg('heroicons-cake', 'h-6 w-6 text-gray-400')
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>

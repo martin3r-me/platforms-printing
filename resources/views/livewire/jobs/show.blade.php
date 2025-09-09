@@ -120,7 +120,7 @@
     <div class="mt-6 bg-red-50 border border-red-200 rounded-md p-4">
         <div class="flex">
             <div class="flex-shrink-0">
-                @svg('heroicons-exclamation-triangle', 'h-5 w-5 text-red-400')
+                
             </div>
             <div class="ml-3">
                 <h3 class="text-sm font-medium text-red-800">Fehlermeldung</h3>
@@ -135,7 +135,6 @@
     <!-- Actions -->
     <div class="mt-6 flex justify-end space-x-3">
         <button wire:click="generateContent" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            @svg('heroicons-arrow-path', 'h-4 w-4 mr-2')
             Inhalt generieren
         </button>
         <a href="{{ route('printing.jobs.index') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">

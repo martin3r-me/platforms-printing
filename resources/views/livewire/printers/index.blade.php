@@ -34,7 +34,7 @@
                     <div class="px-4 py-4 flex items-center justify-between">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <!-- Icon entfernt -->
+                                @svg('heroicons-printer', 'h-8 w-8 text-gray-400')
                             </div>
                             <div class="ml-4">
                                 <div class="text-sm font-medium text-gray-900">

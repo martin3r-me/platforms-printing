@@ -1,46 +1,52 @@
 <?php
 
-namespace Platform\Printing\Livewire\Printers;
+namespace Platform\Printing\Livewire\Jobs;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use Platform\Printing\Models\Printer;
 use Platform\Printing\Models\PrintJob;
 
-class Show extends Component
+class Index extends Component
 {
     use WithPagination;
 
-    public Printer $printer;
+    public $search = '';
     public $statusFilter = 'all';
+    public $printableTypeFilter = 'all';
 
     protected $queryString = [
+        'search' => ['except' => ''],
         'statusFilter' => ['except' => 'all'],
+        'printableTypeFilter' => ['except' => 'all'],
     ];
-
-    public function mount(Printer $printer)
-    {
-        $this->printer = $printer;
-    }
 
     public function render()
     {
-        $jobs = PrintJob::where('printer_id', $this->printer->id)
+        $jobs = PrintJob::currentTeam()
+            ->when($this->search, function ($query) {
+                $query->where(function ($q) {
+                    $q->where('template', 'like', '%' . $this->search . '%')
+                      ->orWhere('uuid', 'like', '%' . $this->search . '%');
+                });
+            })
             ->when($this->statusFilter !== 'all', function ($query) {
                 $query->where('status', $this->statusFilter);
             })
-            ->with(['printable', 'user'])
+            ->when($this->printableTypeFilter !== 'all', function ($query) {
+                $query->where('printable_type', $this->printableTypeFilter);
+            })
+            ->with(['printable', 'printer', 'printerGroup', 'user'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
         $stats = [
-            'total' => PrintJob::where('printer_id', $this->printer->id)->count(),
-            'pending' => PrintJob::where('printer_id', $this->printer->id)->pending()->count(),
-            'completed' => PrintJob::where('printer_id', $this->printer->id)->completed()->count(),
-            'failed' => PrintJob::where('printer_id', $this->printer->id)->failed()->count(),
+            'total' => PrintJob::currentTeam()->count(),
+            'pending' => PrintJob::currentTeam()->pending()->count(),
+            'completed' => PrintJob::currentTeam()->completed()->count(),
+            'failed' => PrintJob::currentTeam()->failed()->count(),
         ];
 
-        return view('printing::livewire.printers.show', [
+        return view('printing::livewire.jobs.index', [
             'jobs' => $jobs,
             'stats' => $stats,
         ])->layout('platform::layouts.app');
@@ -48,7 +54,17 @@ class Show extends Component
 
 
 
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
+
     public function updatedStatusFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedPrintableTypeFilter()
     {
         $this->resetPage();
     }

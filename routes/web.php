@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use Platform\Printing\Livewire\Dashboard;
-use Platform\Printing\Livewire\Sidebar;
 use Platform\Printing\Livewire\Printers\Index as PrintersIndex;
 use Platform\Printing\Livewire\Printers\Show as PrintersShow;
 use Platform\Printing\Livewire\Groups\Index as GroupsIndex;

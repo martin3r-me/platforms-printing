@@ -1,7 +1,11 @@
 <div>
     <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900">Printing Dashboard</h1>
-        <p class="text-sm text-gray-600">Übersicht über alle Drucker und Print Jobs</p>
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Print Jobs</h1>
+                <p class="text-sm text-gray-600">Alle Print Jobs verwalten</p>
+            </div>
+        </div>
     </div>
 
     <!-- Statistiken -->
@@ -10,47 +14,12 @@
             <div class="p-5">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        @svg('heroicons-printer', 'h-6 w-6 text-gray-400')
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Drucker</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $totalPrinters }}</dd>
-                            <dd class="text-sm text-gray-500">{{ $activePrinters }} aktiv</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        @svg('heroicons-user-group', 'h-6 w-6 text-gray-400')
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Gruppen</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $totalGroups }}</dd>
-                            <dd class="text-sm text-gray-500">{{ $activeGroups }} aktiv</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
                         @svg('heroicons-document-text', 'h-6 w-6 text-gray-400')
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Print Jobs</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $totalJobs }}</dd>
-                            <dd class="text-sm text-gray-500">{{ $pendingJobs }} wartend</dd>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Gesamt</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ $stats['total'] }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -61,22 +30,18 @@
             <div class="p-5">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        @svg('heroicons-check-circle', 'h-6 w-6 text-gray-400')
+                        @svg('heroicons-clock', 'h-6 w-6 text-yellow-400')
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Abgeschlossen</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $completedJobs }}</dd>
-                            <dd class="text-sm text-gray-500">{{ $failedJobs }} fehlgeschlagen</dd>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Wartend</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ $stats['pending'] }}</dd>
                         </dl>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Drucker Status -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div class="bg-white overflow-hidden shadow rounded-lg">
             <div class="p-5">
                 <div class="flex items-center">
@@ -85,8 +50,8 @@
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Bereit</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $printerStatus['ready'] }}</dd>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Abgeschlossen</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ $stats['completed'] }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -97,28 +62,12 @@
             <div class="p-5">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        @svg('heroicons-arrow-path', 'h-6 w-6 text-blue-400')
+                        @svg('heroicons-x-circle', 'h-6 w-6 text-red-400')
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Beschäftigt</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $printerStatus['busy'] }}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        @svg('heroicons-exclamation-triangle', 'h-6 w-6 text-red-400')
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Fehler</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $printerStatus['error'] }}</dd>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Fehlgeschlagen</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ $stats['failed'] }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -126,14 +75,34 @@
         </div>
     </div>
 
-    <!-- Neueste Jobs -->
-    <div class="bg-white shadow overflow-hidden sm:rounded-md">
-        <div class="px-4 py-5 sm:px-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">Neueste Print Jobs</h3>
-            <p class="mt-1 max-w-2xl text-sm text-gray-500">Die letzten 10 Print Jobs</p>
+    <!-- Filter -->
+    <div class="mb-4 flex space-x-4">
+        <div class="flex-1">
+            <input wire:model.live.debounce.300ms="search" type="text" placeholder="Jobs suchen..." class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
         </div>
+        <div>
+            <select wire:model.live="statusFilter" class="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                <option value="all">Alle Status</option>
+                <option value="pending">Wartend</option>
+                <option value="processing">Verarbeitung</option>
+                <option value="completed">Abgeschlossen</option>
+                <option value="failed">Fehlgeschlagen</option>
+                <option value="cancelled">Abgebrochen</option>
+            </select>
+        </div>
+        <div>
+            <select wire:model.live="printableTypeFilter" class="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                <option value="all">Alle Typen</option>
+                <option value="Platform\Sales\Models\SalesDeal">Sales Deal</option>
+                <option value="Platform\Helpdesk\Models\HelpdeskTicket">Helpdesk Ticket</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Jobs Tabelle -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-md">
         <ul class="divide-y divide-gray-200">
-            @forelse($recentJobs as $job)
+            @forelse($jobs as $job)
                 <li>
                     <div class="px-4 py-4 flex items-center justify-between">
                         <div class="flex items-center">
@@ -158,13 +127,21 @@
                             </div>
                             <div class="ml-4">
                                 <div class="text-sm font-medium text-gray-900">
-                                    {{ $job->template }}
+                                    <a href="{{ route('printing.jobs.show', $job) }}" class="hover:text-indigo-600">
+                                        {{ $job->template }}
+                                    </a>
                                 </div>
                                 <div class="text-sm text-gray-500">
                                     {{ $job->printable_type }} #{{ $job->printable_id }}
                                     @if($job->printer)
                                         • {{ $job->printer->name }}
                                     @endif
+                                    @if($job->printerGroup)
+                                        • {{ $job->printerGroup->name }}
+                                    @endif
+                                </div>
+                                <div class="text-xs text-gray-400">
+                                    {{ $job->created_at->diffForHumans() }}
                                 </div>
                             </div>
                         </div>
@@ -178,17 +155,26 @@
                                 @endif">
                                 {{ ucfirst($job->status) }}
                             </span>
-                            <span class="text-xs text-gray-500">
-                                {{ $job->created_at->diffForHumans() }}
-                            </span>
+                            @if($job->status === 'failed')
+                                <button wire:click="retryJob({{ $job->id }})" class="text-indigo-600 hover:text-indigo-900 text-sm">
+                                    Wiederholen
+                                </button>
+                            @endif
+                            @if(in_array($job->status, ['pending', 'processing']))
+                                <button wire:click="cancelJob({{ $job->id }})" class="text-red-600 hover:text-red-900 text-sm">
+                                    Abbrechen
+                                </button>
+                            @endif
                         </div>
                     </div>
                 </li>
             @empty
                 <li class="px-4 py-8 text-center text-gray-500">
-                    Keine Print Jobs gefunden
+                    Keine Jobs gefunden
                 </li>
             @endforelse
         </ul>
     </div>
+
+    {{ $jobs->links() }}
 </div>

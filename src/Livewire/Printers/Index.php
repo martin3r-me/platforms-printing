@@ -15,6 +15,12 @@ class Index extends Component
     public $showCreateModal = false;
     public $showEditModal = false;
     public $editingPrinter = null;
+    
+    // Form fields for creating printer
+    public $name = '';
+    public $location = '';
+    public $username = '';
+    public $password = '';
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -46,6 +52,8 @@ class Index extends Component
             'printers' => $printers,
         ])->layout('platform::layouts.app');
     }
+
+
 
     public function updatedSearch()
     {
@@ -105,5 +113,39 @@ class Index extends Component
     {
         $this->editingPrinter = null;
         $this->showEditModal = false;
+    }
+
+    public function createPrinter()
+    {
+        $this->validate([
+            'name' => 'required|string|max:255',
+            'location' => 'nullable|string|max:255',
+            'username' => 'nullable|string|max:255|unique:printers,username',
+            'password' => 'nullable|string|max:255',
+        ]);
+
+        $data = [
+            'name' => $this->name,
+            'location' => $this->location,
+            'team_id' => auth()->user()->currentTeam->id,
+        ];
+
+        if ($this->username) {
+            $data['username'] = $this->username;
+        }
+
+        if ($this->password) {
+            $data['password'] = $this->password;
+        }
+
+        Printer::create($data);
+
+        $this->hideCreateModal();
+        $this->reset(['name', 'location', 'username', 'password']);
+
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'message' => 'Drucker erfolgreich erstellt'
+        ]);
     }
 }

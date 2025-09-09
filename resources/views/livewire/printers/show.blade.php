@@ -35,7 +35,7 @@
             <div class="p-5">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        @svg('heroicons-clock', 'h-6 w-6 text-yellow-400')
+                        @svg('heroicons-o-clock', 'h-6 w-6 text-yellow-400')
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
@@ -51,7 +51,7 @@
             <div class="p-5">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        @svg('heroicons-check-circle', 'h-6 w-6 text-green-400')
+                        @svg('heroicons-o-check-circle', 'h-6 w-6 text-green-400')
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
@@ -67,7 +67,7 @@
             <div class="p-5">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        @svg('heroicons-x-circle', 'h-6 w-6 text-red-400')
+                        @svg('heroicons-o-x-circle', 'h-6 w-6 text-red-400')
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
@@ -102,19 +102,19 @@
                             <div class="flex-shrink-0">
                                 @switch($job->status)
                                     @case('pending')
-                                        @svg('heroicons-clock', 'h-5 w-5 text-yellow-400')
+                                        @svg('heroicons-o-clock', 'h-5 w-5 text-yellow-400')
                                         @break
                                     @case('processing')
-                                        @svg('heroicons-arrow-path', 'h-5 w-5 text-blue-400')
+                                        @svg('heroicons-o-arrow-path', 'h-5 w-5 text-blue-400')
                                         @break
                                     @case('completed')
-                                        @svg('heroicons-check-circle', 'h-5 w-5 text-green-400')
+                                        @svg('heroicons-o-check-circle', 'h-5 w-5 text-green-400')
                                         @break
                                     @case('failed')
-                                        @svg('heroicons-x-circle', 'h-5 w-5 text-red-400')
+                                        @svg('heroicons-o-x-circle', 'h-5 w-5 text-red-400')
                                         @break
                                     @case('cancelled')
-                                        @svg('heroicons-x-mark', 'h-5 w-5 text-gray-400')
+                                        @svg('heroicons-o-x-mark', 'h-5 w-5 text-gray-400')
                                         @break
                                 @endswitch
                             </div>

@@ -6,7 +6,7 @@
                 <p class="text-sm text-gray-600">Verwalten Sie alle Drucker</p>
             </div>
             <button wire:click="showCreateModal" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                @svg('heroicons-plus', 'h-4 w-4 mr-2')
+                @svg('heroicons-o-plus', 'h-4 w-4 mr-2')
                 Neuer Drucker
             </button>
         </div>
@@ -34,7 +34,7 @@
                     <div class="px-4 py-4 flex items-center justify-between">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                @svg('heroicons-home', 'h-8 w-8 text-gray-400')
+                                @svg('heroicons-o-printer', 'h-8 w-8 text-gray-400')
                             </div>
                             <div class="ml-4">
                                 <div class="text-sm font-medium text-gray-900">

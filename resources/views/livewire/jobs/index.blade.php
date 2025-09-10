@@ -1,179 +1,94 @@
 <div>
-    <div class="mb-6">
-        <div class="flex items-center justify-between">
+    <div>
+        <div>
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Print Jobs</h1>
-                <p class="text-sm text-gray-600">Alle Print Jobs verwalten</p>
+                <h1>Print Jobs</h1>
+                <p>Alle Print Jobs verwalten</p>
             </div>
         </div>
     </div>
 
-    <!-- Statistiken -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <!-- Icon entfernt -->
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Gesamt</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $stats['total'] }}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Wartend</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $stats['pending'] }}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Abgeschlossen</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $stats['completed'] }}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Fehlgeschlagen</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $stats['failed'] }}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div>
+        <x-ui-dashboard-tile title="Gesamt" :count="$stats['total']" size="sm" />
+        <x-ui-dashboard-tile title="Wartend" :count="$stats['pending']" size="sm" />
+        <x-ui-dashboard-tile title="Abgeschlossen" :count="$stats['completed']" size="sm" />
+        <x-ui-dashboard-tile title="Fehlgeschlagen" :count="$stats['failed']" size="sm" />
     </div>
 
     <!-- Filter -->
-    <div class="mb-4 flex space-x-4">
-        <div class="flex-1">
-            <input wire:model.live.debounce.300ms="search" type="text" placeholder="Jobs suchen..." class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+    <div>
+        <div>
+            <x-ui-input-text wire:model.live.debounce.300ms="search" placeholder="Jobs suchen..." />
         </div>
         <div>
-            <select wire:model.live="statusFilter" class="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+            <x-ui-input-select wire:model.live="statusFilter">
                 <option value="all">Alle Status</option>
                 <option value="pending">Wartend</option>
                 <option value="processing">Verarbeitung</option>
                 <option value="completed">Abgeschlossen</option>
                 <option value="failed">Fehlgeschlagen</option>
                 <option value="cancelled">Abgebrochen</option>
-            </select>
+            </x-ui-input-select>
         </div>
         <div>
-            <select wire:model.live="printableTypeFilter" class="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+            <x-ui-input-select wire:model.live="printableTypeFilter">
                 <option value="all">Alle Typen</option>
                 <option value="Platform\Sales\Models\SalesDeal">Sales Deal</option>
                 <option value="Platform\Helpdesk\Models\HelpdeskTicket">Helpdesk Ticket</option>
-            </select>
+            </x-ui-input-select>
         </div>
     </div>
 
-    <!-- Jobs Tabelle -->
-    <div class="bg-white shadow overflow-hidden sm:rounded-md">
-        <ul class="divide-y divide-gray-200">
-            @forelse($jobs as $job)
-                <li>
-                    <div class="px-4 py-4 flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                @switch($job->status)
-                                    @case('pending')
-                                        
-                                        @break
-                                    @case('processing')
-                                        
-                                        @break
-                                    @case('completed')
-                                        
-                                        @break
-                                    @case('failed')
-                                        
-                                        @break
-                                    @case('cancelled')
-                                        
-                                        @break
-                                @endswitch
-                            </div>
-                            <div class="ml-4">
-                                <div class="text-sm font-medium text-gray-900">
-                                    <a href="{{ route('printing.jobs.show', $job) }}" class="hover:text-indigo-600">
-                                        {{ $job->template }}
-                                    </a>
-                                </div>
-                                <div class="text-sm text-gray-500">
-                                    {{ $job->printable_type }} #{{ $job->printable_id }}
-                                    @if($job->printer)
-                                        • {{ $job->printer->name }}
-                                    @endif
-                                    @if($job->printerGroup)
-                                        • {{ $job->printerGroup->name }}
-                                    @endif
-                                </div>
-                                <div class="text-xs text-gray-400">
-                                    {{ $job->created_at->diffForHumans() }}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                @if($job->status === 'pending') bg-yellow-100 text-yellow-800
-                                @elseif($job->status === 'processing') bg-blue-100 text-blue-800
-                                @elseif($job->status === 'completed') bg-green-100 text-green-800
-                                @elseif($job->status === 'failed') bg-red-100 text-red-800
-                                @else bg-gray-100 text-gray-800
-                                @endif">
-                                {{ ucfirst($job->status) }}
-                            </span>
-                            @if($job->status === 'failed')
-                                <button wire:click="retryJob({{ $job->id }})" class="text-indigo-600 hover:text-indigo-900 text-sm">
-                                    Wiederholen
-                                </button>
-                            @endif
-                            @if(in_array($job->status, ['pending', 'processing']))
-                                <button wire:click="cancelJob({{ $job->id }})" class="text-red-600 hover:text-red-900 text-sm">
-                                    Abbrechen
-                                </button>
-                            @endif
-                        </div>
-                    </div>
-                </li>
-            @empty
-                <li class="px-4 py-8 text-center text-gray-500">
-                    Keine Jobs gefunden
-                </li>
-            @endforelse
-        </ul>
+    <div>
+        @if($jobs->count() > 0)
+            <x-ui-table>
+                <x-ui-table-header>
+                    <x-ui-table-header-cell>Template</x-ui-table-header-cell>
+                    <x-ui-table-header-cell>Status</x-ui-table-header-cell>
+                    <x-ui-table-header-cell>Ziel</x-ui-table-header-cell>
+                    <x-ui-table-header-cell>Erstellt</x-ui-table-header-cell>
+                    <x-ui-table-header-cell>Aktionen</x-ui-table-header-cell>
+                </x-ui-table-header>
+
+                <x-ui-table-body>
+                    @foreach($jobs as $job)
+                        <x-ui-table-row>
+                            <x-ui-table-cell>
+                                <a href="{{ route('printing.jobs.show', $job) }}">{{ $job->template }}</a>
+                            </x-ui-table-cell>
+                            <x-ui-table-cell>
+                                <x-ui-badge
+                                    variant="{{ in_array($job->status, ['pending','processing']) ? 'warning' : ($job->status === 'completed' ? 'success' : ($job->status === 'failed' ? 'danger' : 'secondary')) }}"
+                                    size="sm"
+                                >
+                                    {{ ucfirst($job->status) }}
+                                </x-ui-badge>
+                            </x-ui-table-cell>
+                            <x-ui-table-cell>
+                                {{ $job->printable_type }} #{{ $job->printable_id }}
+                                @if($job->printer)
+                                    • {{ $job->printer->name }}
+                                @endif
+                                @if($job->printerGroup)
+                                    • {{ $job->printerGroup->name }}
+                                @endif
+                            </x-ui-table-cell>
+                            <x-ui-table-cell>{{ $job->created_at->diffForHumans() }}</x-ui-table-cell>
+                            <x-ui-table-cell>
+                                @if($job->status === 'failed')
+                                    <x-ui-button wire:click="retryJob({{ $job->id }})" size="sm">Wiederholen</x-ui-button>
+                                @endif
+                                @if(in_array($job->status, ['pending', 'processing']))
+                                    <x-ui-button variant="danger" wire:click="cancelJob({{ $job->id }})" size="sm">Abbrechen</x-ui-button>
+                                @endif
+                            </x-ui-table-cell>
+                        </x-ui-table-row>
+                    @endforeach
+                </x-ui-table-body>
+            </x-ui-table>
+        @else
+            <div>Keine Jobs gefunden</div>
+        @endif
     </div>
 
     {{ $jobs->links() }}

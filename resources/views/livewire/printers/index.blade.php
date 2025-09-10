@@ -12,98 +12,91 @@
     <!-- Filter -->
     <div>
         <div>
-            <input wire:model.live.debounce.300ms="search" type="text" placeholder="Drucker suchen...">
+            <x-ui-input-text wire:model.live.debounce.300ms="search" placeholder="Drucker suchen..." />
         </div>
         <div>
-            <select wire:model.live="statusFilter">
+            <x-ui-input-select wire:model.live="statusFilter">
                 <option value="all">Alle Status</option>
                 <option value="active">Aktiv</option>
                 <option value="inactive">Inaktiv</option>
-            </select>
+            </x-ui-input-select>
         </div>
     </div>
 
     <!-- Drucker Tabelle -->
     <div>
-        <ul>
-            @forelse($printers as $printer)
-                <li>
-                    <div>
-                        <div>
-                            <div>
-                                
-                            </div>
-                            <div>
-                                <div>
-                                    <a href="{{ route('printing.printers.show', $printer) }}">
-                                        {{ $printer->name }}
-                                    </a>
-                                </div>
-                                <div>
-                                    {{ $printer->location }}
-                                    @if($printer->username)
-                                        • {{ $printer->username }}
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <span>
-                                {{ $printer->is_active ? 'Aktiv' : 'Inaktiv' }}
-                            </span>
-                            <x-ui-button wire:click="toggleActive({{ $printer->id }})">
-                                {{ $printer->is_active ? 'Deaktivieren' : 'Aktivieren' }}
-                            </x-ui-button>
-                            <x-ui-button variant="danger" wire:click="deletePrinter({{ $printer->id }})">
-                                Löschen
-                            </x-ui-button>
-                        </div>
-                    </div>
-                </li>
-            @empty
-                <li>
-                    Keine Drucker gefunden
-                </li>
-            @endforelse
-        </ul>
+        @if($printers->count() > 0)
+            <x-ui-table>
+                <x-ui-table-header>
+                    <x-ui-table-header-cell>Name</x-ui-table-header-cell>
+                    <x-ui-table-header-cell>Standort</x-ui-table-header-cell>
+                    <x-ui-table-header-cell>Benutzername</x-ui-table-header-cell>
+                    <x-ui-table-header-cell>Status</x-ui-table-header-cell>
+                    <x-ui-table-header-cell>Aktionen</x-ui-table-header-cell>
+                </x-ui-table-header>
+
+                <x-ui-table-body>
+                    @foreach($printers as $printer)
+                        <x-ui-table-row>
+                            <x-ui-table-cell>
+                                <a href="{{ route('printing.printers.show', $printer) }}">
+                                    {{ $printer->name }}
+                                </a>
+                            </x-ui-table-cell>
+                            <x-ui-table-cell>{{ $printer->location }}</x-ui-table-cell>
+                            <x-ui-table-cell>{{ $printer->username ?: '–' }}</x-ui-table-cell>
+                            <x-ui-table-cell>
+                                <x-ui-badge variant="{{ $printer->is_active ? 'success' : 'secondary' }}" size="sm">
+                                    {{ $printer->is_active ? 'Aktiv' : 'Inaktiv' }}
+                                </x-ui-badge>
+                            </x-ui-table-cell>
+                            <x-ui-table-cell>
+                                <x-ui-button wire:click="toggleActive({{ $printer->id }})" size="sm">
+                                    {{ $printer->is_active ? 'Deaktivieren' : 'Aktivieren' }}
+                                </x-ui-button>
+                                <x-ui-button variant="danger" wire:click="deletePrinter({{ $printer->id }})" size="sm">
+                                    Löschen
+                                </x-ui-button>
+                            </x-ui-table-cell>
+                        </x-ui-table-row>
+                    @endforeach
+                </x-ui-table-body>
+            </x-ui-table>
+        @else
+            <div class="text-center py-8">Keine Drucker gefunden</div>
+        @endif
     </div>
 
     {{ $printers->links() }}
 
     <!-- Create Modal -->
     @if($showCreateModal)
-        <div>
+        <x-ui-modal wire:model="showCreateModal">
             <div>
-                <div>
-                    <h3>Neuer Drucker</h3>
-                    <form wire:submit.prevent="createPrinter">
-                        <div>
-                            <label>Name</label>
-                            <input wire:model="name" type="text">
-                            @error('name') <span>{{ $message }}</span> @enderror
-                        </div>
-                        <div>
-                            <label>Standort</label>
-                            <input wire:model="location" type="text">
-                            @error('location') <span>{{ $message }}</span> @enderror
-                        </div>
-                        <div>
-                            <label>Benutzername</label>
-                            <input wire:model="username" type="text">
-                            @error('username') <span>{{ $message }}</span> @enderror
-                        </div>
-                        <div>
-                            <label>Passwort</label>
-                            <input wire:model="password" type="password">
-                            @error('password') <span>{{ $message }}</span> @enderror
-                        </div>
-                        <div>
-                            <x-ui-button type="button" wire:click="hideCreateModal">Abbrechen</x-ui-button>
-                            <x-ui-button type="submit" variant="primary">Erstellen</x-ui-button>
-                        </div>
-                    </form>
-                </div>
+                <h3>Neuer Drucker</h3>
+                <form wire:submit.prevent="createPrinter">
+                    <div>
+                        <x-ui-input-text wire:model="name" label="Name" />
+                        @error('name') <span>{{ $message }}</span> @enderror
+                    </div>
+                    <div>
+                        <x-ui-input-text wire:model="location" label="Standort" />
+                        @error('location') <span>{{ $message }}</span> @enderror
+                    </div>
+                    <div>
+                        <x-ui-input-text wire:model="username" label="Benutzername" />
+                        @error('username') <span>{{ $message }}</span> @enderror
+                    </div>
+                    <div>
+                        <x-ui-input-text wire:model="password" type="password" label="Passwort" />
+                        @error('password') <span>{{ $message }}</span> @enderror
+                    </div>
+                    <div>
+                        <x-ui-button type="button" wire:click="hideCreateModal">Abbrechen</x-ui-button>
+                        <x-ui-button type="submit" variant="primary">Erstellen</x-ui-button>
+                    </div>
+                </form>
             </div>
-        </div>
+        </x-ui-modal>
     @endif
 </div>

@@ -1,130 +1,120 @@
 <div>
-    <div class="mb-6">
-        <div class="flex items-center justify-between">
+    <div>
+        <div>
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Print Job Details</h1>
-                <p class="text-sm text-gray-600">Job #{{ $job->id }}</p>
+                <h1>Print Job Details</h1>
+                <p>Job #{{ $job->id }}</p>
             </div>
-            <div class="flex items-center space-x-2">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                    @if($job->status === 'pending') bg-yellow-100 text-yellow-800
-                    @elseif($job->status === 'processing') bg-blue-100 text-blue-800
-                    @elseif($job->status === 'completed') bg-green-100 text-green-800
-                    @elseif($job->status === 'failed') bg-red-100 text-red-800
-                    @else bg-gray-100 text-gray-800
-                    @endif">
+            <div>
+                <x-ui-badge
+                    variant="{{ in_array($job->status, ['pending','processing']) ? 'warning' : ($job->status === 'completed' ? 'success' : ($job->status === 'failed' ? 'danger' : 'secondary')) }}"
+                    size="sm"
+                >
                     {{ ucfirst($job->status) }}
-                </span>
+                </x-ui-badge>
                 @if($job->status === 'failed')
-                    <button wire:click="retryJob" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Wiederholen
-                    </button>
+                    <x-ui-button wire:click="retryJob" size="sm">Wiederholen</x-ui-button>
                 @endif
                 @if(in_array($job->status, ['pending', 'processing']))
-                    <button wire:click="cancelJob" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                        Abbrechen
-                    </button>
+                    <x-ui-button variant="danger" wire:click="cancelJob" size="sm">Abbrechen</x-ui-button>
                 @endif
             </div>
         </div>
     </div>
 
-    <!-- Job Details -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Basic Info -->
-        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-            <div class="px-4 py-5 sm:px-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">Job Informationen</h3>
-                <p class="mt-1 max-w-2xl text-sm text-gray-500">Grundlegende Job-Details</p>
+    <div>
+        <div>
+            <div>
+                <h3>Job Informationen</h3>
+                <p>Grundlegende Job-Details</p>
             </div>
-            <div class="border-t border-gray-200">
-                <dl>
-                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                        <dt class="text-sm font-medium text-gray-500">Template</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $job->template }}</dd>
-                    </div>
-                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                        <dt class="text-sm font-medium text-gray-500">UUID</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">{{ $job->uuid }}</dd>
-                    </div>
-                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                        <dt class="text-sm font-medium text-gray-500">Erstellt</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $job->created_at->format('d.m.Y H:i:s') }}</dd>
-                    </div>
-                    @if($job->printed_at)
-                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                        <dt class="text-sm font-medium text-gray-500">Gedruckt</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $job->printed_at->format('d.m.Y H:i:s') }}</dd>
-                    </div>
-                    @endif
-                </dl>
+            <div>
+                <x-ui-table>
+                    <x-ui-table-body>
+                        <x-ui-table-row>
+                            <x-ui-table-cell>Template</x-ui-table-cell>
+                            <x-ui-table-cell>{{ $job->template }}</x-ui-table-cell>
+                        </x-ui-table-row>
+                        <x-ui-table-row>
+                            <x-ui-table-cell>UUID</x-ui-table-cell>
+                            <x-ui-table-cell>{{ $job->uuid }}</x-ui-table-cell>
+                        </x-ui-table-row>
+                        <x-ui-table-row>
+                            <x-ui-table-cell>Erstellt</x-ui-table-cell>
+                            <x-ui-table-cell>{{ $job->created_at->format('d.m.Y H:i:s') }}</x-ui-table-cell>
+                        </x-ui-table-row>
+                        @if($job->printed_at)
+                        <x-ui-table-row>
+                            <x-ui-table-cell>Gedruckt</x-ui-table-cell>
+                            <x-ui-table-cell>{{ $job->printed_at->format('d.m.Y H:i:s') }}</x-ui-table-cell>
+                        </x-ui-table-row>
+                        @endif
+                    </x-ui-table-body>
+                </x-ui-table>
             </div>
         </div>
 
-        <!-- Target Info -->
-        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-            <div class="px-4 py-5 sm:px-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">Ziel-Informationen</h3>
-                <p class="mt-1 max-w-2xl text-sm text-gray-500">Drucker und verknüpfte Objekte</p>
+        <div>
+            <div>
+                <h3>Ziel-Informationen</h3>
+                <p>Drucker und verknüpfte Objekte</p>
             </div>
-            <div class="border-t border-gray-200">
-                <dl>
-                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                        <dt class="text-sm font-medium text-gray-500">Drucker</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                            @if($job->printer)
-                                {{ $job->printer->name }}
-                            @elseif($job->printerGroup)
-                                Gruppe: {{ $job->printerGroup->name }}
-                            @else
-                                Nicht zugewiesen
-                            @endif
-                        </dd>
-                    </div>
-                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                        <dt class="text-sm font-medium text-gray-500">Objekt-Typ</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $job->printable_type }}</dd>
-                    </div>
-                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                        <dt class="text-sm font-medium text-gray-500">Objekt-ID</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $job->printable_id }}</dd>
-                    </div>
-                    @if($job->user)
-                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                        <dt class="text-sm font-medium text-gray-500">Erstellt von</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $job->user->name }}</dd>
-                    </div>
-                    @endif
-                </dl>
+            <div>
+                <x-ui-table>
+                    <x-ui-table-body>
+                        <x-ui-table-row>
+                            <x-ui-table-cell>Drucker</x-ui-table-cell>
+                            <x-ui-table-cell>
+                                @if($job->printer)
+                                    {{ $job->printer->name }}
+                                @elseif($job->printerGroup)
+                                    Gruppe: {{ $job->printerGroup->name }}
+                                @else
+                                    Nicht zugewiesen
+                                @endif
+                            </x-ui-table-cell>
+                        </x-ui-table-row>
+                        <x-ui-table-row>
+                            <x-ui-table-cell>Objekt-Typ</x-ui-table-cell>
+                            <x-ui-table-cell>{{ $job->printable_type }}</x-ui-table-cell>
+                        </x-ui-table-row>
+                        <x-ui-table-row>
+                            <x-ui-table-cell>Objekt-ID</x-ui-table-cell>
+                            <x-ui-table-cell>{{ $job->printable_id }}</x-ui-table-cell>
+                        </x-ui-table-row>
+                        @if($job->user)
+                        <x-ui-table-row>
+                            <x-ui-table-cell>Erstellt von</x-ui-table-cell>
+                            <x-ui-table-cell>{{ $job->user->name }}</x-ui-table-cell>
+                        </x-ui-table-row>
+                        @endif
+                    </x-ui-table-body>
+                </x-ui-table>
             </div>
         </div>
     </div>
 
-    <!-- Job Data -->
     @if($job->data)
-    <div class="mt-6 bg-white shadow overflow-hidden sm:rounded-lg">
-        <div class="px-4 py-5 sm:px-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">Job-Daten</h3>
-            <p class="mt-1 max-w-2xl text-sm text-gray-500">Die Daten, die an den Drucker gesendet werden</p>
+    <div>
+        <div>
+            <h3>Job-Daten</h3>
+            <p>Die Daten, die an den Drucker gesendet werden</p>
         </div>
-        <div class="border-t border-gray-200">
-            <div class="px-4 py-5 sm:px-6">
-                <pre class="bg-gray-50 p-4 rounded-md text-sm overflow-x-auto">{{ json_encode($job->data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+        <div>
+            <div>
+                <pre>{{ json_encode($job->data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
             </div>
         </div>
     </div>
     @endif
 
-    <!-- Error Message -->
     @if($job->error_message)
-    <div class="mt-6 bg-red-50 border border-red-200 rounded-md p-4">
-        <div class="flex">
-            <div class="flex-shrink-0">
-                
-            </div>
-            <div class="ml-3">
-                <h3 class="text-sm font-medium text-red-800">Fehlermeldung</h3>
-                <div class="mt-2 text-sm text-red-700">
+    <div>
+        <div>
+            <div></div>
+            <div>
+                <h3>Fehlermeldung</h3>
+                <div>
                     <p>{{ $job->error_message }}</p>
                 </div>
             </div>
@@ -132,13 +122,10 @@
     </div>
     @endif
 
-    <!-- Actions -->
-    <div class="mt-6 flex justify-end space-x-3">
-        <button wire:click="generateContent" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            Inhalt generieren
-        </button>
-        <a href="{{ route('printing.jobs.index') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            Zurück zur Übersicht
+    <div>
+        <x-ui-button wire:click="generateContent">Inhalt generieren</x-ui-button>
+        <a href="{{ route('printing.jobs.index') }}">
+            <x-ui-button variant="primary">Zurück zur Übersicht</x-ui-button>
         </a>
     </div>
 </div>

@@ -1,162 +1,85 @@
 <div>
-    <div class="mb-6">
-        <div class="flex items-center justify-between">
+    <div>
+        <div class="d-flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">{{ $printer->name }}</h1>
-                <p class="text-sm text-gray-600">{{ $printer->location }}</p>
+                <h1>{{ $printer->name }}</h1>
+                <p>{{ $printer->location }}</p>
             </div>
-            <div class="flex items-center space-x-2">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $printer->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+            <div>
+                <x-ui-badge variant="{{ $printer->is_active ? 'success' : 'danger' }}" size="sm">
                     {{ $printer->is_active ? 'Aktiv' : 'Inaktiv' }}
-                </span>
+                </x-ui-badge>
             </div>
         </div>
     </div>
 
-    <!-- Statistiken -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <!-- Icon entfernt -->
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Gesamt Jobs</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $stats['total'] }}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Wartend</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $stats['pending'] }}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Abgeschlossen</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $stats['completed'] }}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Fehlgeschlagen</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $stats['failed'] }}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="grid grid-cols-4 gap-4 mb-6">
+        <x-ui-dashboard-tile title="Gesamt Jobs" :count="$stats['total']" icon="document-text" variant="primary" size="lg" />
+        <x-ui-dashboard-tile title="Wartend" :count="$stats['pending']" icon="clock" variant="warning" size="lg" />
+        <x-ui-dashboard-tile title="Abgeschlossen" :count="$stats['completed']" icon="check-circle" variant="success" size="lg" />
+        <x-ui-dashboard-tile title="Fehlgeschlagen" :count="$stats['failed']" icon="x-circle" variant="danger" size="lg" />
     </div>
 
-    <!-- Filter -->
-    <div class="mb-4">
-        <select wire:model.live="statusFilter" class="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-            <option value="all">Alle Status</option>
-            <option value="pending">Wartend</option>
-            <option value="processing">Verarbeitung</option>
-            <option value="completed">Abgeschlossen</option>
-            <option value="failed">Fehlgeschlagen</option>
-            <option value="cancelled">Abgebrochen</option>
-        </select>
+    <div>
+        <x-ui-input-select
+            name="statusFilter"
+            label="Status filtern"
+            :options="[
+                ['value' => 'all', 'label' => 'Alle Status'],
+                ['value' => 'pending', 'label' => 'Wartend'],
+                ['value' => 'processing', 'label' => 'Verarbeitung'],
+                ['value' => 'completed', 'label' => 'Abgeschlossen'],
+                ['value' => 'failed', 'label' => 'Fehlgeschlagen'],
+                ['value' => 'cancelled', 'label' => 'Abgebrochen'],
+            ]"
+            optionValue="value"
+            optionLabel="label"
+            wire:model.live="statusFilter"
+        />
     </div>
 
-    <!-- Jobs Tabelle -->
-    <div class="bg-white shadow overflow-hidden sm:rounded-md">
-        <ul class="divide-y divide-gray-200">
-            @forelse($jobs as $job)
-                <li>
-                    <div class="px-4 py-4 flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                @switch($job->status)
-                                    @case('pending')
-                                        
-                                        @break
-                                    @case('processing')
-                                        
-                                        @break
-                                    @case('completed')
-                                        
-                                        @break
-                                    @case('failed')
-                                        
-                                        @break
-                                    @case('cancelled')
-                                        
-                                        @break
-                                @endswitch
-                            </div>
-                            <div class="ml-4">
-                                <div class="text-sm font-medium text-gray-900">
-                                    {{ $job->template }}
-                                </div>
-                                <div class="text-sm text-gray-500">
-                                    {{ $job->printable_type }} #{{ $job->printable_id }}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                @if($job->status === 'pending') bg-yellow-100 text-yellow-800
-                                @elseif($job->status === 'processing') bg-blue-100 text-blue-800
-                                @elseif($job->status === 'completed') bg-green-100 text-green-800
-                                @elseif($job->status === 'failed') bg-red-100 text-red-800
-                                @else bg-gray-100 text-gray-800
-                                @endif">
+    @if($jobs->count() > 0)
+        <x-ui-table>
+            <x-ui-table-header>
+                <x-ui-table-header-cell>Template</x-ui-table-header-cell>
+                <x-ui-table-header-cell>Status</x-ui-table-header-cell>
+                <x-ui-table-header-cell>Objekt</x-ui-table-header-cell>
+                <x-ui-table-header-cell align="right">Aktionen</x-ui-table-header-cell>
+            </x-ui-table-header>
+
+            <x-ui-table-body>
+                @foreach($jobs as $job)
+                    <x-ui-table-row>
+                        <x-ui-table-cell>
+                            <div class="font-medium">{{ $job->template }}</div>
+                        </x-ui-table-cell>
+                        <x-ui-table-cell>
+                            <x-ui-badge
+                                variant="{{ in_array($job->status, ['pending','processing']) ? 'warning' : ($job->status === 'completed' ? 'success' : ($job->status === 'failed' ? 'danger' : 'secondary')) }}"
+                                size="sm"
+                            >
                                 {{ ucfirst($job->status) }}
-                            </span>
-                            @if($job->status === 'failed')
-                                <button wire:click="retryJob({{ $job->id }})" class="text-indigo-600 hover:text-indigo-900 text-sm">
-                                    Wiederholen
-                                </button>
-                            @endif
-                            @if(in_array($job->status, ['pending', 'processing']))
-                                <button wire:click="cancelJob({{ $job->id }})" class="text-red-600 hover:text-red-900 text-sm">
-                                    Abbrechen
-                                </button>
-                            @endif
-                        </div>
-                    </div>
-                </li>
-            @empty
-                <li class="px-4 py-8 text-center text-gray-500">
-                    Keine Jobs gefunden
-                </li>
-            @endforelse
-        </ul>
-    </div>
-
-    {{ $jobs->links() }}
+                            </x-ui-badge>
+                        </x-ui-table-cell>
+                        <x-ui-table-cell>
+                            <div class="text-sm text-muted">{{ $job->printable_type }} #{{ $job->printable_id }}</div>
+                        </x-ui-table-cell>
+                        <x-ui-table-cell align="right">
+                            <div class="d-flex items-center gap-2 justify-end">
+                                @if($job->status === 'failed')
+                                    <x-ui-button size="sm" variant="secondary" wire:click="retryJob({{ $job->id }})">Wiederholen</x-ui-button>
+                                @endif
+                                @if(in_array($job->status, ['pending','processing']))
+                                    <x-ui-button size="sm" variant="danger-outline" wire:click="cancelJob({{ $job->id }})">Abbrechen</x-ui-button>
+                                @endif
+                            </div>
+                        </x-ui-table-cell>
+                    </x-ui-table-row>
+                @endforeach
+            </x-ui-table-body>
+        </x-ui-table>
+        <div class="mt-4">{{ $jobs->links() }}</div>
+    @else
+        <div class="text-center py-8">Keine Jobs gefunden</div>
+    @endif
 </div>

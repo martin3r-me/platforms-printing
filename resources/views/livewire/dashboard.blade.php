@@ -1,194 +1,61 @@
 <div>
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900">Printing Dashboard</h1>
-        <p class="text-sm text-gray-600">Übersicht über alle Drucker und Print Jobs</p>
+    <div>
+        <h1>Printing</h1>
+        <p>Übersicht über alle Drucker und Print Jobs</p>
     </div>
 
-    <!-- Statistiken -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Drucker</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $totalPrinters }}</dd>
-                            <dd class="text-sm text-gray-500">{{ $activePrinters }} aktiv</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Gruppen</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $totalGroups }}</dd>
-                            <dd class="text-sm text-gray-500">{{ $activeGroups }} aktiv</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <!-- Icon entfernt -->
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Print Jobs</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $totalJobs }}</dd>
-                            <dd class="text-sm text-gray-500">{{ $pendingJobs }} wartend</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Abgeschlossen</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $completedJobs }}</dd>
-                            <dd class="text-sm text-gray-500">{{ $failedJobs }} fehlgeschlagen</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div>
+        <x-ui-dashboard-tile title="Drucker" :count="$totalPrinters" subtitle="{{ $activePrinters }} aktiv" variant="primary" size="lg" />
+        <x-ui-dashboard-tile title="Gruppen" :count="$totalGroups" subtitle="{{ $activeGroups }} aktiv" variant="secondary" size="lg" />
+        <x-ui-dashboard-tile title="Print Jobs" :count="$totalJobs" subtitle="{{ $pendingJobs }} wartend" variant="info" size="lg" />
+        <x-ui-dashboard-tile title="Abgeschlossen" :count="$completedJobs" subtitle="{{ $failedJobs }} fehlgeschlagen" variant="success" size="lg" />
     </div>
 
-    <!-- Drucker Status -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Bereit</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $printerStatus['ready'] }}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Beschäftigt</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $printerStatus['busy'] }}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Fehler</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $printerStatus['error'] }}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div>
+        <x-ui-dashboard-tile title="Bereit" :count="$printerStatus['ready']" variant="success" size="sm" />
+        <x-ui-dashboard-tile title="Beschäftigt" :count="$printerStatus['busy']" variant="warning" size="sm" />
+        <x-ui-dashboard-tile title="Fehler" :count="$printerStatus['error']" variant="danger" size="sm" />
     </div>
 
-    <!-- Neueste Jobs -->
-    <div class="bg-white shadow overflow-hidden sm:rounded-md">
-        <div class="px-4 py-5 sm:px-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">Neueste Print Jobs</h3>
-            <p class="mt-1 max-w-2xl text-sm text-gray-500">Die letzten 10 Print Jobs</p>
-        </div>
-        <ul class="divide-y divide-gray-200">
-            @forelse($recentJobs as $job)
-                <li>
-                    <div class="px-4 py-4 flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                @switch($job->status)
-                                    @case('pending')
-                                        
-                                        @break
-                                    @case('processing')
-                                        
-                                        @break
-                                    @case('completed')
-                                        
-                                        @break
-                                    @case('failed')
-                                        
-                                        @break
-                                    @case('cancelled')
-                                        
-                                        @break
-                                @endswitch
-                            </div>
-                            <div class="ml-4">
-                                <div class="text-sm font-medium text-gray-900">
-                                    {{ $job->template }}
-                                </div>
-                                <div class="text-sm text-gray-500">
-                                    {{ $job->printable_type }} #{{ $job->printable_id }}
-                                    @if($job->printer)
-                                        • {{ $job->printer->name }}
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                @if($job->status === 'pending') bg-yellow-100 text-yellow-800
-                                @elseif($job->status === 'processing') bg-blue-100 text-blue-800
-                                @elseif($job->status === 'completed') bg-green-100 text-green-800
-                                @elseif($job->status === 'failed') bg-red-100 text-red-800
-                                @else bg-gray-100 text-gray-800
-                                @endif">
-                                {{ ucfirst($job->status) }}
-                            </span>
-                            <span class="text-xs text-gray-500">
-                                {{ $job->created_at->diffForHumans() }}
-                            </span>
-                        </div>
-                    </div>
-                </li>
-            @empty
-                <li class="px-4 py-8 text-center text-gray-500">
-                    Keine Print Jobs gefunden
-                </li>
-            @endforelse
-        </ul>
+    <div>
+        <h3>Neueste Print Jobs</h3>
+        @if($recentJobs->count() > 0)
+            <x-ui-table>
+                <x-ui-table-header>
+                    <x-ui-table-header-cell>Template</x-ui-table-header-cell>
+                    <x-ui-table-header-cell>Status</x-ui-table-header-cell>
+                    <x-ui-table-header-cell>Ziel</x-ui-table-header-cell>
+                    <x-ui-table-header-cell>Erstellt</x-ui-table-header-cell>
+                </x-ui-table-header>
+
+                <x-ui-table-body>
+                    @foreach($recentJobs as $job)
+                        <x-ui-table-row>
+                            <x-ui-table-cell>{{ $job->template }}</x-ui-table-cell>
+                            <x-ui-table-cell>
+                                <x-ui-badge
+                                    variant="{{ in_array($job->status, ['pending','processing']) ? 'warning' : ($job->status === 'completed' ? 'success' : ($job->status === 'failed' ? 'danger' : 'secondary')) }}"
+                                    size="sm"
+                                >
+                                    {{ ucfirst($job->status) }}
+                                </x-ui-badge>
+                            </x-ui-table-cell>
+                            <x-ui-table-cell>
+                                @if($job->printer)
+                                    {{ $job->printer->name }}
+                                @elseif($job->printerGroup)
+                                    Gruppe: {{ $job->printerGroup->name }}
+                                @else
+                                    –
+                                @endif
+                            </x-ui-table-cell>
+                            <x-ui-table-cell>{{ $job->created_at->diffForHumans() }}</x-ui-table-cell>
+                        </x-ui-table-row>
+                    @endforeach
+                </x-ui-table-body>
+            </x-ui-table>
+        @else
+            <div>Keine Print Jobs gefunden</div>
+        @endif
     </div>
 </div>

@@ -9,7 +9,7 @@ use Platform\Printing\Models\PrintJob;
 
 class Dashboard extends Component
 {
-    public $perspective = 'overview';
+    public $perspective = 'team';
 
     public function render()
     {
@@ -45,6 +45,8 @@ class Dashboard extends Component
         ];
 
         return view('printing::livewire.dashboard', [
+            'currentDate' => now()->format('d.m.Y'),
+            'currentDay' => now()->format('l'),
             'perspective' => $this->perspective,
             'totalPrinters' => $totalPrinters,
             'activePrinters' => $activePrinters,

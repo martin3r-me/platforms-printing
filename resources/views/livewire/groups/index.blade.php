@@ -1,30 +1,40 @@
-<div>
-    <div>
-        <div>
+<div class="h-full overflow-y-auto p-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="d-flex justify-between items-center">
             <div>
-                <h1>Drucker-Gruppen</h1>
-                <p>Verwalten Sie Drucker-Gruppen</p>
+                <h1 class="text-2xl font-bold text-gray-900">Drucker-Gruppen</h1>
+                <p class="text-gray-600">Verwalten Sie Drucker-Gruppen</p>
             </div>
-            <x-ui-button wire:click="showCreateModal">Neue Gruppe</x-ui-button>
+            <div class="d-flex items-center gap-2">
+                <x-ui-button variant="primary" wire:click="showCreateModal">
+                    <div class="d-flex items-center gap-2">
+                        @svg('heroicon-o-plus', 'w-4 h-4')
+                        <span>Neue Gruppe</span>
+                    </div>
+                </x-ui-button>
+            </div>
         </div>
     </div>
 
-    <!-- Filter -->
-    <div>
-        <div>
-            <x-ui-input-text wire:model.live.debounce.300ms="search" placeholder="Gruppen suchen..." />
-        </div>
-        <div>
-            <x-ui-input-select wire:model.live="statusFilter">
-                <option value="all">Alle Status</option>
-                <option value="active">Aktiv</option>
-                <option value="inactive">Inaktiv</option>
-            </x-ui-input-select>
+    <!-- Filterleiste -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div class="grid grid-cols-3 gap-4">
+            <div class="col-span-2">
+                <x-ui-input-text wire:model.live.debounce.300ms="search" placeholder="Gruppen suchen..." />
+            </div>
+            <div>
+                <x-ui-input-select wire:model.live="statusFilter" label="Status">
+                    <option value="all">Alle Status</option>
+                    <option value="active">Aktiv</option>
+                    <option value="inactive">Inaktiv</option>
+                </x-ui-input-select>
+            </div>
         </div>
     </div>
 
-    <!-- Gruppen Tabelle -->
-    <div>
+    <!-- Tabelle -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
         @if($groups->count() > 0)
             <x-ui-table>
                 <x-ui-table-header>
@@ -32,14 +42,14 @@
                     <x-ui-table-header-cell>Beschreibung</x-ui-table-header-cell>
                     <x-ui-table-header-cell>Drucker</x-ui-table-header-cell>
                     <x-ui-table-header-cell>Status</x-ui-table-header-cell>
-                    <x-ui-table-header-cell>Aktionen</x-ui-table-header-cell>
+                    <x-ui-table-header-cell align="right">Aktionen</x-ui-table-header-cell>
                 </x-ui-table-header>
 
                 <x-ui-table-body>
                     @foreach($groups as $group)
                         <x-ui-table-row>
                             <x-ui-table-cell>
-                                <a href="{{ route('printing.groups.show', $group) }}">
+                                <a href="{{ route('printing.groups.show', $group) }}" class="text-primary hover:underline">
                                     {{ $group->name }}
                                 </a>
                             </x-ui-table-cell>
@@ -50,41 +60,43 @@
                                     {{ $group->is_active ? 'Aktiv' : 'Inaktiv' }}
                                 </x-ui-badge>
                             </x-ui-table-cell>
-                            <x-ui-table-cell>
-                                <x-ui-button wire:click="toggleActive({{ $group->id }})" size="sm">
-                                    {{ $group->is_active ? 'Deaktivieren' : 'Aktivieren' }}
-                                </x-ui-button>
-                                <x-ui-button variant="danger" wire:click="deleteGroup({{ $group->id }})" size="sm">
-                                    Löschen
-                                </x-ui-button>
+                            <x-ui-table-cell align="right">
+                                <div class="d-flex items-center gap-2 justify-end">
+                                    <x-ui-button wire:click="toggleActive({{ $group->id }})" size="sm" variant="secondary">
+                                        {{ $group->is_active ? 'Deaktivieren' : 'Aktivieren' }}
+                                    </x-ui-button>
+                                    <x-ui-button variant="danger" wire:click="deleteGroup({{ $group->id }})" size="sm">
+                                        Löschen
+                                    </x-ui-button>
+                                </div>
                             </x-ui-table-cell>
                         </x-ui-table-row>
                     @endforeach
                 </x-ui-table-body>
             </x-ui-table>
         @else
-            <div class="text-center py-8">Keine Gruppen gefunden</div>
+            <div class="text-center py-12 text-gray-600">
+                <x-heroicon-o-folder class="w-12 h-12 text-gray-400 mx-auto mb-3"/>
+                <div class="text-lg font-medium">Keine Gruppen gefunden</div>
+                <div>Erstellen Sie die erste Gruppe, um zu starten.</div>
+            </div>
         @endif
     </div>
 
-    {{ $groups->links() }}
+    <div class="mt-4">{{ $groups->links() }}</div>
 
     <!-- Create Modal -->
     @if($showCreateModal)
         <x-ui-modal wire:model="showCreateModal">
-            <div>
-                <h3>Neue Gruppe</h3>
-                <form wire:submit.prevent="createGroup">
-                    <div>
+            <div class="space-y-4">
+                <h3 class="text-lg font-semibold">Neue Gruppe</h3>
+                <form wire:submit.prevent="createGroup" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
                         <x-ui-input-text wire:model="name" label="Name" />
-                        @error('name') <span>{{ $message }}</span> @enderror
-                    </div>
-                    <div>
                         <x-ui-input-text wire:model="description" label="Beschreibung" type="textarea" />
-                        @error('description') <span>{{ $message }}</span> @enderror
                     </div>
-                    <div>
-                        <x-ui-button type="button" wire:click="hideCreateModal">Abbrechen</x-ui-button>
+                    <div class="d-flex justify-end gap-2">
+                        <x-ui-button type="button" variant="secondary" wire:click="hideCreateModal">Abbrechen</x-ui-button>
                         <x-ui-button type="submit" variant="primary">Erstellen</x-ui-button>
                     </div>
                 </form>

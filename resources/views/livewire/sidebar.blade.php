@@ -1,23 +1,63 @@
 <div>
-    <nav class="space-y-1">
-        <a href="{{ route('printing.dashboard') }}" class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('printing.dashboard') ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-            
-            Dashboard
+    {{-- Abschnitt: Allgemein --}}
+    <div>
+        <h4 x-show="!collapsed" class="p-3 text-sm italic text-secondary uppercase">Allgemein</h4>
+
+        {{-- Dashboard --}}
+        <a href="{{ route('printing.dashboard') }}"
+           class="relative d-flex items-center p-2 my-1 rounded-md font-medium transition"
+           :class="[
+               window.location.pathname.endsWith('/printing') || 
+               window.location.pathname.endsWith('/printing/')
+                   ? 'bg-primary text-on-primary shadow-md'
+                   : 'text-black hover:bg-primary-10 hover:text-primary hover:shadow-md',
+               collapsed ? 'justify-center' : 'gap-3'
+           ]"
+           wire:navigate>
+            <x-heroicon-o-chart-bar class="w-6 h-6 flex-shrink-0"/>
+            <span x-show="!collapsed" class="truncate">Dashboard</span>
         </a>
 
-        <a href="{{ route('printing.printers.index') }}" class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('printing.printers.*') ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-            
-            Drucker
+        {{-- Drucker --}}
+        <a href="{{ route('printing.printers.index') }}"
+           class="relative d-flex items-center p-2 my-1 rounded-md font-medium transition"
+           :class="[
+               window.location.pathname.includes('/printing/printers')
+                   ? 'bg-primary text-on-primary shadow-md'
+                   : 'text-black hover:bg-primary-10 hover:text-primary hover:shadow-md',
+               collapsed ? 'justify-center' : 'gap-3'
+           ]"
+           wire:navigate>
+            <x-heroicon-o-printer class="w-6 h-6 flex-shrink-0"/>
+            <span x-show="!collapsed" class="truncate">Drucker</span>
         </a>
 
-        <a href="{{ route('printing.groups.index') }}" class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('printing.groups.*') ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-            
-            Gruppen
+        {{-- Gruppen --}}
+        <a href="{{ route('printing.groups.index') }}"
+           class="relative d-flex items-center p-2 my-1 rounded-md font-medium transition"
+           :class="[
+               window.location.pathname.includes('/printing/groups')
+                   ? 'bg-primary text-on-primary shadow-md'
+                   : 'text-black hover:bg-primary-10 hover:text-primary hover:shadow-md',
+               collapsed ? 'justify-center' : 'gap-3'
+           ]"
+           wire:navigate>
+            <x-heroicon-o-folder class="w-6 h-6 flex-shrink-0"/>
+            <span x-show="!collapsed" class="truncate">Gruppen</span>
         </a>
 
-        <a href="{{ route('printing.jobs.index') }}" class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('printing.jobs.*') ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-            <!-- Icon entfernt -->
-            Print Jobs
+        {{-- Print Jobs --}}
+        <a href="{{ route('printing.jobs.index') }}"
+           class="relative d-flex items-center p-2 my-1 rounded-md font-medium transition"
+           :class="[
+               window.location.pathname.includes('/printing/jobs')
+                   ? 'bg-primary text-on-primary shadow-md'
+                   : 'text-black hover:bg-primary-10 hover:text-primary hover:shadow-md',
+               collapsed ? 'justify-center' : 'gap-3'
+           ]"
+           wire:navigate>
+            <x-heroicon-o-document-text class="w-6 h-6 flex-shrink-0"/>
+            <span x-show="!collapsed" class="truncate">Print Jobs</span>
         </a>
-    </nav>
+    </div>
 </div>

@@ -1,11 +1,12 @@
-<div>
-    <div>
-        <div>
+<div class="h-full overflow-y-auto p-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="d-flex justify-between items-center">
             <div>
-                <h1>Print Job Details</h1>
-                <p>Job #{{ $job->id }}</p>
+                <h1 class="text-2xl font-bold text-gray-900">Print Job Details</h1>
+                <p class="text-gray-600">Job #{{ $job->id }}</p>
             </div>
-            <div>
+            <div class="d-flex items-center gap-2">
                 <x-ui-badge
                     variant="{{ in_array($job->status, ['pending','processing']) ? 'warning' : ($job->status === 'completed' ? 'success' : ($job->status === 'failed' ? 'danger' : 'secondary')) }}"
                     size="sm"
@@ -13,22 +14,23 @@
                     {{ ucfirst($job->status) }}
                 </x-ui-badge>
                 @if($job->status === 'failed')
-                    <x-ui-button wire:click="retryJob" size="sm">Wiederholen</x-ui-button>
+                    <x-ui-button wire:click="retryJob" size="sm" variant="secondary">Wiederholen</x-ui-button>
                 @endif
                 @if(in_array($job->status, ['pending', 'processing']))
-                    <x-ui-button variant="danger" wire:click="cancelJob" size="sm">Abbrechen</x-ui-button>
+                    <x-ui-button variant="danger-outline" wire:click="cancelJob" size="sm">Abbrechen</x-ui-button>
                 @endif
             </div>
         </div>
     </div>
 
-    <div>
-        <div>
-            <div>
-                <h3>Job Informationen</h3>
-                <p>Grundlegende Job-Details</p>
+    <div class="grid grid-cols-2 gap-6">
+        <!-- Job Informationen -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold">Job Informationen</h3>
+                <p class="text-sm text-gray-600">Grundlegende Job-Details</p>
             </div>
-            <div>
+            <div class="p-6">
                 <x-ui-table>
                     <x-ui-table-body>
                         <x-ui-table-row>
@@ -54,12 +56,13 @@
             </div>
         </div>
 
-        <div>
-            <div>
-                <h3>Ziel-Informationen</h3>
-                <p>Drucker und verknüpfte Objekte</p>
+        <!-- Ziel-Informationen -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold">Ziel-Informationen</h3>
+                <p class="text-sm text-gray-600">Drucker und verknüpfte Objekte</p>
             </div>
-            <div>
+            <div class="p-6">
                 <x-ui-table>
                     <x-ui-table-body>
                         <x-ui-table-row>
@@ -95,34 +98,29 @@
     </div>
 
     @if($job->data)
-    <div>
-        <div>
-            <h3>Job-Daten</h3>
-            <p>Die Daten, die an den Drucker gesendet werden</p>
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mt-6">
+        <div class="p-6 border-b border-gray-200">
+            <h3 class="text-lg font-semibold">Job-Daten</h3>
+            <p class="text-sm text-gray-600">Die Daten, die an den Drucker gesendet werden</p>
         </div>
-        <div>
-            <div>
-                <pre>{{ json_encode($job->data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+        <div class="p-6">
+            <div class="bg-gray-50 rounded-md p-4 overflow-auto">
+                <pre class="text-sm">{{ json_encode($job->data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
             </div>
         </div>
     </div>
     @endif
 
     @if($job->error_message)
-    <div>
-        <div>
-            <div></div>
-            <div>
-                <h3>Fehlermeldung</h3>
-                <div>
-                    <p>{{ $job->error_message }}</p>
-                </div>
-            </div>
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mt-6">
+        <div class="p-6">
+            <h3 class="text-lg font-semibold mb-2">Fehlermeldung</h3>
+            <p class="text-sm text-red-700">{{ $job->error_message }}</p>
         </div>
     </div>
     @endif
 
-    <div>
+    <div class="d-flex justify-between items-center mt-6">
         <x-ui-button wire:click="generateContent">Inhalt generieren</x-ui-button>
         <a href="{{ route('printing.jobs.index') }}">
             <x-ui-button variant="primary">Zurück zur Übersicht</x-ui-button>

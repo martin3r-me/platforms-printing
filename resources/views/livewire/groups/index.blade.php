@@ -17,22 +17,6 @@
         </div>
     </div>
 
-    <!-- Filterleiste -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-        <div class="grid grid-cols-3 gap-4">
-            <div class="col-span-2">
-                <x-ui-input-text name="search" wire:model.live.debounce.300ms="search" placeholder="Gruppen suchen..." />
-            </div>
-            <div>
-                <x-ui-input-select name="statusFilter" wire:model.live="statusFilter" label="Status">
-                    <option value="all">Alle Status</option>
-                    <option value="active">Aktiv</option>
-                    <option value="inactive">Inaktiv</option>
-                </x-ui-input-select>
-            </div>
-        </div>
-    </div>
-
     <!-- Tabelle -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
         @if($groups->count() > 0)
@@ -87,7 +71,7 @@
 
     <!-- Create Modal -->
     @if($showCreateModal)
-        <x-ui-modal wire:model="showCreateModal">
+        <x-ui-modal model="showCreateModal">
             <div class="space-y-4">
                 <h3 class="text-lg font-semibold">Neue Gruppe</h3>
                 <form wire:submit.prevent="createGroup" class="space-y-4">

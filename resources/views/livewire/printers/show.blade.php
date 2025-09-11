@@ -22,29 +22,6 @@
         <x-ui-dashboard-tile title="Fehlgeschlagen" :count="$stats['failed']" icon="x-circle" variant="danger" size="lg" />
     </div>
 
-    <!-- Filter -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-        <div class="grid grid-cols-4 gap-4 items-end">
-            <div class="col-span-3">
-                <x-ui-input-select
-                    name="statusFilter"
-                    label="Status filtern"
-                    :options="[
-                        ['value' => 'all', 'label' => 'Alle Status'],
-                        ['value' => 'pending', 'label' => 'Wartend'],
-                        ['value' => 'processing', 'label' => 'Verarbeitung'],
-                        ['value' => 'completed', 'label' => 'Abgeschlossen'],
-                        ['value' => 'failed', 'label' => 'Fehlgeschlagen'],
-                        ['value' => 'cancelled', 'label' => 'Abgebrochen'],
-                    ]"
-                    optionValue="value"
-                    optionLabel="label"
-                    wire:model.live="statusFilter"
-                />
-            </div>
-        </div>
-    </div>
-
     <!-- Tabelle -->
     @if($jobs->count() > 0)
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">

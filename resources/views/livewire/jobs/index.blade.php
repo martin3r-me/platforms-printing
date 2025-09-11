@@ -17,32 +17,6 @@
         <x-ui-dashboard-tile title="Fehlgeschlagen" :count="$stats['failed']" icon="x-circle" variant="danger" size="lg" />
     </div>
 
-    <!-- Filterleiste -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-        <div class="grid grid-cols-3 gap-4">
-            <div>
-                <x-ui-input-text name="search" wire:model.live.debounce.300ms="search" placeholder="Jobs suchen..." />
-            </div>
-            <div>
-                <x-ui-input-select name="statusFilter" wire:model.live="statusFilter" label="Status">
-                    <option value="all">Alle Status</option>
-                    <option value="pending">Wartend</option>
-                    <option value="processing">Verarbeitung</option>
-                    <option value="completed">Abgeschlossen</option>
-                    <option value="failed">Fehlgeschlagen</option>
-                    <option value="cancelled">Abgebrochen</option>
-                </x-ui-input-select>
-            </div>
-            <div>
-                <x-ui-input-select name="printableTypeFilter" wire:model.live="printableTypeFilter" label="Typ">
-                    <option value="all">Alle Typen</option>
-                    <option value="Platform\\Sales\\Models\\SalesDeal">Sales Deal</option>
-                    <option value="Platform\\Helpdesk\\Models\\HelpdeskTicket">Helpdesk Ticket</option>
-                </x-ui-input-select>
-            </div>
-        </div>
-    </div>
-
     <!-- Tabelle -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
         @if($jobs->count() > 0)

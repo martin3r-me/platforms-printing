@@ -11,7 +11,7 @@ interface PrintingServiceInterface
      */
     public function createJob(
         Model $printable,
-        string $template = 'default',
+        string $template = null,
         array $data = [],
         ?int $printerId = null,
         ?int $printerGroupId = null

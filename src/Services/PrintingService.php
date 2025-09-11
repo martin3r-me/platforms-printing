@@ -16,11 +16,15 @@ class PrintingService implements PrintingServiceInterface
      */
     public function createJob(
         Model $printable,
-        string $template = 'default',
+        string $template = null,
         array $data = [],
         ?int $printerId = null,
         ?int $printerGroupId = null
     ): PrintJob {
+        // Intelligente Template-Auswahl wenn keins angegeben
+        if ($template === null) {
+            $template = $this->getDefaultTemplateForModel($printable);
+        }
         $printJob = PrintJob::create([
             'printable_type' => get_class($printable),
             'printable_id' => $printable->id,
@@ -178,9 +182,108 @@ class PrintingService implements PrintingServiceInterface
         // Template-spezifische Daten
         $templateData = array_merge($baseData, $data);
 
-        // Hier würde normalerweise ein Template-Engine verwendet werden
-        // Für jetzt geben wir einfachen Text zurück
-        return $this->renderTemplate($template, $templateData);
+        // Versuche zuerst ein Blade-Template zu finden
+        $bladeTemplate = $this->findBladeTemplate($printable, $template);
+        if ($bladeTemplate) {
+            return view($bladeTemplate, $templateData)->render();
+        }
+
+        // Fallback: Einfache Text-Generierung
+        return $this->renderSimpleTemplate($printable, $templateData);
+    }
+
+    /**
+     * Findet das passende Blade-Template für ein Model
+     */
+    private function findBladeTemplate(Model $printable, string $template): ?string
+    {
+        $modelName = class_basename($printable);
+        $moduleName = $this->getModuleName($printable);
+        
+        // Verschiedene Template-Pfade versuchen (modul-spezifisch zuerst!)
+        $templatePaths = [
+            // 1. Im Modul selbst (LOOSE COUPLING!)
+            "{$moduleName}::printing.{$template}",
+            "{$moduleName}::printing.{$modelName}.{$template}",
+            
+            // 2. Im Printing-Service als Fallback
+            "printing::templates.{$moduleName}.{$modelName}.{$template}",
+            "printing::templates.{$moduleName}.{$template}",
+            "printing::templates.{$modelName}.{$template}",
+            "printing::templates.{$template}",
+        ];
+
+        foreach ($templatePaths as $path) {
+            if (view()->exists($path)) {
+                return $path;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Ermittelt den Modul-Namen aus der Model-Klasse
+     */
+    private function getModuleName(Model $model): string
+    {
+        $className = get_class($model);
+        
+        // Platform\Helpdesk\Models\HelpdeskTicket -> helpdesk
+        if (preg_match('/Platform\\\\([^\\\\]+)\\\\Models/', $className, $matches)) {
+            return strtolower($matches[1]);
+        }
+        
+        return 'default';
+    }
+
+    /**
+     * Einfache Text-Template-Generierung als Fallback
+     */
+    private function renderSimpleTemplate(Model $printable, array $data): string
+    {
+        $modelName = class_basename($printable);
+        $moduleName = $this->getModuleName($printable);
+        
+        $content = "=== {$moduleName} - {$modelName} ===\n\n";
+        
+        // Generische Felder basierend auf Model-Attributen
+        foreach ($printable->getAttributes() as $key => $value) {
+            if (in_array($key, ['id', 'created_at', 'updated_at', 'deleted_at'])) {
+                continue;
+            }
+            
+            $label = ucfirst(str_replace('_', ' ', $key));
+            $content .= "{$label}: {$value}\n";
+        }
+        
+        // Zusätzliche Daten hinzufügen
+        if (!empty($data)) {
+            $content .= "\n--- Zusätzliche Daten ---\n";
+            foreach ($data as $key => $value) {
+                if (is_array($value)) {
+                    $value = json_encode($value, JSON_PRETTY_PRINT);
+                }
+                $content .= "{$key}: {$value}\n";
+            }
+        }
+        
+        $content .= "\n" . str_repeat('=', 40) . "\n";
+        $content .= "Gedruckt am: " . now()->format('d.m.Y H:i:s') . "\n";
+        
+        return $content;
+    }
+
+    /**
+     * Ermittelt das Standard-Template für ein Model
+     */
+    private function getDefaultTemplateForModel(Model $printable): string
+    {
+        $modelName = class_basename($printable);
+        $moduleName = $this->getModuleName($printable);
+        
+        // Konvention: {modul}-{model} (z.B. helpdesk-ticket)
+        return strtolower($moduleName . '-' . kebab_case($modelName));
     }
 
     /**

@@ -208,14 +208,16 @@
                             <span class="flex-grow-1 text-sm">{{ $printer->name }}</span>
                             <x-ui-badge variant="primary" size="xs">{{ $printer->is_active ? 'Aktiv' : 'Inaktiv' }}</x-ui-badge>
                             <div class="flex-shrink-0" @click.stop>
-                                <x-ui-confirm-button 
-                                    action="removePrinter"
-                                    :params="[$printer->id]"
-                                    text="Entfernen" 
-                                    confirmText="Aus Gruppe entfernen?" 
+                                <x-ui-button 
+                                    size="xs" 
                                     variant="danger-outline"
-                                    :icon="@svg('heroicon-o-x-mark', 'w-4 h-4')->toHtml()"
-                                />
+                                    x-on:click.prevent="$wire.openRemovePrinterModal({{ $printer->id }})"
+                                >
+                                    <div class="d-flex items-center gap-1">
+                                        @svg('heroicon-o-x-mark', 'w-3 h-3')
+                                        Entfernen
+                                    </div>
+                                </x-ui-button>
                             </div>
                         </div>
                     @endforeach
@@ -265,6 +267,32 @@
                 <x-ui-button type="button" variant="primary" wire:click="assignPrinter">
                     Zuweisen
                 </x-ui-button>
+            </div>
+        </x-slot>
+    </x-ui-modal>
+
+    <!-- Remove Printer Confirm Modal -->
+    <x-ui-modal model="removePrinterModalShow" size="sm">
+        <x-slot name="header">
+            Drucker entfernen
+        </x-slot>
+
+        <div class="space-y-2">
+            <p class="text-sm">Soll dieser Drucker wirklich entfernt werden?</p>
+        </div>
+
+        <x-slot name="footer">
+            <div class="d-flex justify-end gap-2">
+                <x-ui-button type="button" variant="secondary-outline" @click="$wire.closeRemovePrinterModal()">
+                    Abbrechen
+                </x-ui-button>
+                <x-ui-confirm-button 
+                    action="confirmRemovePrinter" 
+                    text="Entfernen" 
+                    confirmText="Jetzt entfernen?"
+                    variant="danger"
+                    size="sm"
+                />
             </div>
         </x-slot>
     </x-ui-modal>

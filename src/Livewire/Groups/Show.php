@@ -17,6 +17,8 @@ class Show extends Component
     public $isDirty = false;
     public $printerAssignmentModalShow = false;
     public $selectedPrinterId = null;
+    public $removePrinterModalShow = false;
+    public $printerToRemoveId = null;
     
     // Separate properties for form binding
     public $group_name = '';
@@ -182,13 +184,32 @@ class Show extends Component
 
     public function removePrinter($printerId)
     {
-        $printer = Printer::find($printerId);
+        // kept for backward compatibility if called directly
+        $this->openRemovePrinterModal($printerId);
+    }
+
+    public function openRemovePrinterModal($printerId)
+    {
+        $this->printerToRemoveId = $printerId;
+        $this->removePrinterModalShow = true;
+    }
+
+    public function closeRemovePrinterModal()
+    {
+        $this->removePrinterModalShow = false;
+        $this->printerToRemoveId = null;
+    }
+
+    public function confirmRemovePrinter()
+    {
+        $printer = $this->printerToRemoveId ? Printer::find($this->printerToRemoveId) : null;
         if ($printer) {
             $this->group->removePrinter($printer);
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => 'Drucker wurde entfernt'
-            ]);
         }
+        $this->closeRemovePrinterModal();
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'message' => 'Drucker wurde entfernt'
+        ]);
     }
 }

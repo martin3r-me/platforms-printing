@@ -17,6 +17,8 @@ class Show extends Component
     public $isDirty = false;
     public $groupAssignmentModalShow = false;
     public $selectedGroupId = null;
+    public $removeGroupModalShow = false;
+    public $groupToRemoveId = null;
     
     // Separate properties for form binding
     public $printer_name = '';
@@ -194,13 +196,32 @@ class Show extends Component
 
     public function removeGroup($groupId)
     {
-        $group = PrinterGroup::find($groupId);
+        // kept for backward compatibility if called directly
+        $this->openRemoveGroupModal($groupId);
+    }
+
+    public function openRemoveGroupModal($groupId)
+    {
+        $this->groupToRemoveId = $groupId;
+        $this->removeGroupModalShow = true;
+    }
+
+    public function closeRemoveGroupModal()
+    {
+        $this->removeGroupModalShow = false;
+        $this->groupToRemoveId = null;
+    }
+
+    public function confirmRemoveGroup()
+    {
+        $group = $this->groupToRemoveId ? PrinterGroup::find($this->groupToRemoveId) : null;
         if ($group) {
             $this->printer->removeFromGroup($group);
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => 'Gruppe wurde entfernt'
-            ]);
         }
+        $this->closeRemoveGroupModal();
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'message' => 'Gruppe wurde entfernt'
+        ]);
     }
 }

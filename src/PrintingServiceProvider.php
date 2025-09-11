@@ -10,6 +10,7 @@ use Platform\Core\PlatformCore;
 use Platform\Core\Routing\ModuleRouter;
 use Platform\Printing\Contracts\PrintingServiceInterface;
 use Platform\Printing\Services\PrintingService;
+use Platform\Printing\Http\Middleware\VerifyPrinterBasicAuth;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
@@ -73,6 +74,9 @@ class PrintingServiceProvider extends ServiceProvider
         ], 'printing-config');
 
         $this->mergeConfigFrom(__DIR__.'/../config/printing.php', 'printing');
+
+        // Middleware registrieren
+        $this->app['router']->aliasMiddleware('verify.printer.basic', VerifyPrinterBasicAuth::class);
 
         // Migrations, Views, Livewire-Komponenten
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');

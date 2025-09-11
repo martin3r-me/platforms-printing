@@ -286,7 +286,8 @@ class PrintingService implements PrintingServiceInterface
         // Aber wenn der Model-Name bereits das Modul enthält, verwende nur den Model-Namen
         $kebabModelName = \Illuminate\Support\Str::kebab($modelName);
         
-        if (str_starts_with($kebabModelName, $moduleName . '-')) {
+        // Spezielle Behandlung für Models die bereits das Modul im Namen haben
+        if ($kebabModelName === $moduleName . '-ticket') {
             // HelpdeskTicket -> helpdesk-ticket (Modul bereits enthalten)
             return $kebabModelName;
         }

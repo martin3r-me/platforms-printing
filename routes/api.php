@@ -8,151 +8,172 @@ use Platform\Printing\Models\Printer;
 use Platform\Printing\Models\PrintJob;
 use Platform\Printing\Services\PrintingService;
 
-// CloudPRNT Poll Endpoint
-Route::post('/poll', function (Request $request) {
-    Log::info('CloudPRNT Poll', [
-        'timestamp' => now()->toDateTimeString(),
-        'ip' => $request->ip(),
-        'user_agent' => $request->userAgent(),
-        'username' => $request->input('username'),
-    ]);
+// Alle API-Routen mit Basic Auth Middleware
+Route::middleware('verify.printer.basic')->group(function () {
 
-    // Validiere Drucker-Anmeldedaten
-    $username = $request->input('username');
-    $password = $request->input('password');
-
-    if (!$username || !$password) {
-        Log::warning('CloudPRNT Poll ohne Anmeldedaten', [
+    // CloudPRNT Poll Endpoint
+    Route::post('/poll', function (Request $request) {
+        Log::info('CloudPRNT Poll', [
+            'timestamp' => now()->toDateTimeString(),
             'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'username' => $request->input('username'),
         ]);
-        return response()->json(['error' => 'Anmeldedaten erforderlich'], 401);
-    }
 
-    $printer = app(PrintingService::class)->validatePrinterCredentials($username, $password);
-    
-    if (!$printer) {
-        Log::warning('CloudPRNT Poll mit ungültigen Anmeldedaten', [
-            'username' => $username,
+        // Drucker ist bereits durch Middleware validiert
+        $printer = $request->attributes->get('printer');
+
+        // Hole nächsten Job für diesen Drucker
+        $job = app(PrintingService::class)->getNextJobForPrinter($printer->id);
+
+        if (!$job) {
+            Log::info('CloudPRNT Poll - Keine Jobs verfügbar', [
+                'printer_id' => $printer->id,
+                'printer_name' => $printer->name,
+            ]);
+            return response()->json(['status' => 'no_job']);
+        }
+
+        Log::info('CloudPRNT Poll - Job gefunden', [
+            'printer_id' => $printer->id,
+            'job_id' => $job->id,
+            'job_uuid' => $job->uuid,
+        ]);
+
+        return response()->json([
+            'status' => 'job_available',
+            'job_uuid' => $job->uuid,
+            'job_url' => route('printing.api.job.download', $job->uuid),
+            'confirm_url' => route('printing.api.job.confirm', $job->uuid),
+        ]);
+    })->name('printing.api.poll');
+
+    // Job Download Endpoint
+    Route::get('/job/{uuid}', function (Request $request, string $uuid) {
+        Log::info('CloudPRNT Job Download', [
+            'timestamp' => now()->toDateTimeString(),
             'ip' => $request->ip(),
+            'job_uuid' => $uuid,
         ]);
-        return response()->json(['error' => 'Ungültige Anmeldedaten'], 401);
-    }
 
-    // Hole nächsten Job für diesen Drucker
-    $job = app(PrintingService::class)->getNextJobForPrinter($printer->id);
+        // Drucker ist bereits durch Middleware validiert
+        $printer = $request->attributes->get('printer');
 
-    if (!$job) {
-        return response()->json(['jobReady' => false], 200);
-    }
+        $job = PrintJob::where('uuid', $uuid)
+            ->where('printer_id', $printer->id)
+            ->where('status', 'pending')
+            ->first();
 
-    Log::info('CloudPRNT Job bereitgestellt', [
-        'printer_id' => $printer->id,
-        'printer_name' => $printer->name,
-        'job_id' => $job->id,
-        'job_uuid' => $job->uuid,
-    ]);
+        if (!$job) {
+            Log::warning('CloudPRNT Job Download - Job nicht gefunden', [
+                'job_uuid' => $uuid,
+                'printer_id' => $printer->id,
+            ]);
+            return response()->json(['error' => 'Job nicht gefunden'], 404);
+        }
 
-    // Für den Testfall die UUID als Token verwenden
-    return response()->json([
-        'jobReady' => true,
-        'mediaTypes' => ['text/plain'],
-        'jobToken' => $job->uuid,
-        'jobGetUrl' => url("api/printing/job/{$job->uuid}"),
-        'deleteMethod' => 'DELETE',
-        'jobConfirmationUrl' => url("api/printing/confirm/{$job->uuid}"),
-    ]);
-});
+        // Markiere Job als verarbeitet
+        $job->update(['status' => 'processing']);
 
-// CloudPRNT Job Download
-Route::get('/job/{uuid}', function (string $uuid) {
-    Log::info("CloudPRNT GET job", ['job_uuid' => $uuid]);
+        // Generiere Job-Content
+        $content = app(PrintingService::class)->generateJobContent($job);
 
-    $job = PrintJob::where('uuid', $uuid)->first();
-
-    if (!$job) {
-        Log::warning("CloudPRNT Job nicht gefunden", ['job_uuid' => $uuid]);
-        return response('', 404);
-    }
-
-    // Generiere Job-Inhalt
-    $content = app(PrintingService::class)->generateJobContent($job);
-
-    Log::info("CloudPRNT Job bereitgestellt", [
-        'job_id' => $job->id,
-        'job_uuid' => $job->uuid,
-        'printer_id' => $job->printer_id,
-        'content_length' => strlen($content),
-    ]);
-
-    // Rohdaten (kein JSON/Base64), muss zu mediaTypes passen
-    return Response::make($content, 200, [
-        'Content-Type' => 'text/plain',
-    ]);
-});
-
-// CloudPRNT Job Confirmation
-Route::delete('/confirm/{uuid}', function (string $uuid) {
-    Log::info("CloudPRNT confirm job", ['job_uuid' => $uuid]);
-
-    $job = PrintJob::where('uuid', $uuid)->first();
-
-    if (!$job) {
-        Log::warning("CloudPRNT confirm für unbekannten Job", ['job_uuid' => $uuid]);
-        return response()->json(['error' => 'Job nicht gefunden'], 404);
-    }
-
-    // Markiere Job als abgeschlossen
-    $success = app(PrintingService::class)->markJobAsCompleted($job->id);
-
-    if ($success) {
-        Log::info("CloudPRNT Job bestätigt", [
+        Log::info('CloudPRNT Job Download - Content generiert', [
             'job_id' => $job->id,
             'job_uuid' => $job->uuid,
-            'printer_id' => $job->printer_id,
-            'completed_at' => now()->toDateTimeString(),
+            'content_length' => strlen($content),
         ]);
-    } else {
-        Log::error("CloudPRNT Job-Bestätigung fehlgeschlagen", [
-            'job_id' => $job->id,
-            'job_uuid' => $job->uuid,
+
+        return response($content)
+            ->header('Content-Type', 'text/plain; charset=utf-8')
+            ->header('Content-Length', strlen($content));
+    })->name('printing.api.job.download');
+
+    // Job Confirmation Endpoint
+    Route::delete('/confirm/{uuid}', function (Request $request, string $uuid) {
+        Log::info('CloudPRNT Job Confirmation', [
+            'timestamp' => now()->toDateTimeString(),
+            'ip' => $request->ip(),
+            'job_uuid' => $uuid,
         ]);
-    }
 
-    return response()->noContent(); // 204
-});
+        // Drucker ist bereits durch Middleware validiert
+        $printer = $request->attributes->get('printer');
 
-// CloudPRNT Job Error
-Route::post('/error/{uuid}', function (Request $request, string $uuid) {
-    Log::info("CloudPRNT job error", [
-        'job_uuid' => $uuid,
-        'error' => $request->input('error'),
-    ]);
+        $job = PrintJob::where('uuid', $uuid)
+            ->where('printer_id', $printer->id)
+            ->where('status', 'processing')
+            ->first();
 
-    $job = PrintJob::where('uuid', $uuid)->first();
+        if (!$job) {
+            Log::warning('CloudPRNT Job Confirmation - Job nicht gefunden', [
+                'job_uuid' => $uuid,
+                'printer_id' => $printer->id,
+            ]);
+            return response()->json(['error' => 'Job nicht gefunden'], 404);
+        }
 
-    if (!$job) {
-        Log::warning("CloudPRNT error für unbekannten Job", ['job_uuid' => $uuid]);
-        return response()->json(['error' => 'Job nicht gefunden'], 404);
-    }
+        $success = app(PrintingService::class)->markJobAsCompleted($job->id);
 
-    $errorMessage = $request->input('error', 'Unbekannter Fehler');
-    
-    // Markiere Job als fehlgeschlagen
-    $success = app(PrintingService::class)->markJobAsFailed($job->id, $errorMessage);
+        if ($success) {
+            Log::info('CloudPRNT Job Confirmation - Erfolgreich', [
+                'job_id' => $job->id,
+                'job_uuid' => $job->uuid,
+                'printer_id' => $job->printer_id,
+            ]);
+        } else {
+            Log::error('CloudPRNT Job Confirmation - Fehlgeschlagen', [
+                'job_id' => $job->id,
+                'job_uuid' => $job->uuid,
+            ]);
+        }
 
-    if ($success) {
-        Log::info("CloudPRNT Job als fehlgeschlagen markiert", [
-            'job_id' => $job->id,
-            'job_uuid' => $job->uuid,
-            'printer_id' => $job->printer_id,
-            'error_message' => $errorMessage,
+        return response()->noContent(); // 204
+    })->name('printing.api.job.confirm');
+
+    // Job Error Endpoint
+    Route::post('/error/{uuid}', function (Request $request, string $uuid) {
+        Log::info('CloudPRNT Job Error', [
+            'timestamp' => now()->toDateTimeString(),
+            'ip' => $request->ip(),
+            'job_uuid' => $uuid,
+            'error_message' => $request->input('error_message'),
         ]);
-    } else {
-        Log::error("CloudPRNT Job-Fehler-Markierung fehlgeschlagen", [
-            'job_id' => $job->id,
-            'job_uuid' => $job->uuid,
-        ]);
-    }
 
-    return response()->noContent(); // 204
-});
+        // Drucker ist bereits durch Middleware validiert
+        $printer = $request->attributes->get('printer');
+
+        $job = PrintJob::where('uuid', $uuid)
+            ->where('printer_id', $printer->id)
+            ->whereIn('status', ['processing', 'pending'])
+            ->first();
+
+        if (!$job) {
+            Log::warning('CloudPRNT Job Error - Job nicht gefunden', [
+                'job_uuid' => $uuid,
+                'printer_id' => $printer->id,
+            ]);
+            return response()->json(['error' => 'Job nicht gefunden'], 404);
+        }
+
+        $errorMessage = $request->input('error_message', 'Unbekannter Fehler');
+        $success = app(PrintingService::class)->markJobAsFailed($job->id, $errorMessage);
+
+        if ($success) {
+            Log::info('CloudPRNT Job Error - Als fehlgeschlagen markiert', [
+                'job_id' => $job->id,
+                'job_uuid' => $job->uuid,
+                'printer_id' => $job->printer_id,
+                'error_message' => $errorMessage,
+            ]);
+        } else {
+            Log::error("CloudPRNT Job-Fehler-Markierung fehlgeschlagen", [
+                'job_id' => $job->id,
+                'job_uuid' => $job->uuid,
+            ]);
+        }
+
+        return response()->noContent(); // 204
+    })->name('printing.api.job.error');
+
+}); // Ende der Middleware-Gruppe

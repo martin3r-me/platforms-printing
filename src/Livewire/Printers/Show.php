@@ -26,6 +26,10 @@ class Show extends Component
     public $printer_username = '';
     public $printer_password = '';
     public $printer_is_active = false;
+    public $showPassword = false;
+    public $passwordModalShow = false;
+    public $newPassword = '';
+    public $confirmPassword = '';
 
     protected $queryString = [
         'statusFilter' => ['except' => 'all'],
@@ -43,6 +47,7 @@ class Show extends Component
         $this->printer_username = $printer->username;
         $this->printer_password = '';
         $this->printer_is_active = $printer->is_active;
+        $this->showPassword = false;
     }
 
     public function updated($propertyName)
@@ -223,5 +228,56 @@ class Show extends Component
             'type' => 'success',
             'message' => 'Gruppe wurde entfernt'
         ]);
+    }
+
+    public function togglePasswordVisibility()
+    {
+        $this->showPassword = !$this->showPassword;
+    }
+
+    public function openPasswordModal()
+    {
+        $this->passwordModalShow = true;
+        $this->newPassword = '';
+        $this->confirmPassword = '';
+    }
+
+    public function closePasswordModal()
+    {
+        $this->passwordModalShow = false;
+        $this->newPassword = '';
+        $this->confirmPassword = '';
+    }
+
+    public function updatePassword()
+    {
+        $this->validate([
+            'newPassword' => 'required|string|min:6|max:255',
+            'confirmPassword' => 'required|same:newPassword',
+        ]);
+
+        $this->printer->update([
+            'password' => $this->newPassword
+        ]);
+
+        $this->closePasswordModal();
+
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'message' => 'Passwort wurde erfolgreich geändert'
+        ]);
+    }
+
+    public function getCurrentPasswordProperty()
+    {
+        return $this->showPassword ? $this->printer->password : str_repeat('•', 8);
+    }
+
+    public function getBasicAuthHeaderProperty()
+    {
+        if ($this->printer->username && $this->printer->password) {
+            return 'Basic ' . base64_encode($this->printer->username . ':' . $this->printer->password);
+        }
+        return null;
     }
 }

@@ -28,7 +28,8 @@ class PrintingService implements PrintingServiceInterface
 
         // Wenn eine Gruppe angegeben ist, erstelle Jobs für alle aktiven Drucker der Gruppe
         if ($printerGroupId && !$printerId) {
-            return $this->createJobsForGroup($printable, $template, $data, $printerGroupId);
+            $jobs = $this->createJobsForGroup($printable, $printerGroupId, $template, $data);
+            return $jobs[0]; // Rückgabe des ersten Jobs für Kompatibilität
         }
 
         // Einzelner Drucker-Job
@@ -57,12 +58,12 @@ class PrintingService implements PrintingServiceInterface
     /**
      * Erstellt Print Jobs für alle Drucker in einer Gruppe
      */
-    private function createJobsForGroup(
+    public function createJobsForGroup(
         Model $printable,
-        string $template,
-        array $data,
-        int $printerGroupId
-    ): PrintJob {
+        int $printerGroupId,
+        string $template = 'default',
+        array $data = []
+    ): array {
         $group = PrinterGroup::find($printerGroupId);
         if (!$group) {
             throw new \InvalidArgumentException("Drucker-Gruppe mit ID {$printerGroupId} nicht gefunden");
@@ -108,8 +109,7 @@ class PrintingService implements PrintingServiceInterface
             'printer_count' => $activePrinters->count(),
         ]);
 
-        // Rückgabe des ersten Jobs für Kompatibilität
-        return $jobs[0];
+        return $jobs;
     }
 
 

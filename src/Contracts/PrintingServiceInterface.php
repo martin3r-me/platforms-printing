@@ -51,4 +51,14 @@ interface PrintingServiceInterface
      * Validiert die Drucker-Anmeldedaten
      */
     public function validatePrinterCredentials(string $username, string $password): ?\Platform\Printing\Models\Printer;
+
+    /**
+     * Listet Drucker für Auswahl-UI auf
+     */
+    public function listPrinters(?bool $onlyActive = true, ?int $teamId = null): \Illuminate\Support\Collection;
+
+    /**
+     * Listet Drucker-Gruppen für Auswahl-UI auf
+     */
+    public function listPrinterGroups(?bool $onlyActive = true, ?int $teamId = null): \Illuminate\Support\Collection;
 }

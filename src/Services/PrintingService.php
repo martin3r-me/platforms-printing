@@ -195,35 +195,37 @@ class PrintingService implements PrintingServiceInterface
     }
 
     /**
-     * Rendert ein Template (vereinfachte Version)
+     * Listet Drucker für Auswahl-UI auf
      */
-    protected function renderTemplate(string $template, array $data): string
+    public function listPrinters(?bool $onlyActive = true, ?int $teamId = null): \Illuminate\Support\Collection
     {
-        // Hier würde normalerweise Blade oder eine andere Template-Engine verwendet
-        // Für jetzt geben wir einfachen Text zurück
-        
-        $content = "=== PRINT JOB ===\n";
-        $content .= "Template: {$template}\n";
-        $content .= "Erstellt: {$data['created_at']}\n";
-        $content .= "Team: {$data['team']->name}\n\n";
-
-        if ($data['printable']) {
-            $content .= "Inhalt:\n";
-            $content .= "Typ: {$data['printable']::class}\n";
-            $content .= "ID: {$data['printable']->id}\n";
-            
-            // Spezifische Daten je nach Model
-            if (method_exists($data['printable'], 'title')) {
-                $content .= "Titel: {$data['printable']->title}\n";
-            }
-            
-            if (method_exists($data['printable'], 'description')) {
-                $content .= "Beschreibung: {$data['printable']->description}\n";
-            }
+        $query = Printer::query();
+        if ($onlyActive) {
+            $query->where('is_active', true);
         }
-
-        $content .= "\n=== ENDE ===";
-        
-        return $content;
+        if ($teamId) {
+            $query->where('team_id', $teamId);
+        } elseif (auth()->check() && auth()->user()->currentTeam) {
+            $query->where('team_id', auth()->user()->currentTeam->id);
+        }
+        return $query->orderBy('name')->get(['id','name']);
     }
+
+    /**
+     * Listet Drucker-Gruppen für Auswahl-UI auf
+     */
+    public function listPrinterGroups(?bool $onlyActive = true, ?int $teamId = null): \Illuminate\Support\Collection
+    {
+        $query = PrinterGroup::query();
+        if ($onlyActive) {
+            $query->where('is_active', true);
+        }
+        if ($teamId) {
+            $query->where('team_id', $teamId);
+        } elseif (auth()->check() && auth()->user()->currentTeam) {
+            $query->where('team_id', auth()->user()->currentTeam->id);
+        }
+        return $query->orderBy('name')->get(['id','name']);
+    }
+
 }

@@ -21,10 +21,10 @@
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
         <div class="grid grid-cols-3 gap-4">
             <div class="col-span-2">
-                <x-ui-input-text wire:model.live.debounce.300ms="search" placeholder="Drucker suchen..." />
+                <x-ui-input-text name="search" wire:model.live.debounce.300ms="search" placeholder="Drucker suchen..." />
             </div>
             <div>
-                <x-ui-input-select wire:model.live="statusFilter" label="Status">
+                <x-ui-input-select name="statusFilter" wire:model.live="statusFilter" label="Status">
                     <option value="all">Alle Status</option>
                     <option value="active">Aktiv</option>
                     <option value="inactive">Inaktiv</option>
@@ -92,10 +92,10 @@
                 <h3 class="text-lg font-semibold">Neuer Drucker</h3>
                 <form wire:submit.prevent="createPrinter" class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
-                        <x-ui-input-text wire:model="name" label="Name" />
-                        <x-ui-input-text wire:model="location" label="Standort" />
-                        <x-ui-input-text wire:model="username" label="Benutzername" />
-                        <x-ui-input-text wire:model="password" type="password" label="Passwort" />
+                        <x-ui-input-text name="name" wire:model="name" label="Name" />
+                        <x-ui-input-text name="location" wire:model="location" label="Standort" />
+                        <x-ui-input-text name="username" wire:model="username" label="Benutzername" />
+                        <x-ui-input-text name="password" wire:model="password" type="password" label="Passwort" />
                     </div>
                     <div class="d-flex justify-end gap-2">
                         <x-ui-button type="button" variant="secondary" wire:click="hideCreateModal">Abbrechen</x-ui-button>

@@ -21,10 +21,10 @@
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
         <div class="grid grid-cols-3 gap-4">
             <div>
-                <x-ui-input-text wire:model.live.debounce.300ms="search" placeholder="Jobs suchen..." />
+                <x-ui-input-text name="search" wire:model.live.debounce.300ms="search" placeholder="Jobs suchen..." />
             </div>
             <div>
-                <x-ui-input-select wire:model.live="statusFilter" label="Status">
+                <x-ui-input-select name="statusFilter" wire:model.live="statusFilter" label="Status">
                     <option value="all">Alle Status</option>
                     <option value="pending">Wartend</option>
                     <option value="processing">Verarbeitung</option>
@@ -34,10 +34,10 @@
                 </x-ui-input-select>
             </div>
             <div>
-                <x-ui-input-select wire:model.live="printableTypeFilter" label="Typ">
+                <x-ui-input-select name="printableTypeFilter" wire:model.live="printableTypeFilter" label="Typ">
                     <option value="all">Alle Typen</option>
-                    <option value="Platform\Sales\Models\SalesDeal">Sales Deal</option>
-                    <option value="Platform\Helpdesk\Models\HelpdeskTicket">Helpdesk Ticket</option>
+                    <option value="Platform\\Sales\\Models\\SalesDeal">Sales Deal</option>
+                    <option value="Platform\\Helpdesk\\Models\\HelpdeskTicket">Helpdesk Ticket</option>
                 </x-ui-input-select>
             </div>
         </div>

@@ -26,7 +26,7 @@
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
         <div class="grid grid-cols-4 gap-4 items-end">
             <div class="col-span-3">
-                <x-ui-input-select wire:model.live="statusFilter" label="Status filtern">
+                <x-ui-input-select name="statusFilter" wire:model.live="statusFilter" label="Status filtern">
                     <option value="all">Alle Status</option>
                     <option value="pending">Wartend</option>
                     <option value="processing">Verarbeitung</option>

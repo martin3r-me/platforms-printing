@@ -179,4 +179,16 @@ class Show extends Component
             'message' => 'Drucker-Bearbeitung wird implementiert'
         ]);
     }
+
+    public function removePrinter($printerId)
+    {
+        $printer = Printer::find($printerId);
+        if ($printer) {
+            $this->group->removePrinter($printer);
+            $this->dispatch('notify', [
+                'type' => 'success',
+                'message' => 'Drucker wurde entfernt'
+            ]);
+        }
+    }
 }

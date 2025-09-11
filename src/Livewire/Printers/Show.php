@@ -191,4 +191,16 @@ class Show extends Component
             'message' => 'Gruppen-Bearbeitung wird implementiert'
         ]);
     }
+
+    public function removeGroup($groupId)
+    {
+        $group = PrinterGroup::find($groupId);
+        if ($group) {
+            $this->printer->removeFromGroup($group);
+            $this->dispatch('notify', [
+                'type' => 'success',
+                'message' => 'Gruppe wurde entfernt'
+            ]);
+        }
+    }
 }

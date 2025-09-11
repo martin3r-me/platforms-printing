@@ -224,6 +224,16 @@
                         <div class="d-flex items-center gap-2 p-2 bg-muted-5 rounded cursor-pointer" wire:click="editGroup({{ $group->id }})">
                             <span class="flex-grow-1 text-sm">{{ $group->name }}</span>
                             <x-ui-badge variant="primary" size="xs">{{ $group->is_active ? 'Aktiv' : 'Inaktiv' }}</x-ui-badge>
+                            <div class="flex-shrink-0" @click.stop>
+                                <x-ui-confirm-button 
+                                    action="removeGroup"
+                                    :params="[$group->id]"
+                                    text="Entfernen" 
+                                    confirmText="Aus Gruppe entfernen?" 
+                                    variant="danger-outline"
+                                    :icon="@svg('heroicon-o-x-mark', 'w-4 h-4')->toHtml()"
+                                />
+                            </div>
                         </div>
                     @endforeach
                     @if($printer->groups->count() === 0)

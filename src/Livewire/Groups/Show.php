@@ -53,7 +53,10 @@ class Show extends Component
         // Refresh group data
         $this->group = $this->group->fresh(['printers', 'activities']);
         
-        $jobs = PrintJob::where('printer_group_id', $this->group->id)
+        // Jobs für alle Drucker in dieser Gruppe
+        $printerIds = $this->group->printers()->pluck('printers.id');
+        
+        $jobs = PrintJob::whereIn('printer_id', $printerIds)
             ->when($this->statusFilter !== 'all', function ($query) {
                 $query->where('status', $this->statusFilter);
             })
@@ -62,10 +65,10 @@ class Show extends Component
             ->paginate(20);
 
         $stats = [
-            'total' => PrintJob::where('printer_group_id', $this->group->id)->count(),
-            'pending' => PrintJob::where('printer_group_id', $this->group->id)->pending()->count(),
-            'completed' => PrintJob::where('printer_group_id', $this->group->id)->completed()->count(),
-            'failed' => PrintJob::where('printer_group_id', $this->group->id)->failed()->count(),
+            'total' => PrintJob::whereIn('printer_id', $printerIds)->count(),
+            'pending' => PrintJob::whereIn('printer_id', $printerIds)->pending()->count(),
+            'completed' => PrintJob::whereIn('printer_id', $printerIds)->completed()->count(),
+            'failed' => PrintJob::whereIn('printer_id', $printerIds)->failed()->count(),
         ];
 
         $availablePrinters = Printer::where('is_active', true)

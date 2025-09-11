@@ -47,10 +47,6 @@ interface PrintingServiceInterface
      */
     public function generateJobContent(\Platform\Printing\Models\PrintJob $job): string;
 
-    /**
-     * Validiert die Drucker-Anmeldedaten
-     */
-    public function validatePrinterCredentials(string $username, string $password): ?\Platform\Printing\Models\Printer;
 
     /**
      * Listet Drucker für Auswahl-UI auf

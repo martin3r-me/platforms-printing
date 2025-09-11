@@ -25,13 +25,20 @@ class PrintingService implements PrintingServiceInterface
         if ($template === null) {
             $template = $this->getDefaultTemplateForModel($printable);
         }
+
+        // Wenn eine Gruppe angegeben ist, erstelle Jobs für alle aktiven Drucker der Gruppe
+        if ($printerGroupId && !$printerId) {
+            return $this->createJobsForGroup($printable, $template, $data, $printerGroupId);
+        }
+
+        // Einzelner Drucker-Job
         $printJob = PrintJob::create([
             'printable_type' => get_class($printable),
             'printable_id' => $printable->id,
             'template' => $template,
             'data' => $data,
             'printer_id' => $printerId,
-            'printer_group_id' => $printerGroupId,
+            'printer_group_id' => null, // Keine Gruppen-Jobs mehr
             'user_id' => auth()->id(),
             'team_id' => auth()->user()->currentTeam->id,
         ]);
@@ -42,7 +49,6 @@ class PrintingService implements PrintingServiceInterface
             'printable_id' => $printable->id,
             'template' => $template,
             'printer_id' => $printerId,
-            'printer_group_id' => $printerGroupId,
         ]);
 
         return $printJob;
@@ -51,42 +57,67 @@ class PrintingService implements PrintingServiceInterface
     /**
      * Erstellt Print Jobs für alle Drucker in einer Gruppe
      */
-    public function createJobsForGroup(
+    private function createJobsForGroup(
         Model $printable,
-        int $printerGroupId,
-        string $template = 'default',
-        array $data = []
-    ): array {
-        $group = PrinterGroup::findOrFail($printerGroupId);
-        $jobs = [];
-
-        foreach ($group->printers()->active()->get() as $printer) {
-            $jobs[] = $this->createJob(
-                $printable,
-                $template,
-                $data,
-                $printer->id,
-                $printerGroupId
-            );
+        string $template,
+        array $data,
+        int $printerGroupId
+    ): PrintJob {
+        $group = PrinterGroup::find($printerGroupId);
+        if (!$group) {
+            throw new \InvalidArgumentException("Drucker-Gruppe mit ID {$printerGroupId} nicht gefunden");
         }
 
-        Log::info('Print Jobs für Gruppe erstellt', [
+        $activePrinters = $group->printers()->where('is_active', true)->get();
+        
+        if ($activePrinters->isEmpty()) {
+            throw new \InvalidArgumentException("Keine aktiven Drucker in der Gruppe '{$group->name}' gefunden");
+        }
+
+        $jobs = [];
+        foreach ($activePrinters as $printer) {
+            $job = PrintJob::create([
+                'printable_type' => get_class($printable),
+                'printable_id' => $printable->id,
+                'template' => $template,
+                'data' => $data,
+                'printer_id' => $printer->id,
+                'printer_group_id' => null, // Keine Gruppen-Jobs mehr
+                'user_id' => auth()->id(),
+                'team_id' => auth()->user()->currentTeam->id,
+            ]);
+
+            $jobs[] = $job;
+
+            Log::info('Print Job für Gruppe erstellt', [
+                'job_id' => $job->id,
+                'printable_type' => $printable::class,
+                'printable_id' => $printable->id,
+                'template' => $template,
+                'printer_id' => $printer->id,
+                'printer_name' => $printer->name,
+                'group_id' => $printerGroupId,
+                'group_name' => $group->name,
+            ]);
+        }
+
+        Log::info('Gruppen-Print Jobs erstellt', [
             'group_id' => $printerGroupId,
-            'jobs_count' => count($jobs),
-            'printable_type' => $printable::class,
-            'printable_id' => $printable->id,
+            'group_name' => $group->name,
+            'job_count' => count($jobs),
+            'printer_count' => $activePrinters->count(),
         ]);
 
-        return $jobs;
+        // Rückgabe des ersten Jobs für Kompatibilität
+        return $jobs[0];
     }
+
 
     /**
      * Holt den nächsten wartenden Job für einen Drucker
      */
     public function getNextJobForPrinter(int $printerId): ?PrintJob
     {
-        $printer = Printer::findOrFail($printerId);
-
         // Suche nach Jobs für diesen spezifischen Drucker
         $job = PrintJob::where('printer_id', $printerId)
             ->where('status', 'pending')
@@ -96,23 +127,6 @@ class PrintingService implements PrintingServiceInterface
         if ($job) {
             $job->markAsProcessing();
             return $job;
-        }
-
-        // Suche nach Jobs für Gruppen, in denen der Drucker ist
-        $groupIds = $printer->groups()->pluck('printer_groups.id');
-        
-        if ($groupIds->isNotEmpty()) {
-            $job = PrintJob::whereIn('printer_group_id', $groupIds)
-                ->where('status', 'pending')
-                ->orderBy('created_at', 'asc')
-                ->first();
-
-            if ($job) {
-                // Setze den spezifischen Drucker für diesen Job
-                $job->update(['printer_id' => $printerId]);
-                $job->markAsProcessing();
-                return $job;
-            }
         }
 
         return null;
@@ -296,16 +310,6 @@ class PrintingService implements PrintingServiceInterface
         return strtolower($moduleName . '-' . $kebabModelName);
     }
 
-    /**
-     * Validiert die Drucker-Anmeldedaten
-     */
-    public function validatePrinterCredentials(string $username, string $password): ?Printer
-    {
-        return Printer::where('username', $username)
-            ->where('password', $password)
-            ->where('is_active', true)
-            ->first();
-    }
 
     /**
      * Listet Drucker für Auswahl-UI auf

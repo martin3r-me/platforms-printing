@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Platform\Printing\Models\PrinterGroup;
 use Platform\Printing\Models\PrintJob;
+use Platform\Printing\Models\Printer;
 
 class Show extends Component
 {
@@ -13,9 +14,14 @@ class Show extends Component
 
     public PrinterGroup $group;
     public $statusFilter = 'all';
+    public $isDirty = false;
 
     protected $queryString = [
         'statusFilter' => ['except' => 'all'],
+    ];
+
+    protected $listeners = [
+        'groupUpdated' => '$refresh',
     ];
 
     public function mount(PrinterGroup $group)
@@ -23,8 +29,18 @@ class Show extends Component
         $this->group = $group;
     }
 
+    public function updated($propertyName)
+    {
+        if (str_starts_with($propertyName, 'group.')) {
+            $this->isDirty = true;
+        }
+    }
+
     public function render()
     {
+        // Refresh group data
+        $this->group = $this->group->fresh(['printers', 'activities']);
+        
         $jobs = PrintJob::where('printer_group_id', $this->group->id)
             ->when($this->statusFilter !== 'all', function ($query) {
                 $query->where('status', $this->statusFilter);
@@ -81,6 +97,40 @@ class Show extends Component
         $this->dispatch('notify', [
             'type' => 'success',
             'message' => 'Job abgebrochen'
+        ]);
+    }
+
+    public function save()
+    {
+        $this->validate([
+            'group.name' => 'required|string|max:255',
+            'group.description' => 'nullable|string|max:255',
+        ]);
+
+        $this->group->save();
+        $this->isDirty = false;
+
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'message' => 'Gruppe erfolgreich gespeichert'
+        ]);
+    }
+
+    public function addPrinter()
+    {
+        // TODO: Implement printer assignment modal
+        $this->dispatch('notify', [
+            'type' => 'info',
+            'message' => 'Drucker-Zuweisung wird implementiert'
+        ]);
+    }
+
+    public function editPrinter($printerId)
+    {
+        // TODO: Implement printer editing
+        $this->dispatch('notify', [
+            'type' => 'info',
+            'message' => 'Drucker-Bearbeitung wird implementiert'
         ]);
     }
 }

@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Platform\ActivityLog\Traits\LogsActivity;
 
 class PrinterGroup extends Model
 {
+    use LogsActivity;
     protected $fillable = [
         'name',
         'description',

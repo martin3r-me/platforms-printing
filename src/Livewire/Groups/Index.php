@@ -18,10 +18,16 @@ class Index extends Component
 
     // CRM-konformes Modal-Flag
     public $modalShow = false;
+    public $editModalShow = false;
 
     // Formularfelder für neue Gruppe
     public $name = '';
     public $description = '';
+
+    // Formularfelder für bearbeitende Gruppe
+    public $edit_name = '';
+    public $edit_description = '';
+    public $editingGroupId = null;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -100,6 +106,25 @@ class Index extends Component
     public function closeCreateModal()
     {
         $this->modalShow = false;
+    }
+
+    // Edit Modal
+    public function openEditModal($groupId)
+    {
+        $group = PrinterGroup::find($groupId);
+        if ($group) {
+            $this->editingGroupId = $groupId;
+            $this->edit_name = $group->name;
+            $this->edit_description = $group->description;
+            $this->editModalShow = true;
+        }
+    }
+
+    public function closeEditModal()
+    {
+        $this->editModalShow = false;
+        $this->editingGroupId = null;
+        $this->reset(['edit_name', 'edit_description']);
     }
 
     // Rückwärtskompatibilität

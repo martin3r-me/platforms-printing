@@ -31,11 +31,12 @@
 
                 <x-ui-table-body>
                     @foreach($groups as $group)
-                        <x-ui-table-row>
+                        <x-ui-table-row 
+                            clickable="true" 
+                            :href="route('printing.groups.show', ['group' => $group->id])"
+                        >
                             <x-ui-table-cell>
-                                <a href="{{ route('printing.groups.show', $group) }}" class="text-primary hover:underline">
-                                    {{ $group->name }}
-                                </a>
+                                {{ $group->name }}
                             </x-ui-table-cell>
                             <x-ui-table-cell>{{ $group->description ?: '–' }}</x-ui-table-cell>
                             <x-ui-table-cell>{{ $group->printers->count() }}</x-ui-table-cell>
@@ -46,6 +47,9 @@
                             </x-ui-table-cell>
                             <x-ui-table-cell align="right">
                                 <div class="d-flex items-center gap-2 justify-end">
+                                    <x-ui-button wire:click="openEditModal({{ $group->id }})" size="sm" variant="secondary">
+                                        Bearbeiten
+                                    </x-ui-button>
                                     <x-ui-button wire:click="toggleActive({{ $group->id }})" size="sm" variant="secondary">
                                         {{ $group->is_active ? 'Deaktivieren' : 'Aktivieren' }}
                                     </x-ui-button>
@@ -91,6 +95,33 @@
                 </x-ui-button>
                 <x-ui-button type="button" variant="primary" wire:click="createGroup">
                     Gruppe anlegen
+                </x-ui-button>
+            </div>
+        </x-slot>
+    </x-ui-modal>
+
+    <!-- Edit Modal -->
+    <x-ui-modal wire:model="editModalShow" size="lg">
+        <x-slot name="header">
+            Gruppe bearbeiten
+        </x-slot>
+
+        <div class="space-y-4">
+            <form class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <x-ui-input-text name="edit_name" wire:model.live="edit_name" label="Name" />
+                    <x-ui-input-text name="edit_description" wire:model.live="edit_description" label="Beschreibung" />
+                </div>
+            </form>
+        </div>
+
+        <x-slot name="footer">
+            <div class="d-flex justify-end gap-2">
+                <x-ui-button type="button" variant="secondary-outline" @click="$wire.closeEditModal()">
+                    Abbrechen
+                </x-ui-button>
+                <x-ui-button type="button" variant="primary" wire:click="updateGroup">
+                    Speichern
                 </x-ui-button>
             </div>
         </x-slot>

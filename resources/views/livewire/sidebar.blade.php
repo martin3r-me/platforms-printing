@@ -18,20 +18,6 @@
             <span x-show="!collapsed" class="truncate">Dashboard</span>
         </a>
 
-        {{-- Drucker --}}
-        <a href="{{ route('printing.printers.index') }}"
-           class="relative d-flex items-center p-2 my-1 rounded-md font-medium transition"
-           :class="[
-               window.location.pathname.includes('/printing/printers')
-                   ? 'bg-primary text-on-primary shadow-md'
-                   : 'text-black hover:bg-primary-10 hover:text-primary hover:shadow-md',
-               collapsed ? 'justify-center' : 'gap-3'
-           ]"
-           wire:navigate>
-            <x-heroicon-o-printer class="w-6 h-6 flex-shrink-0"/>
-            <span x-show="!collapsed" class="truncate">Drucker</span>
-        </a>
-
         {{-- Gruppen --}}
         <a href="{{ route('printing.groups.index') }}"
            class="relative d-flex items-center p-2 my-1 rounded-md font-medium transition"
@@ -44,6 +30,20 @@
            wire:navigate>
             <x-heroicon-o-folder class="w-6 h-6 flex-shrink-0"/>
             <span x-show="!collapsed" class="truncate">Gruppen</span>
+        </a>
+
+        {{-- Drucker --}}
+        <a href="{{ route('printing.printers.index') }}"
+           class="relative d-flex items-center p-2 my-1 rounded-md font-medium transition"
+           :class="[
+               window.location.pathname.includes('/printing/printers')
+                   ? 'bg-primary text-on-primary shadow-md'
+                   : 'text-black hover:bg-primary-10 hover:text-primary hover:shadow-md',
+               collapsed ? 'justify-center' : 'gap-3'
+           ]"
+           wire:navigate>
+            <x-heroicon-o-printer class="w-6 h-6 flex-shrink-0"/>
+            <span x-show="!collapsed" class="truncate">Drucker</span>
         </a>
 
         {{-- Print Jobs --}}

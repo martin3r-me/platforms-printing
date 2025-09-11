@@ -18,12 +18,21 @@ class Index extends Component
 
     // CRM-konformes Modal-Flag
     public $modalShow = false;
+    public $editModalShow = false;
     
     // Form fields for creating printer
     public $name = '';
     public $location = '';
     public $username = '';
     public $password = '';
+    public $group_id = null;
+
+    // Form fields for editing printer
+    public $edit_name = '';
+    public $edit_location = '';
+    public $edit_username = '';
+    public $edit_password = '';
+    public $editingPrinterId = null;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -51,8 +60,11 @@ class Index extends Component
             ->orderBy('name')
             ->paginate(20);
 
+        $groups = PrinterGroup::where('is_active', true)->orderBy('name')->get();
+
         return view('printing::livewire.printers.index', [
             'printers' => $printers,
+            'groups' => $groups,
         ])->layout('platform::layouts.app');
     }
 
@@ -105,6 +117,27 @@ class Index extends Component
         $this->modalShow = false;
     }
 
+    // Edit Modal
+    public function openEditModal($printerId)
+    {
+        $printer = Printer::find($printerId);
+        if ($printer) {
+            $this->editingPrinterId = $printerId;
+            $this->edit_name = $printer->name;
+            $this->edit_location = $printer->location;
+            $this->edit_username = $printer->username;
+            $this->edit_password = '';
+            $this->editModalShow = true;
+        }
+    }
+
+    public function closeEditModal()
+    {
+        $this->editModalShow = false;
+        $this->editingPrinterId = null;
+        $this->reset(['edit_name', 'edit_location', 'edit_username', 'edit_password']);
+    }
+
     // Rückwärtskompatibilität
     public function showCreateModal()
     {
@@ -151,14 +184,53 @@ class Index extends Component
             $data['password'] = $this->password;
         }
 
+        if ($this->group_id) {
+            $data['printer_group_id'] = $this->group_id;
+        }
+
         Printer::create($data);
 
         $this->closeCreateModal();
-        $this->reset(['name', 'location', 'username', 'password']);
+        $this->reset(['name', 'location', 'username', 'password', 'group_id']);
 
         $this->dispatch('notify', [
             'type' => 'success',
             'message' => 'Drucker erfolgreich erstellt'
         ]);
+    }
+
+    public function updatePrinter()
+    {
+        $this->validate([
+            'edit_name' => 'required|string|max:255',
+            'edit_location' => 'nullable|string|max:255',
+            'edit_username' => 'nullable|string|max:255|unique:printers,username,' . $this->editingPrinterId,
+            'edit_password' => 'nullable|string|max:255',
+        ]);
+
+        $printer = Printer::find($this->editingPrinterId);
+        if ($printer) {
+            $data = [
+                'name' => $this->edit_name,
+                'location' => $this->edit_location,
+            ];
+
+            if ($this->edit_username) {
+                $data['username'] = $this->edit_username;
+            }
+
+            if ($this->edit_password) {
+                $data['password'] = $this->edit_password;
+            }
+
+            $printer->update($data);
+
+            $this->closeEditModal();
+
+            $this->dispatch('notify', [
+                'type' => 'success',
+                'message' => 'Drucker erfolgreich aktualisiert'
+            ]);
+        }
     }
 }

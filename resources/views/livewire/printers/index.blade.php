@@ -31,11 +31,12 @@
 
                 <x-ui-table-body>
                     @foreach($printers as $printer)
-                        <x-ui-table-row>
+                        <x-ui-table-row 
+                            clickable="true" 
+                            :href="route('printing.printers.show', ['printer' => $printer->id])"
+                        >
                             <x-ui-table-cell>
-                                <a href="{{ route('printing.printers.show', $printer) }}" class="text-primary hover:underline">
-                                    {{ $printer->name }}
-                                </a>
+                                {{ $printer->name }}
                             </x-ui-table-cell>
                             <x-ui-table-cell>{{ $printer->location }}</x-ui-table-cell>
                             <x-ui-table-cell>{{ $printer->username ?: '–' }}</x-ui-table-cell>
@@ -46,6 +47,9 @@
                             </x-ui-table-cell>
                             <x-ui-table-cell align="right">
                                 <div class="d-flex items-center gap-2 justify-end">
+                                    <x-ui-button wire:click="openEditModal({{ $printer->id }})" size="sm" variant="secondary">
+                                        Bearbeiten
+                                    </x-ui-button>
                                     <x-ui-button wire:click="toggleActive({{ $printer->id }})" size="sm" variant="secondary">
                                         {{ $printer->is_active ? 'Deaktivieren' : 'Aktivieren' }}
                                     </x-ui-button>
@@ -83,6 +87,18 @@
                     <x-ui-input-text name="username" wire:model.live="username" label="Benutzername" />
                     <x-ui-input-text name="password" wire:model.live="password" type="password" label="Passwort" />
                 </div>
+                <div class="grid grid-cols-1 gap-4">
+                    <x-ui-input-select
+                        name="group_id"
+                        label="Gruppe"
+                        :options="$groups"
+                        optionValue="id"
+                        optionLabel="name"
+                        :nullable="true"
+                        nullLabel="– Gruppe auswählen –"
+                        wire:model.live="group_id"
+                    />
+                </div>
             </form>
         </div>
 
@@ -93,6 +109,35 @@
                 </x-ui-button>
                 <x-ui-button type="button" variant="primary" wire:click="createPrinter">
                     Drucker anlegen
+                </x-ui-button>
+            </div>
+        </x-slot>
+    </x-ui-modal>
+
+    <!-- Edit Modal -->
+    <x-ui-modal wire:model="editModalShow" size="lg">
+        <x-slot name="header">
+            Drucker bearbeiten
+        </x-slot>
+
+        <div class="space-y-4">
+            <form class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <x-ui-input-text name="edit_name" wire:model.live="edit_name" label="Name" />
+                    <x-ui-input-text name="edit_location" wire:model.live="edit_location" label="Standort" />
+                    <x-ui-input-text name="edit_username" wire:model.live="edit_username" label="Benutzername" />
+                    <x-ui-input-text name="edit_password" wire:model.live="edit_password" type="password" label="Passwort" />
+                </div>
+            </form>
+        </div>
+
+        <x-slot name="footer">
+            <div class="d-flex justify-end gap-2">
+                <x-ui-button type="button" variant="secondary-outline" @click="$wire.closeEditModal()">
+                    Abbrechen
+                </x-ui-button>
+                <x-ui-button type="button" variant="primary" wire:click="updatePrinter">
+                    Speichern
                 </x-ui-button>
             </div>
         </x-slot>

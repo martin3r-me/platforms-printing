@@ -17,6 +17,11 @@ class Show extends Component
     public $isDirty = false;
     public $printerAssignmentModalShow = false;
     public $selectedPrinterId = null;
+    
+    // Separate properties for form binding
+    public $group_name = '';
+    public $group_description = '';
+    public $group_is_active = false;
 
     protected $queryString = [
         'statusFilter' => ['except' => 'all'],
@@ -29,11 +34,14 @@ class Show extends Component
     public function mount(PrinterGroup $group)
     {
         $this->group = $group;
+        $this->group_name = $group->name;
+        $this->group_description = $group->description;
+        $this->group_is_active = $group->is_active;
     }
 
     public function updated($propertyName)
     {
-        if (str_starts_with($propertyName, 'group.')) {
+        if (in_array($propertyName, ['group_name', 'group_description', 'group_is_active'])) {
             $this->isDirty = true;
         }
     }
@@ -112,11 +120,16 @@ class Show extends Component
     public function save()
     {
         $this->validate([
-            'group.name' => 'required|string|max:255',
-            'group.description' => 'nullable|string|max:255',
+            'group_name' => 'required|string|max:255',
+            'group_description' => 'nullable|string|max:255',
         ]);
 
-        $this->group->save();
+        $this->group->update([
+            'name' => $this->group_name,
+            'description' => $this->group_description,
+            'is_active' => $this->group_is_active,
+        ]);
+        
         $this->isDirty = false;
 
         $this->dispatch('notify', [

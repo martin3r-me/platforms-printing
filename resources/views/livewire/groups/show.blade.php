@@ -35,19 +35,19 @@
                 <h3 class="text-lg font-semibold mb-4 text-secondary">Gruppen-Daten</h3>
                 <div class="grid grid-cols-2 gap-4">
                     <x-ui-input-text 
-                        name="group.name"
+                        name="group_name"
                         label="Name"
-                        wire:model.live.debounce.500ms="group.name"
+                        wire:model.live.debounce.500ms="group_name"
                         placeholder="Gruppenname eingeben..."
                         required
-                        :errorKey="'group.name'"
+                        :errorKey="'group_name'"
                     />
                     <x-ui-input-text 
-                        name="group.description"
+                        name="group_description"
                         label="Beschreibung"
-                        wire:model.live.debounce.500ms="group.description"
+                        wire:model.live.debounce.500ms="group_description"
                         placeholder="Beschreibung eingeben..."
-                        :errorKey="'group.description'"
+                        :errorKey="'group_description'"
                     />
                 </div>
             </div>
@@ -57,7 +57,7 @@
                 <h3 class="text-lg font-semibold mb-4 text-secondary">Status & Einstellungen</h3>
                 <div class="grid grid-cols-2 gap-4">
                     <x-ui-input-checkbox
-                        model="group.is_active"
+                        model="group_is_active"
                         checked-label="Aktiv"
                         unchecked-label="Gruppe ist aktiv"
                         size="md"

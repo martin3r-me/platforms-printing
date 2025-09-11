@@ -35,36 +35,36 @@
                 <h3 class="text-lg font-semibold mb-4 text-secondary">Drucker-Daten</h3>
                 <div class="grid grid-cols-2 gap-4">
                     <x-ui-input-text 
-                        name="printer.name"
+                        name="printer_name"
                         label="Name"
-                        wire:model.live.debounce.500ms="printer.name"
+                        wire:model.live.debounce.500ms="printer_name"
                         placeholder="Druckername eingeben..."
                         required
-                        :errorKey="'printer.name'"
+                        :errorKey="'printer_name'"
                     />
                     <x-ui-input-text 
-                        name="printer.location"
+                        name="printer_location"
                         label="Standort"
-                        wire:model.live.debounce.500ms="printer.location"
+                        wire:model.live.debounce.500ms="printer_location"
                         placeholder="Standort eingeben..."
-                        :errorKey="'printer.location'"
+                        :errorKey="'printer_location'"
                     />
                 </div>
                 <div class="grid grid-cols-2 gap-4 mt-4">
                     <x-ui-input-text 
-                        name="printer.username"
+                        name="printer_username"
                         label="Benutzername"
-                        wire:model.live.debounce.500ms="printer.username"
+                        wire:model.live.debounce.500ms="printer_username"
                         placeholder="Benutzername (optional)"
-                        :errorKey="'printer.username'"
+                        :errorKey="'printer_username'"
                     />
                     <x-ui-input-text 
-                        name="printer.password"
+                        name="printer_password"
                         label="Passwort"
-                        wire:model.live.debounce.500ms="printer.password"
+                        wire:model.live.debounce.500ms="printer_password"
                         type="password"
                         placeholder="Passwort (optional)"
-                        :errorKey="'printer.password'"
+                        :errorKey="'printer_password'"
                     />
                 </div>
             </div>
@@ -74,7 +74,7 @@
                 <h3 class="text-lg font-semibold mb-4 text-secondary">Status & Einstellungen</h3>
                 <div class="grid grid-cols-2 gap-4">
                     <x-ui-input-checkbox
-                        model="printer.is_active"
+                        model="printer_is_active"
                         checked-label="Aktiv"
                         unchecked-label="Drucker ist aktiv"
                         size="md"

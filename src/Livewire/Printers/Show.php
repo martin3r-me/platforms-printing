@@ -17,6 +17,13 @@ class Show extends Component
     public $isDirty = false;
     public $groupAssignmentModalShow = false;
     public $selectedGroupId = null;
+    
+    // Separate properties for form binding
+    public $printer_name = '';
+    public $printer_location = '';
+    public $printer_username = '';
+    public $printer_password = '';
+    public $printer_is_active = false;
 
     protected $queryString = [
         'statusFilter' => ['except' => 'all'],
@@ -29,11 +36,16 @@ class Show extends Component
     public function mount(Printer $printer)
     {
         $this->printer = $printer;
+        $this->printer_name = $printer->name;
+        $this->printer_location = $printer->location;
+        $this->printer_username = $printer->username;
+        $this->printer_password = '';
+        $this->printer_is_active = $printer->is_active;
     }
 
     public function updated($propertyName)
     {
-        if (str_starts_with($propertyName, 'printer.')) {
+        if (in_array($propertyName, ['printer_name', 'printer_location', 'printer_username', 'printer_password', 'printer_is_active'])) {
             $this->isDirty = true;
         }
     }
@@ -112,13 +124,24 @@ class Show extends Component
     public function save()
     {
         $this->validate([
-            'printer.name' => 'required|string|max:255',
-            'printer.location' => 'nullable|string|max:255',
-            'printer.username' => 'nullable|string|max:255|unique:printers,username,' . $this->printer->id,
-            'printer.password' => 'nullable|string|max:255',
+            'printer_name' => 'required|string|max:255',
+            'printer_location' => 'nullable|string|max:255',
+            'printer_username' => 'nullable|string|max:255|unique:printers,username,' . $this->printer->id,
+            'printer_password' => 'nullable|string|max:255',
         ]);
 
-        $this->printer->save();
+        $data = [
+            'name' => $this->printer_name,
+            'location' => $this->printer_location,
+            'username' => $this->printer_username,
+            'is_active' => $this->printer_is_active,
+        ];
+
+        if ($this->printer_password) {
+            $data['password'] = $this->printer_password;
+        }
+
+        $this->printer->update($data);
         $this->isDirty = false;
 
         $this->dispatch('notify', [

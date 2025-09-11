@@ -15,6 +15,9 @@ class Index extends Component
     public $showCreateModal = false;
     public $showEditModal = false;
     public $editingPrinter = null;
+
+    // CRM-konformes Modal-Flag
+    public $modalShow = false;
     
     // Form fields for creating printer
     public $name = '';
@@ -52,8 +55,6 @@ class Index extends Component
             'printers' => $printers,
         ])->layout('platform::layouts.app');
     }
-
-
 
     public function updatedSearch()
     {
@@ -93,14 +94,26 @@ class Index extends Component
         ]);
     }
 
+    // CRM-konform: Open/Close
+    public function openCreateModal()
+    {
+        $this->modalShow = true;
+    }
+
+    public function closeCreateModal()
+    {
+        $this->modalShow = false;
+    }
+
+    // Rückwärtskompatibilität
     public function showCreateModal()
     {
-        $this->showCreateModal = true;
+        $this->openCreateModal();
     }
 
     public function hideCreateModal()
     {
-        $this->showCreateModal = false;
+        $this->closeCreateModal();
     }
 
     public function showEditModal(Printer $printer)
@@ -140,7 +153,7 @@ class Index extends Component
 
         Printer::create($data);
 
-        $this->hideCreateModal();
+        $this->closeCreateModal();
         $this->reset(['name', 'location', 'username', 'password']);
 
         $this->dispatch('notify', [

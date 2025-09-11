@@ -7,7 +7,7 @@
                 <p class="text-gray-600">Verwalten Sie Drucker-Gruppen</p>
             </div>
             <div class="d-flex items-center gap-2">
-                <x-ui-button variant="primary" wire:click="showCreateModal">
+                <x-ui-button variant="primary" wire:click="openCreateModal">
                     <div class="d-flex items-center gap-2">
                         @svg('heroicon-o-plus', 'w-4 h-4')
                         <span>Neue Gruppe</span>
@@ -70,21 +70,29 @@
     <div class="mt-4">{{ $groups->links() }}</div>
 
     <!-- Create Modal -->
-    @if($showCreateModal)
-        <x-ui-modal model="showCreateModal">
-            <div class="space-y-4">
-                <h3 class="text-lg font-semibold">Neue Gruppe</h3>
-                <form wire:submit.prevent="createGroup" class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <x-ui-input-text name="name" wire:model="name" label="Name" />
-                        <x-ui-input-text name="description" wire:model="description" label="Beschreibung" type="textarea" />
-                    </div>
-                    <div class="d-flex justify-end gap-2">
-                        <x-ui-button type="button" variant="secondary" wire:click="hideCreateModal">Abbrechen</x-ui-button>
-                        <x-ui-button type="submit" variant="primary">Erstellen</x-ui-button>
-                    </div>
-                </form>
+    <x-ui-modal wire:model="modalShow" size="lg">
+        <x-slot name="header">
+            Gruppe anlegen
+        </x-slot>
+
+        <div class="space-y-4">
+            <form class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <x-ui-input-text name="name" wire:model.live="name" label="Name" />
+                    <x-ui-input-text name="description" wire:model.live="description" label="Beschreibung" />
+                </div>
+            </form>
+        </div>
+
+        <x-slot name="footer">
+            <div class="d-flex justify-end gap-2">
+                <x-ui-button type="button" variant="secondary-outline" @click="$wire.closeCreateModal()">
+                    Abbrechen
+                </x-ui-button>
+                <x-ui-button type="button" variant="primary" wire:click="createGroup">
+                    Gruppe anlegen
+                </x-ui-button>
             </div>
-        </x-ui-modal>
-    @endif
+        </x-slot>
+    </x-ui-modal>
 </div>

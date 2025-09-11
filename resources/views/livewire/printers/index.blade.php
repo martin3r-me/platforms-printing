@@ -7,7 +7,7 @@
                 <p class="text-gray-600">Verwalten Sie alle Drucker im Team</p>
             </div>
             <div class="d-flex items-center gap-2">
-                <x-ui-button variant="primary" wire:click="showCreateModal">
+                <x-ui-button variant="primary" wire:click="openCreateModal">
                     <div class="d-flex items-center gap-2">
                         @svg('heroicon-o-plus', 'w-4 h-4')
                         <span>Neuer Drucker</span>
@@ -70,23 +70,31 @@
     <div class="mt-4">{{ $printers->links() }}</div>
 
     <!-- Create Modal -->
-    @if($showCreateModal)
-        <x-ui-modal model="showCreateModal">
-            <div class="space-y-4">
-                <h3 class="text-lg font-semibold">Neuer Drucker</h3>
-                <form wire:submit.prevent="createPrinter" class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <x-ui-input-text name="name" wire:model="name" label="Name" />
-                        <x-ui-input-text name="location" wire:model="location" label="Standort" />
-                        <x-ui-input-text name="username" wire:model="username" label="Benutzername" />
-                        <x-ui-input-text name="password" wire:model="password" type="password" label="Passwort" />
-                    </div>
-                    <div class="d-flex justify-end gap-2">
-                        <x-ui-button type="button" variant="secondary" wire:click="hideCreateModal">Abbrechen</x-ui-button>
-                        <x-ui-button type="submit" variant="primary">Erstellen</x-ui-button>
-                    </div>
-                </form>
+    <x-ui-modal wire:model="modalShow" size="lg">
+        <x-slot name="header">
+            Drucker anlegen
+        </x-slot>
+
+        <div class="space-y-4">
+            <form class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <x-ui-input-text name="name" wire:model.live="name" label="Name" />
+                    <x-ui-input-text name="location" wire:model.live="location" label="Standort" />
+                    <x-ui-input-text name="username" wire:model.live="username" label="Benutzername" />
+                    <x-ui-input-text name="password" wire:model.live="password" type="password" label="Passwort" />
+                </div>
+            </form>
+        </div>
+
+        <x-slot name="footer">
+            <div class="d-flex justify-end gap-2">
+                <x-ui-button type="button" variant="secondary-outline" @click="$wire.closeCreateModal()">
+                    Abbrechen
+                </x-ui-button>
+                <x-ui-button type="button" variant="primary" wire:click="createPrinter">
+                    Drucker anlegen
+                </x-ui-button>
             </div>
-        </x-ui-modal>
-    @endif
+        </x-slot>
+    </x-ui-modal>
 </div>

@@ -16,6 +16,13 @@ class Index extends Component
     public $showEditModal = false;
     public $editingGroup = null;
 
+    // CRM-konformes Modal-Flag
+    public $modalShow = false;
+
+    // Formularfelder für neue Gruppe
+    public $name = '';
+    public $description = '';
+
     protected $queryString = [
         'search' => ['except' => ''],
         'statusFilter' => ['except' => 'all'],
@@ -45,8 +52,6 @@ class Index extends Component
             'groups' => $groups,
         ])->layout('platform::layouts.app');
     }
-
-
 
     public function updatedSearch()
     {
@@ -86,14 +91,26 @@ class Index extends Component
         ]);
     }
 
+    // CRM-konform: Open/Close
+    public function openCreateModal()
+    {
+        $this->modalShow = true;
+    }
+
+    public function closeCreateModal()
+    {
+        $this->modalShow = false;
+    }
+
+    // Rückwärtskompatibilität
     public function showCreateModal()
     {
-        $this->showCreateModal = true;
+        $this->openCreateModal();
     }
 
     public function hideCreateModal()
     {
-        $this->showCreateModal = false;
+        $this->closeCreateModal();
     }
 
     public function showEditModal(PrinterGroup $group)
@@ -106,5 +123,28 @@ class Index extends Component
     {
         $this->editingGroup = null;
         $this->showEditModal = false;
+    }
+
+    public function createGroup()
+    {
+        $this->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+        ]);
+
+        PrinterGroup::create([
+            'name' => $this->name,
+            'description' => $this->description ?: null,
+            'team_id' => auth()->user()->currentTeam->id,
+            'is_active' => true,
+        ]);
+
+        $this->closeCreateModal();
+        $this->reset(['name', 'description']);
+
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'message' => 'Gruppe erfolgreich erstellt'
+        ]);
     }
 }

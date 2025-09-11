@@ -169,6 +169,7 @@ class Index extends Component
             'location' => 'nullable|string|max:255',
             'username' => 'nullable|string|max:255|unique:printers,username',
             'password' => 'nullable|string|max:255',
+            'group_id' => 'nullable|exists:printer_groups,id',
         ]);
 
         $data = [

@@ -225,4 +225,37 @@
 
         </div>
     </div>
+
+    <!-- Printer Assignment Modal -->
+    <x-ui-modal wire:model="printerAssignmentModalShow" size="md">
+        <x-slot name="header">
+            Drucker zuweisen
+        </x-slot>
+
+        <div class="space-y-4">
+            <form class="space-y-4">
+                <x-ui-input-select
+                    name="selectedPrinterId"
+                    label="Drucker auswählen"
+                    :options="$availablePrinters"
+                    optionValue="id"
+                    optionLabel="name"
+                    :nullable="true"
+                    nullLabel="– Drucker auswählen –"
+                    wire:model.live="selectedPrinterId"
+                />
+            </form>
+        </div>
+
+        <x-slot name="footer">
+            <div class="d-flex justify-end gap-2">
+                <x-ui-button type="button" variant="secondary-outline" @click="$wire.closePrinterAssignmentModal()">
+                    Abbrechen
+                </x-ui-button>
+                <x-ui-button type="button" variant="primary" wire:click="assignPrinter">
+                    Zuweisen
+                </x-ui-button>
+            </div>
+        </x-slot>
+    </x-ui-modal>
 </div>

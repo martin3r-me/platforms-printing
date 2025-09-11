@@ -242,4 +242,37 @@
 
         </div>
     </div>
+
+    <!-- Group Assignment Modal -->
+    <x-ui-modal wire:model="groupAssignmentModalShow" size="md">
+        <x-slot name="header">
+            Gruppe zuweisen
+        </x-slot>
+
+        <div class="space-y-4">
+            <form class="space-y-4">
+                <x-ui-input-select
+                    name="selectedGroupId"
+                    label="Gruppe auswählen"
+                    :options="$availableGroups"
+                    optionValue="id"
+                    optionLabel="name"
+                    :nullable="true"
+                    nullLabel="– Gruppe auswählen –"
+                    wire:model.live="selectedGroupId"
+                />
+            </form>
+        </div>
+
+        <x-slot name="footer">
+            <div class="d-flex justify-end gap-2">
+                <x-ui-button type="button" variant="secondary-outline" @click="$wire.closeGroupAssignmentModal()">
+                    Abbrechen
+                </x-ui-button>
+                <x-ui-button type="button" variant="primary" wire:click="assignGroup">
+                    Zuweisen
+                </x-ui-button>
+            </div>
+        </x-slot>
+    </x-ui-modal>
 </div>

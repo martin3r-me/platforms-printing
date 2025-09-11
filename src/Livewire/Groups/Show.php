@@ -15,6 +15,8 @@ class Show extends Component
     public PrinterGroup $group;
     public $statusFilter = 'all';
     public $isDirty = false;
+    public $printerAssignmentModalShow = false;
+    public $selectedPrinterId = null;
 
     protected $queryString = [
         'statusFilter' => ['except' => 'all'],
@@ -56,9 +58,16 @@ class Show extends Component
             'failed' => PrintJob::where('printer_group_id', $this->group->id)->failed()->count(),
         ];
 
+        $availablePrinters = Printer::where('is_active', true)
+            ->where('team_id', auth()->user()->currentTeam->id)
+            ->whereNotIn('id', $this->group->printers->pluck('id'))
+            ->orderBy('name')
+            ->get();
+
         return view('printing::livewire.groups.show', [
             'jobs' => $jobs,
             'stats' => $stats,
+            'availablePrinters' => $availablePrinters,
         ])->layout('platform::layouts.app');
     }
 
@@ -118,11 +127,35 @@ class Show extends Component
 
     public function addPrinter()
     {
-        // TODO: Implement printer assignment modal
-        $this->dispatch('notify', [
-            'type' => 'info',
-            'message' => 'Drucker-Zuweisung wird implementiert'
-        ]);
+        $this->printerAssignmentModalShow = true;
+    }
+
+    public function closePrinterAssignmentModal()
+    {
+        $this->printerAssignmentModalShow = false;
+        $this->selectedPrinterId = null;
+    }
+
+    public function assignPrinter()
+    {
+        if (!$this->selectedPrinterId) {
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'Bitte wählen Sie einen Drucker aus'
+            ]);
+            return;
+        }
+
+        $printer = Printer::find($this->selectedPrinterId);
+        if ($printer) {
+            $this->group->addPrinter($printer);
+            $this->closePrinterAssignmentModal();
+
+            $this->dispatch('notify', [
+                'type' => 'success',
+                'message' => 'Drucker wurde der Gruppe zugewiesen'
+            ]);
+        }
     }
 
     public function editPrinter($printerId)

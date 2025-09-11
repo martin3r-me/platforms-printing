@@ -15,6 +15,8 @@ class Show extends Component
     public Printer $printer;
     public $statusFilter = 'all';
     public $isDirty = false;
+    public $groupAssignmentModalShow = false;
+    public $selectedGroupId = null;
 
     protected $queryString = [
         'statusFilter' => ['except' => 'all'],
@@ -56,9 +58,16 @@ class Show extends Component
             'failed' => PrintJob::where('printer_id', $this->printer->id)->failed()->count(),
         ];
 
+        $availableGroups = PrinterGroup::where('is_active', true)
+            ->where('team_id', auth()->user()->currentTeam->id)
+            ->whereNotIn('id', $this->printer->groups->pluck('id'))
+            ->orderBy('name')
+            ->get();
+
         return view('printing::livewire.printers.show', [
             'jobs' => $jobs,
             'stats' => $stats,
+            'availableGroups' => $availableGroups,
         ])->layout('platform::layouts.app');
     }
 
@@ -120,11 +129,35 @@ class Show extends Component
 
     public function addGroup()
     {
-        // TODO: Implement group assignment modal
-        $this->dispatch('notify', [
-            'type' => 'info',
-            'message' => 'Gruppen-Zuweisung wird implementiert'
-        ]);
+        $this->groupAssignmentModalShow = true;
+    }
+
+    public function closeGroupAssignmentModal()
+    {
+        $this->groupAssignmentModalShow = false;
+        $this->selectedGroupId = null;
+    }
+
+    public function assignGroup()
+    {
+        if (!$this->selectedGroupId) {
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'Bitte wählen Sie eine Gruppe aus'
+            ]);
+            return;
+        }
+
+        $group = PrinterGroup::find($this->selectedGroupId);
+        if ($group) {
+            $this->printer->addToGroup($group);
+            $this->closeGroupAssignmentModal();
+
+            $this->dispatch('notify', [
+                'type' => 'success',
+                'message' => 'Drucker wurde der Gruppe zugewiesen'
+            ]);
+        }
     }
 
     public function editGroup($groupId)

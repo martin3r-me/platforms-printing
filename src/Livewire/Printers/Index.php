@@ -5,6 +5,7 @@ namespace Platform\Printing\Livewire\Printers;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Platform\Printing\Models\Printer;
+use Platform\Printing\Models\PrinterGroup;
 
 class Index extends Component
 {

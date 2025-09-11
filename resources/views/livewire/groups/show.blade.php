@@ -227,7 +227,7 @@
     </div>
 
     <!-- Printer Assignment Modal -->
-    <x-ui-modal wire:model="printerAssignmentModalShow" size="md">
+    <x-ui-modal model="printerAssignmentModalShow" size="md">
         <x-slot name="header">
             Drucker zuweisen
         </x-slot>

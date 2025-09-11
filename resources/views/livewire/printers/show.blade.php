@@ -244,7 +244,7 @@
     </div>
 
     <!-- Group Assignment Modal -->
-    <x-ui-modal wire:model="groupAssignmentModalShow" size="md">
+    <x-ui-modal model="groupAssignmentModalShow" size="md">
         <x-slot name="header">
             Gruppe zuweisen
         </x-slot>

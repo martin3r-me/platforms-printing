@@ -283,7 +283,7 @@ class PrintingService implements PrintingServiceInterface
         $moduleName = $this->getModuleName($printable);
         
         // Konvention: {modul}-{model} (z.B. helpdesk-ticket)
-        return strtolower($moduleName . '-' . kebab_case($modelName));
+        return strtolower($moduleName . '-' . \Illuminate\Support\Str::kebab($modelName));
     }
 
     /**

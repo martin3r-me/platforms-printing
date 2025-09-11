@@ -283,7 +283,16 @@ class PrintingService implements PrintingServiceInterface
         $moduleName = $this->getModuleName($printable);
         
         // Konvention: {modul}-{model} (z.B. helpdesk-ticket)
-        return strtolower($moduleName . '-' . \Illuminate\Support\Str::kebab($modelName));
+        // Aber wenn der Model-Name bereits das Modul enthält, verwende nur den Model-Namen
+        $kebabModelName = \Illuminate\Support\Str::kebab($modelName);
+        
+        if (str_starts_with($kebabModelName, $moduleName . '-')) {
+            // HelpdeskTicket -> helpdesk-ticket (Modul bereits enthalten)
+            return $kebabModelName;
+        }
+        
+        // Andere Models: {modul}-{model}
+        return strtolower($moduleName . '-' . $kebabModelName);
     }
 
     /**

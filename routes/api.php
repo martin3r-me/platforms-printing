@@ -26,7 +26,7 @@ Route::get('/test', function (Request $request) {
 });
 
 // API-Routen (Prefix und Middleware werden vom ServiceProvider gesetzt)
-Route::group(function () {
+Route::group([], function () {
 
     // CloudPRNT Poll Endpoint
     Route::post('/poll', function (Request $request) {

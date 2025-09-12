@@ -38,16 +38,7 @@ class VerifyPrinterBasicAuth
             \Illuminate\Support\Facades\Log::warning('CloudPRNT API - Keine MAC-Adresse', [
                 'ip' => $request->ip(),
             ]);
-            
-            // Für Test: Erstelle einen Dummy-Drucker
-            $dummyPrinter = new Printer();
-            $dummyPrinter->id = 0;
-            $dummyPrinter->name = 'Test-Drucker';
-            $dummyPrinter->mac_address = '00:11:62:34:d9:64';
-            $dummyPrinter->is_active = true;
-
-            $request->attributes->set('printer', $dummyPrinter);
-            return $next($request);
+            return response()->json(['error' => 'MAC-Adresse erforderlich'], 401);
         }
 
         // Suche Drucker anhand der MAC-Adresse

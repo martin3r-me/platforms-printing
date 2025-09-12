@@ -61,14 +61,24 @@ Route::group([], function () {
 
     // Job Download Endpoint
     Route::get('/job/{uuid}', function (Request $request, string $uuid) {
-        Log::info('CloudPRNT Job Download', [
+        Log::info('CloudPRNT Job Download - Start', [
             'timestamp' => now()->toDateTimeString(),
             'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
             'job_uuid' => $uuid,
+            'headers' => $request->headers->all(),
         ]);
 
         // Drucker ist bereits durch Middleware validiert
         $printer = $request->attributes->get('printer');
+        
+        if (!$printer) {
+            Log::warning('CloudPRNT Job Download - Kein Drucker in Request', [
+                'job_uuid' => $uuid,
+                'ip' => $request->ip(),
+            ]);
+            return response()->json(['error' => 'Drucker nicht authentifiziert'], 401);
+        }
 
         $job = PrintJob::where('uuid', $uuid)
             ->where('printer_id', $printer->id)
@@ -103,14 +113,24 @@ Route::group([], function () {
 
     // Job Confirmation Endpoint
     Route::delete('/confirm/{uuid}', function (Request $request, string $uuid) {
-        Log::info('CloudPRNT Job Confirmation', [
+        Log::info('CloudPRNT Job Confirmation - Start', [
             'timestamp' => now()->toDateTimeString(),
             'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
             'job_uuid' => $uuid,
+            'headers' => $request->headers->all(),
         ]);
 
         // Drucker ist bereits durch Middleware validiert
         $printer = $request->attributes->get('printer');
+        
+        if (!$printer) {
+            Log::warning('CloudPRNT Job Confirmation - Kein Drucker in Request', [
+                'job_uuid' => $uuid,
+                'ip' => $request->ip(),
+            ]);
+            return response()->json(['error' => 'Drucker nicht authentifiziert'], 401);
+        }
 
         $job = PrintJob::where('uuid', $uuid)
             ->where('printer_id', $printer->id)

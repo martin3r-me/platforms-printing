@@ -55,6 +55,16 @@ class PrintingServiceProvider extends ServiceProvider
             ]);
         }
 
+        // CloudPRNT Log-Kanal registrieren
+        $this->app->make('log')->extend('cloudprnt', function ($app, $config) {
+            return new \Monolog\Logger('cloudprnt', [
+                new \Monolog\Handler\StreamHandler(
+                    storage_path('logs/cloudprnt.log'),
+                    \Monolog\Logger::INFO
+                ),
+            ]);
+        });
+
         // API Routes für CloudPRNT - außerhalb des Modul-Systems registrieren
         if (config('printing.api.cloudprnt.enabled')) {
             Route::prefix('printing/' . config('printing.api.prefix', 'api'))
@@ -78,16 +88,6 @@ class PrintingServiceProvider extends ServiceProvider
 
         // Middleware registrieren
         $this->app['router']->aliasMiddleware('verify.printer.basic', VerifyPrinterBasicAuth::class);
-
-        // CloudPRNT Log-Kanal registrieren
-        $this->app->make('log')->extend('cloudprnt', function ($app, $config) {
-            return new \Monolog\Logger('cloudprnt', [
-                new \Monolog\Handler\StreamHandler(
-                    storage_path('logs/cloudprnt.log'),
-                    \Monolog\Logger::INFO
-                ),
-            ]);
-        });
 
         // Migrations, Views, Livewire-Komponenten
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');

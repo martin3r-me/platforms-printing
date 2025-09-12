@@ -10,15 +10,19 @@ class VerifyPrinterBasicAuth
 {
     public function handle(Request $request, Closure $next)
     {
-        // Logging in spezielle CloudPRNT-Log-Datei
-        \Illuminate\Support\Facades\Log::channel('cloudprnt')->info('CloudPRNT API Request', [
+        // Detailliertes Request-Logging
+        \Illuminate\Support\Facades\Log::channel('cloudprnt')->info('CloudPRNT API Request - Detailliert', [
             'timestamp' => now()->toDateTimeString(),
             'ip' => $request->ip(),
             'user_agent' => $request->userAgent(),
             'method' => $request->method(),
             'url' => $request->fullUrl(),
+            'all_input' => $request->all(),
+            'headers' => $request->headers->all(),
+            'content_type' => $request->header('Content-Type'),
             'username' => $request->input('username'),
-            'has_password' => $request->has('password'),
+            'password' => $request->has('password') ? '[HIDDEN]' : null,
+            'raw_content' => $request->getContent(),
         ]);
 
         $username = $request->input('username');

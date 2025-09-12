@@ -54,15 +54,15 @@ class PrintingServiceProvider extends ServiceProvider
             ]);
         }
 
-        // API Routes für CloudPRNT - außerhalb des Modul-Systems registrieren
-        if (config('printing.api.cloudprnt.enabled')) {
-            $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
-        }
-
-        // Web-Routen nur laden, wenn das Modul registriert wurde
+        // Web-Routen und API-Routen nur laden, wenn das Modul registriert wurde
         if (PlatformCore::getModule('printing')) {
             ModuleRouter::group('printing', function () {
                 $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+                
+                // API Routes für CloudPRNT
+                if (config('printing.api.cloudprnt.enabled')) {
+                    $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
+                }
             });
         }
 

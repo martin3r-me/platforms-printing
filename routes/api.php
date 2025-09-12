@@ -10,7 +10,7 @@ use Platform\Printing\Services\PrintingService;
 
 // Test-Endpoint ohne Middleware (für Debug)
 Route::get('/test', function (Request $request) {
-    Log::info('CloudPRNT Test Endpoint', [
+    \Illuminate\Support\Facades\Log::channel('cloudprnt')->info('CloudPRNT Test Endpoint', [
         'timestamp' => now()->toDateTimeString(),
         'ip' => $request->ip(),
         'user_agent' => $request->userAgent(),
@@ -32,7 +32,7 @@ Route::prefix(config('printing.api.prefix', 'api'))
 
     // CloudPRNT Poll Endpoint
     Route::post('/poll', function (Request $request) {
-        Log::info('CloudPRNT Poll - Start', [
+        \Illuminate\Support\Facades\Log::channel('cloudprnt')->info('CloudPRNT Poll - Start', [
             'timestamp' => now()->toDateTimeString(),
             'ip' => $request->ip(),
             'user_agent' => $request->userAgent(),

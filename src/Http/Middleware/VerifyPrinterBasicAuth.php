@@ -10,8 +10,8 @@ class VerifyPrinterBasicAuth
 {
     public function handle(Request $request, Closure $next)
     {
-        // Logging für jeden API-Aufruf - mit verschiedenen Kanälen testen
-        Log::info('CloudPRNT API Request', [
+        // Logging in spezielle CloudPRNT-Log-Datei
+        \Illuminate\Support\Facades\Log::channel('cloudprnt')->info('CloudPRNT API Request', [
             'timestamp' => now()->toDateTimeString(),
             'ip' => $request->ip(),
             'user_agent' => $request->userAgent(),
@@ -20,25 +20,13 @@ class VerifyPrinterBasicAuth
             'username' => $request->input('username'),
             'has_password' => $request->has('password'),
         ]);
-        
-        // Zusätzlich in Laravel-Log
-        \Illuminate\Support\Facades\Log::channel('single')->info('CloudPRNT API Request - Single Channel', [
-            'ip' => $request->ip(),
-            'url' => $request->fullUrl(),
-        ]);
-        
-        // Zusätzlich in Daily-Log
-        \Illuminate\Support\Facades\Log::channel('daily')->info('CloudPRNT API Request - Daily Channel', [
-            'ip' => $request->ip(),
-            'url' => $request->fullUrl(),
-        ]);
 
         $username = $request->input('username');
         $password = $request->input('password');
 
         // Wenn keine Anmeldedaten vorhanden, erlaube trotzdem (für Test)
         if (!$username || !$password) {
-            Log::warning('CloudPRNT API - Keine Anmeldedaten', [
+            \Illuminate\Support\Facades\Log::channel('cloudprnt')->warning('CloudPRNT API - Keine Anmeldedaten', [
                 'ip' => $request->ip(),
                 'username' => $username,
             ]);
@@ -61,14 +49,14 @@ class VerifyPrinterBasicAuth
             ->first();
 
         if (!$printer) {
-            Log::warning('CloudPRNT API - Ungültige Anmeldedaten', [
+            \Illuminate\Support\Facades\Log::channel('cloudprnt')->warning('CloudPRNT API - Ungültige Anmeldedaten', [
                 'ip' => $request->ip(),
                 'username' => $username,
             ]);
             return response()->json(['error' => 'Ungültige Anmeldedaten'], 401);
         }
 
-        Log::info('CloudPRNT API - Drucker authentifiziert', [
+        \Illuminate\Support\Facades\Log::channel('cloudprnt')->info('CloudPRNT API - Drucker authentifiziert', [
             'printer_id' => $printer->id,
             'printer_name' => $printer->name,
             'username' => $username,

@@ -76,6 +76,16 @@ class PrintingServiceProvider extends ServiceProvider
         // Middleware registrieren
         $this->app['router']->aliasMiddleware('verify.printer.basic', VerifyPrinterBasicAuth::class);
 
+        // CloudPRNT Log-Kanal registrieren
+        $this->app->make('log')->extend('cloudprnt', function ($app, $config) {
+            return new \Monolog\Logger('cloudprnt', [
+                new \Monolog\Handler\StreamHandler(
+                    storage_path('logs/cloudprnt.log'),
+                    \Monolog\Logger::INFO
+                ),
+            ]);
+        });
+
         // Migrations, Views, Livewire-Komponenten
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'printing');

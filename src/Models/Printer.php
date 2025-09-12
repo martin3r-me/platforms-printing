@@ -17,6 +17,7 @@ class Printer extends Model
         'location',
         'username',
         'password',
+        'mac_address',
         'printer_id',
         'is_active',
         'settings',

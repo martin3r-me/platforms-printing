@@ -25,45 +25,48 @@ class VerifyPrinterBasicAuth
             'raw_content' => $request->getContent(),
         ]);
 
-        $username = $request->input('username');
-        $password = $request->input('password');
+        // CloudPRNT verwendet MAC-Adresse für Authentifizierung
+        $macAddress = $request->header('x-star-mac') ?? $request->input('printerMAC');
+        
+        \Illuminate\Support\Facades\Log::info('CloudPRNT API - MAC-basierte Authentifizierung', [
+            'ip' => $request->ip(),
+            'mac_address' => $macAddress,
+            'serial_number' => $request->header('x-star-serial-number'),
+        ]);
 
-        // Wenn keine Anmeldedaten vorhanden, erlaube trotzdem (für Test)
-        if (!$username || !$password) {
-            \Illuminate\Support\Facades\Log::warning('CloudPRNT API - Keine Anmeldedaten', [
+        if (!$macAddress) {
+            \Illuminate\Support\Facades\Log::warning('CloudPRNT API - Keine MAC-Adresse', [
                 'ip' => $request->ip(),
-                'username' => $username,
             ]);
             
             // Für Test: Erstelle einen Dummy-Drucker
             $dummyPrinter = new Printer();
             $dummyPrinter->id = 0;
             $dummyPrinter->name = 'Test-Drucker';
-            $dummyPrinter->username = 'test';
-            $dummyPrinter->password = 'test';
+            $dummyPrinter->mac_address = '00:11:62:34:d9:64';
             $dummyPrinter->is_active = true;
-            
+
             $request->attributes->set('printer', $dummyPrinter);
             return $next($request);
         }
 
-        $printer = Printer::where('username', $username)
-            ->where('password', $password)
+        // Suche Drucker anhand der MAC-Adresse
+        $printer = Printer::where('mac_address', $macAddress)
             ->where('is_active', true)
             ->first();
 
         if (!$printer) {
-            \Illuminate\Support\Facades\Log::warning('CloudPRNT API - Ungültige Anmeldedaten', [
+            \Illuminate\Support\Facades\Log::warning('CloudPRNT API - Drucker nicht gefunden', [
                 'ip' => $request->ip(),
-                'username' => $username,
+                'mac_address' => $macAddress,
             ]);
-            return response()->json(['error' => 'Ungültige Anmeldedaten'], 401);
+            return response()->json(['error' => 'Drucker nicht registriert'], 401);
         }
 
         \Illuminate\Support\Facades\Log::info('CloudPRNT API - Drucker authentifiziert', [
             'printer_id' => $printer->id,
             'printer_name' => $printer->name,
-            'username' => $username,
+            'mac_address' => $macAddress,
         ]);
 
         // Setze den Drucker in der Request für weitere Verwendung

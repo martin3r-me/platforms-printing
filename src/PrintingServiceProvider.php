@@ -113,7 +113,7 @@ class PrintingServiceProvider extends ServiceProvider
             $classPath = str_replace(['/', '.php'], ['\\', ''], $relativePath);
             $class = $baseNamespace . '\\' . $classPath;
 
-            if (!class_exists($class)) {
+            if (!is_string($class) || !class_exists($class)) {
                 continue;
             }
 

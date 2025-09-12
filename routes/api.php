@@ -26,8 +26,8 @@ Route::get('/test', function (Request $request) {
 });
 
 // API-Routen mit Config-basiertem Prefix und Middleware
-Route::prefix(config('printing.api.prefix', 'api'))
-    ->middleware(array_merge(config('printing.api.middleware', ['api']), ['verify.printer.basic']))
+Route::prefix('printing/' . config('printing.api.prefix', 'api'))
+    ->middleware(array_merge(config('printing.api.middleware', []), ['verify.printer.basic']))
     ->group(function () {
 
     // CloudPRNT Poll Endpoint

@@ -32,7 +32,7 @@ return [
 
     'api' => [
         'prefix' => 'api',
-        'middleware' => ['api'],
+        'middleware' => [],
         'cloudprnt' => [
             'enabled' => true,
             'endpoints' => [

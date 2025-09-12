@@ -53,9 +53,9 @@ Route::group([], function () {
             'jobReady' => true,
             'mediaTypes' => ['text/plain'],
             'jobToken' => $job->uuid,
-            'jobGetUrl' => url("api/job/{$job->uuid}"),
+            'jobGetUrl' => route('printing.api.job.download', ['uuid' => $job->uuid]),
             'deleteMethod' => 'DELETE',
-            'jobConfirmationUrl' => url("api/confirm/{$job->uuid}"),
+            'jobConfirmationUrl' => route('printing.api.job.confirm', ['uuid' => $job->uuid]),
         ]);
     })->name('printing.api.poll');
 

@@ -68,12 +68,10 @@ class PrintingServiceProvider extends ServiceProvider
             }
         }
 
-        // Config veröffentlichen & zusammenführen
+        // Config veröffentlichen
         $this->publishes([
             __DIR__.'/../config/printing.php' => config_path('printing.php'),
         ], 'printing-config');
-
-        $this->mergeConfigFrom(__DIR__.'/../config/printing.php', 'printing');
 
         // Middleware registrieren
         $this->app['router']->aliasMiddleware('verify.printer.basic', VerifyPrinterBasicAuth::class);

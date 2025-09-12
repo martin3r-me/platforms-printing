@@ -8,8 +8,10 @@ use Platform\Printing\Models\Printer;
 use Platform\Printing\Models\PrintJob;
 use Platform\Printing\Services\PrintingService;
 
-// Alle API-Routen mit Basic Auth Middleware
-Route::middleware('verify.printer.basic')->group(function () {
+// API-Routen mit Config-basiertem Prefix und Middleware
+Route::prefix(config('printing.api.prefix', 'api/printing'))
+    ->middleware(array_merge(config('printing.api.middleware', ['api']), ['verify.printer.basic']))
+    ->group(function () {
 
     // CloudPRNT Poll Endpoint
     Route::post('/poll', function (Request $request) {

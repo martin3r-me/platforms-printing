@@ -10,7 +10,7 @@ class VerifyPrinterBasicAuth
 {
     public function handle(Request $request, Closure $next)
     {
-        // Logging für jeden API-Aufruf
+        // Logging für jeden API-Aufruf - mit verschiedenen Kanälen testen
         Log::info('CloudPRNT API Request', [
             'timestamp' => now()->toDateTimeString(),
             'ip' => $request->ip(),
@@ -19,6 +19,18 @@ class VerifyPrinterBasicAuth
             'url' => $request->fullUrl(),
             'username' => $request->input('username'),
             'has_password' => $request->has('password'),
+        ]);
+        
+        // Zusätzlich in Laravel-Log
+        \Illuminate\Support\Facades\Log::channel('single')->info('CloudPRNT API Request - Single Channel', [
+            'ip' => $request->ip(),
+            'url' => $request->fullUrl(),
+        ]);
+        
+        // Zusätzlich in Daily-Log
+        \Illuminate\Support\Facades\Log::channel('daily')->info('CloudPRNT API Request - Daily Channel', [
+            'ip' => $request->ip(),
+            'url' => $request->fullUrl(),
         ]);
 
         $username = $request->input('username');
@@ -65,6 +77,13 @@ class VerifyPrinterBasicAuth
         // Setze den Drucker in der Request für weitere Verwendung
         $request->attributes->set('printer', $printer);
 
-        return $next($request);
+        $response = $next($request);
+        
+        // Debug-Headers für Test
+        $response->header('X-Debug-IP', $request->ip());
+        $response->header('X-Debug-URL', $request->fullUrl());
+        $response->header('X-Debug-Printer', $printer->name ?? 'Unknown');
+        
+        return $response;
     }
 }

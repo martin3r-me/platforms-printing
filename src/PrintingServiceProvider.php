@@ -122,7 +122,8 @@ class PrintingServiceProvider extends ServiceProvider
             
             $class = $baseNamespace . '\\' . $classPath;
 
-            if (!class_exists($class)) {
+            // Sicherstellen, dass $class ein String ist
+            if (!is_string($class) || !class_exists($class)) {
                 continue;
             }
 

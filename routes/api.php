@@ -15,11 +15,10 @@ Route::prefix(config('printing.api.prefix', 'api'))
 
     // CloudPRNT Poll Endpoint
     Route::post('/poll', function (Request $request) {
-        Log::info('CloudPRNT Poll', [
+        Log::info('CloudPRNT Poll - Start', [
             'timestamp' => now()->toDateTimeString(),
             'ip' => $request->ip(),
             'user_agent' => $request->userAgent(),
-            'username' => $request->input('username'),
         ]);
 
         // Drucker ist bereits durch Middleware validiert
@@ -33,7 +32,7 @@ Route::prefix(config('printing.api.prefix', 'api'))
                 'printer_id' => $printer->id,
                 'printer_name' => $printer->name,
             ]);
-            return response()->json(['status' => 'no_job']);
+            return response()->json(['jobReady' => false], 200);
         }
 
         Log::info('CloudPRNT Poll - Job gefunden', [
@@ -42,11 +41,14 @@ Route::prefix(config('printing.api.prefix', 'api'))
             'job_uuid' => $job->uuid,
         ]);
 
+        // CloudPRNT-kompatible Antwort
         return response()->json([
-            'status' => 'job_available',
-            'job_uuid' => $job->uuid,
-            'job_url' => route('printing.api.job.download', $job->uuid),
-            'confirm_url' => route('printing.api.job.confirm', $job->uuid),
+            'jobReady' => true,
+            'mediaTypes' => ['text/plain'],
+            'jobToken' => $job->uuid,
+            'jobGetUrl' => url("api/job/{$job->uuid}"),
+            'deleteMethod' => 'DELETE',
+            'jobConfirmationUrl' => url("api/confirm/{$job->uuid}"),
         ]);
     })->name('printing.api.poll');
 
@@ -71,7 +73,7 @@ Route::prefix(config('printing.api.prefix', 'api'))
                 'job_uuid' => $uuid,
                 'printer_id' => $printer->id,
             ]);
-            return response()->json(['error' => 'Job nicht gefunden'], 404);
+            return response('', 404);
         }
 
         // Markiere Job als verarbeitet
@@ -86,9 +88,10 @@ Route::prefix(config('printing.api.prefix', 'api'))
             'content_length' => strlen($content),
         ]);
 
-        return response($content)
-            ->header('Content-Type', 'text/plain; charset=utf-8')
-            ->header('Content-Length', strlen($content));
+        // CloudPRNT-kompatible Antwort (roher Text, kein JSON)
+        return Response::make($content, 200, [
+            'Content-Type' => 'text/plain; charset=utf-8',
+        ]);
     })->name('printing.api.job.download');
 
     // Job Confirmation Endpoint

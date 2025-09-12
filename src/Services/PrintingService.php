@@ -199,10 +199,25 @@ class PrintingService implements PrintingServiceInterface
         // Versuche zuerst ein Blade-Template zu finden
         $bladeTemplate = $this->findBladeTemplate($printable, $template);
         if ($bladeTemplate) {
+            \Illuminate\Support\Facades\Log::info('PrintingService: Blade-Template gefunden', [
+                'job_id' => $job->id,
+                'job_uuid' => $job->uuid,
+                'template' => $template,
+                'blade' => $bladeTemplate,
+                'module' => $this->getModuleName($printable),
+                'model' => class_basename($printable),
+            ]);
             return view($bladeTemplate, $templateData)->render();
         }
 
         // Fallback: Einfache Text-Generierung
+        \Illuminate\Support\Facades\Log::warning('PrintingService: Kein Blade-Template gefunden, Fallback aktiv', [
+            'job_id' => $job->id,
+            'job_uuid' => $job->uuid,
+            'template' => $template,
+            'module' => $this->getModuleName($printable),
+            'model' => class_basename($printable),
+        ]);
         return $this->renderSimpleTemplate($printable, $templateData);
     }
 

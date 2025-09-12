@@ -8,23 +8,6 @@ use Platform\Printing\Models\Printer;
 use Platform\Printing\Models\PrintJob;
 use Platform\Printing\Services\PrintingService;
 
-// Test-Endpoint ohne Middleware (für Debug)
-Route::get('/test', function (Request $request) {
-    \Illuminate\Support\Facades\Log::channel('cloudprnt')->info('CloudPRNT Test Endpoint', [
-        'timestamp' => now()->toDateTimeString(),
-        'ip' => $request->ip(),
-        'user_agent' => $request->userAgent(),
-        'url' => $request->fullUrl(),
-    ]);
-    
-    return response()->json([
-        'status' => 'ok',
-        'timestamp' => now()->toDateTimeString(),
-        'ip' => $request->ip(),
-        'message' => 'CloudPRNT Test Endpoint funktioniert',
-    ]);
-});
-
 // API-Routen (Prefix und Middleware werden vom ServiceProvider gesetzt)
 Route::group([], function () {
 

@@ -5,6 +5,7 @@ namespace Platform\Printing;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
 use Platform\Core\PlatformCore;
 use Platform\Core\Routing\ModuleRouter;
@@ -54,15 +55,19 @@ class PrintingServiceProvider extends ServiceProvider
             ]);
         }
 
-        // Web-Routen und API-Routen nur laden, wenn das Modul registriert wurde
+        // API Routes für CloudPRNT - außerhalb des Modul-Systems registrieren
+        if (config('printing.api.cloudprnt.enabled')) {
+            Route::prefix('printing/' . config('printing.api.prefix', 'api'))
+                ->middleware(array_merge(config('printing.api.middleware', []), ['verify.printer.basic']))
+                ->group(function () {
+                    require __DIR__.'/../routes/api.php';
+                });
+        }
+
+        // Web-Routen nur laden, wenn das Modul registriert wurde
         if (PlatformCore::getModule('printing')) {
             ModuleRouter::group('printing', function () {
                 $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
-                
-                // API Routes für CloudPRNT
-                if (config('printing.api.cloudprnt.enabled')) {
-                    $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
-                }
             });
         }
 

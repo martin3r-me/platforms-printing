@@ -13,10 +13,19 @@ Route::group([], function () {
 
     // CloudPRNT Poll Endpoint
     Route::post('/poll', function (Request $request) {
-        \Illuminate\Support\Facades\Log::channel('cloudprnt')->info('CloudPRNT Poll - Start', [
+        // Detailliertes Request-Logging direkt in der Route
+        \Illuminate\Support\Facades\Log::info('CloudPRNT Poll - Detailliert', [
             'timestamp' => now()->toDateTimeString(),
             'ip' => $request->ip(),
             'user_agent' => $request->userAgent(),
+            'method' => $request->method(),
+            'url' => $request->fullUrl(),
+            'all_input' => $request->all(),
+            'headers' => $request->headers->all(),
+            'content_type' => $request->header('Content-Type'),
+            'raw_content' => $request->getContent(),
+            'username' => $request->input('username'),
+            'password' => $request->has('password') ? '[HIDDEN]' : null,
         ]);
 
         // Drucker ist bereits durch Middleware validiert

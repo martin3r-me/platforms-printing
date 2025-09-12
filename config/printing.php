@@ -31,7 +31,7 @@ return [
     ],
 
     'api' => [
-        'prefix' => 'api/printing',
+        'prefix' => 'api',
         'middleware' => ['api'],
         'cloudprnt' => [
             'enabled' => true,

@@ -9,7 +9,7 @@ use Platform\Printing\Models\PrintJob;
 use Platform\Printing\Services\PrintingService;
 
 // API-Routen mit Config-basiertem Prefix und Middleware
-Route::prefix(config('printing.api.prefix', 'api/printing'))
+Route::prefix(config('printing.api.prefix', 'api'))
     ->middleware(array_merge(config('printing.api.middleware', ['api']), ['verify.printer.basic']))
     ->group(function () {
 

@@ -109,7 +109,19 @@ class PrintingServiceProvider extends ServiceProvider
                 continue;
             }
 
-            $relativePath = str_replace($basePath . DIRECTORY_SEPARATOR, '', $file->getPathname());
+            $filePath = $file->getPathname();
+            
+            // Sicherstellen, dass $filePath ein String ist
+            if (!is_string($filePath)) {
+                continue;
+            }
+            
+            $relativePath = str_replace($basePath . DIRECTORY_SEPARATOR, '', $filePath);
+            
+            // Sicherstellen, dass $relativePath ein String ist
+            if (!is_string($relativePath)) {
+                continue;
+            }
             
             // Schrittweise ersetzen für bessere Kontrolle
             $classPath = str_replace('/', '\\', $relativePath);

@@ -82,7 +82,7 @@ Route::group([], function () {
 
         $job = PrintJob::where('uuid', $uuid)
             ->where('printer_id', $printer->id)
-            ->where('status', 'pending')
+            ->whereIn('status', ['pending', 'processing'])
             ->first();
 
         if (!$job) {
@@ -93,8 +93,10 @@ Route::group([], function () {
             return response('', 404);
         }
 
-        // Markiere Job als verarbeitet
-        $job->update(['status' => 'processing']);
+        // Markiere Job als verarbeitet, falls noch pending
+        if ($job->status === 'pending') {
+            $job->update(['status' => 'processing']);
+        }
 
         // Generiere Job-Content
         $content = app(PrintingService::class)->generateJobContent($job);

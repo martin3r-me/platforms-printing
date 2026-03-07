@@ -1,4 +1,7 @@
 <div>
+    {{-- Service Header --}}
+    <x-sidebar-module-header module-name="Printing Service" />
+    
     {{-- Abschnitt: Allgemein --}}
     <div>
         <h4 x-show="!collapsed" class="p-3 text-sm italic text-secondary uppercase">Allgemein</h4>

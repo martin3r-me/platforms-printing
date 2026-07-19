@@ -1,66 +1,49 @@
 <div>
-    {{-- Service Header --}}
-    <x-sidebar-module-header module-name="Printing Service" />
-    
+    {{-- Modul Header --}}
+    <x-sidebar-module-header module-name="Printing" />
+
     {{-- Abschnitt: Allgemein --}}
-    <div>
-        <h4 x-show="!collapsed" class="p-3 text-sm italic text-secondary uppercase">Allgemein</h4>
+    <x-ui-sidebar-list label="Allgemein">
+        <x-ui-sidebar-item :href="route('printing.dashboard')" :active="request()->routeIs('printing.dashboard')">
+            @svg('heroicon-o-chart-bar', 'w-5 h-5 flex-shrink-0')
+            <span class="ml-2 text-sm truncate">Dashboard</span>
+        </x-ui-sidebar-item>
 
-        {{-- Dashboard --}}
-        <a href="{{ route('printing.dashboard') }}"
-           class="relative d-flex items-center p-2 my-1 rounded-md font-medium transition"
-           :class="[
-               window.location.pathname.endsWith('/printing') || 
-               window.location.pathname.endsWith('/printing/')
-                   ? 'bg-primary text-on-primary shadow-md'
-                   : 'text-black hover:bg-primary-10 hover:text-primary hover:shadow-md',
-               collapsed ? 'justify-center' : 'gap-3'
-           ]"
-           wire:navigate>
-            <x-heroicon-o-chart-bar class="w-6 h-6 flex-shrink-0"/>
-            <span x-show="!collapsed" class="truncate">Dashboard</span>
-        </a>
+        <x-ui-sidebar-item :href="route('printing.groups.index')" :active="request()->routeIs('printing.groups.*')">
+            @svg('heroicon-o-folder', 'w-5 h-5 flex-shrink-0')
+            <span class="ml-2 text-sm truncate">Gruppen</span>
+        </x-ui-sidebar-item>
 
-        {{-- Gruppen --}}
-        <a href="{{ route('printing.groups.index') }}"
-           class="relative d-flex items-center p-2 my-1 rounded-md font-medium transition"
-           :class="[
-               window.location.pathname.includes('/printing/groups')
-                   ? 'bg-primary text-on-primary shadow-md'
-                   : 'text-black hover:bg-primary-10 hover:text-primary hover:shadow-md',
-               collapsed ? 'justify-center' : 'gap-3'
-           ]"
-           wire:navigate>
-            <x-heroicon-o-folder class="w-6 h-6 flex-shrink-0"/>
-            <span x-show="!collapsed" class="truncate">Gruppen</span>
-        </a>
+        <x-ui-sidebar-item :href="route('printing.printers.index')" :active="request()->routeIs('printing.printers.*')">
+            @svg('heroicon-o-printer', 'w-5 h-5 flex-shrink-0')
+            <span class="ml-2 text-sm truncate">Drucker</span>
+        </x-ui-sidebar-item>
 
-        {{-- Drucker --}}
-        <a href="{{ route('printing.printers.index') }}"
-           class="relative d-flex items-center p-2 my-1 rounded-md font-medium transition"
-           :class="[
-               window.location.pathname.includes('/printing/printers')
-                   ? 'bg-primary text-on-primary shadow-md'
-                   : 'text-black hover:bg-primary-10 hover:text-primary hover:shadow-md',
-               collapsed ? 'justify-center' : 'gap-3'
-           ]"
-           wire:navigate>
-            <x-heroicon-o-printer class="w-6 h-6 flex-shrink-0"/>
-            <span x-show="!collapsed" class="truncate">Drucker</span>
-        </a>
+        <x-ui-sidebar-item :href="route('printing.jobs.index')" :active="request()->routeIs('printing.jobs.*')">
+            @svg('heroicon-o-document-text', 'w-5 h-5 flex-shrink-0')
+            <span class="ml-2 text-sm truncate">Print Jobs</span>
+        </x-ui-sidebar-item>
+    </x-ui-sidebar-list>
 
-        {{-- Print Jobs --}}
-        <a href="{{ route('printing.jobs.index') }}"
-           class="relative d-flex items-center p-2 my-1 rounded-md font-medium transition"
-           :class="[
-               window.location.pathname.includes('/printing/jobs')
-                   ? 'bg-primary text-on-primary shadow-md'
-                   : 'text-black hover:bg-primary-10 hover:text-primary hover:shadow-md',
-               collapsed ? 'justify-center' : 'gap-3'
-           ]"
-           wire:navigate>
-            <x-heroicon-o-document-text class="w-6 h-6 flex-shrink-0"/>
-            <span x-show="!collapsed" class="truncate">Print Jobs</span>
-        </a>
+    {{-- Collapsed: Icons-only --}}
+    <div x-show="collapsed" class="px-2 py-2 border-b border-[var(--ui-border)]">
+        <div class="flex flex-col gap-2">
+            <a href="{{ route('printing.dashboard') }}" wire:navigate
+               class="flex items-center justify-center p-2 rounded-md {{ request()->routeIs('printing.dashboard') ? 'bg-[rgb(var(--ui-primary-rgb))] text-[var(--ui-on-primary)]' : 'text-[var(--ui-secondary)] hover:bg-[var(--ui-muted-5)]' }}">
+                @svg('heroicon-o-chart-bar', 'w-5 h-5')
+            </a>
+            <a href="{{ route('printing.groups.index') }}" wire:navigate
+               class="flex items-center justify-center p-2 rounded-md {{ request()->routeIs('printing.groups.*') ? 'bg-[rgb(var(--ui-primary-rgb))] text-[var(--ui-on-primary)]' : 'text-[var(--ui-secondary)] hover:bg-[var(--ui-muted-5)]' }}">
+                @svg('heroicon-o-folder', 'w-5 h-5')
+            </a>
+            <a href="{{ route('printing.printers.index') }}" wire:navigate
+               class="flex items-center justify-center p-2 rounded-md {{ request()->routeIs('printing.printers.*') ? 'bg-[rgb(var(--ui-primary-rgb))] text-[var(--ui-on-primary)]' : 'text-[var(--ui-secondary)] hover:bg-[var(--ui-muted-5)]' }}">
+                @svg('heroicon-o-printer', 'w-5 h-5')
+            </a>
+            <a href="{{ route('printing.jobs.index') }}" wire:navigate
+               class="flex items-center justify-center p-2 rounded-md {{ request()->routeIs('printing.jobs.*') ? 'bg-[rgb(var(--ui-primary-rgb))] text-[var(--ui-on-primary)]' : 'text-[var(--ui-secondary)] hover:bg-[var(--ui-muted-5)]' }}">
+                @svg('heroicon-o-document-text', 'w-5 h-5')
+            </a>
+        </div>
     </div>
 </div>

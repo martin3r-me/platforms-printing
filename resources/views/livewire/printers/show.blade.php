@@ -11,7 +11,7 @@
         ]">
             @if($this->isDirty)
                 <x-ui-button variant="primary" size="sm" wire:click="save">
-                    <div class="d-flex items-center gap-2">
+                    <div class="flex items-center gap-2">
                         @svg('heroicon-o-check', 'w-4 h-4')
                         Speichern
                     </div>
@@ -23,57 +23,59 @@
     {{-- Rechte Spalte: Einstellungen --}}
     <x-slot name="sidebar">
         <x-ui-page-sidebar title="Einstellungen" icon="heroicon-o-cog-6-tooth" width="w-80" :defaultOpen="true">
-            <div class="p-4 space-y-4">
-                {{-- Kurze Übersicht --}}
-                <div class="p-3 bg-muted-5 rounded-lg">
-                    <h4 class="font-semibold mb-2 text-secondary">Drucker-Übersicht</h4>
-                    <div class="space-y-1 text-sm">
-                        <div><strong>Name:</strong> {{ $printer->name }}</div>
-                        <div><strong>Standort:</strong> {{ $printer->location ?: 'Nicht angegeben' }}</div>
-                        @if($printer->username)
-                            <div><strong>Benutzername:</strong> {{ $printer->username }}</div>
-                        @endif
-                        <div><strong>Status:</strong>
-                            <x-ui-badge variant="{{ $printer->is_active ? 'success' : 'secondary' }}" size="xs">
-                                {{ $printer->is_active ? 'Aktiv' : 'Inaktiv' }}
-                            </x-ui-badge>
+            <div class="p-4 space-y-6">
+                {{-- Übersicht --}}
+                <section>
+                    <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--ui-muted)] mb-2">Übersicht</h3>
+                    <dl class="rounded-lg border border-[var(--ui-border)] divide-y divide-[var(--ui-border)] overflow-hidden">
+                        <div class="flex items-center justify-between gap-3 px-3 py-2">
+                            <dt class="text-xs text-[var(--ui-muted)]">Name</dt>
+                            <dd class="text-sm text-[var(--ui-secondary)] m-0 truncate">{{ $printer->name }}</dd>
                         </div>
-                    </div>
-                </div>
+                        <div class="flex items-center justify-between gap-3 px-3 py-2">
+                            <dt class="text-xs text-[var(--ui-muted)]">Standort</dt>
+                            <dd class="text-sm text-[var(--ui-secondary)] m-0 truncate">{{ $printer->location ?: '–' }}</dd>
+                        </div>
+                        @if($printer->username)
+                            <div class="flex items-center justify-between gap-3 px-3 py-2">
+                                <dt class="text-xs text-[var(--ui-muted)]">Benutzername</dt>
+                                <dd class="text-sm text-[var(--ui-secondary)] m-0 truncate">{{ $printer->username }}</dd>
+                            </div>
+                        @endif
+                        <div class="flex items-center justify-between gap-3 px-3 py-2">
+                            <dt class="text-xs text-[var(--ui-muted)]">Status</dt>
+                            <dd class="m-0">
+                                <x-ui-badge variant="{{ $printer->is_active ? 'success' : 'secondary' }}" size="xs">
+                                    {{ $printer->is_active ? 'Aktiv' : 'Inaktiv' }}
+                                </x-ui-badge>
+                            </dd>
+                        </div>
+                    </dl>
+                </section>
 
                 {{-- Gruppen --}}
-                <div>
-                    <h4 class="font-semibold mb-2">Gruppen</h4>
+                <section>
+                    <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--ui-muted)] mb-2">Gruppen</h3>
                     <div class="space-y-2">
-                        @foreach($printer->groups as $group)
-                            <div class="d-flex items-center gap-2 p-2 bg-muted-5 rounded cursor-pointer" wire:click="editGroup({{ $group->id }})">
-                                <span class="flex-grow-1 text-sm">{{ $group->name }}</span>
-                                <x-ui-badge variant="primary" size="xs">{{ $group->is_active ? 'Aktiv' : 'Inaktiv' }}</x-ui-badge>
-                                <div class="flex-shrink-0" @click.stop>
-                                    <x-ui-button
-                                        size="xs"
-                                        variant="danger-outline"
-                                        x-on:click.prevent="$wire.openRemoveGroupModal({{ $group->id }})"
-                                    >
-                                        <div class="d-flex items-center gap-1">
-                                            @svg('heroicon-o-x-mark', 'w-3 h-3')
-                                            Entfernen
-                                        </div>
-                                    </x-ui-button>
-                                </div>
+                        @forelse($printer->groups as $group)
+                            <div class="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--ui-border)] hover:bg-[var(--ui-muted-5)] transition-colors cursor-pointer" wire:click="editGroup({{ $group->id }})">
+                                <span class="flex-1 min-w-0 truncate text-sm text-[var(--ui-secondary)]">{{ $group->name }}</span>
+                                <x-ui-badge variant="{{ $group->is_active ? 'success' : 'secondary' }}" size="xs">{{ $group->is_active ? 'Aktiv' : 'Inaktiv' }}</x-ui-badge>
+                                <button type="button" class="shrink-0 text-[var(--ui-muted)] hover:text-[var(--ui-danger)] transition-colors" x-on:click.stop.prevent="$wire.openRemoveGroupModal({{ $group->id }})" title="Entfernen">
+                                    @svg('heroicon-o-x-mark', 'w-4 h-4')
+                                </button>
                             </div>
-                        @endforeach
-                        @if($printer->groups->count() === 0)
-                            <p class="text-sm text-muted">Noch keine Gruppen zugewiesen.</p>
-                        @endif
-                        <x-ui-button size="sm" variant="secondary-outline" wire:click="addGroup">
-                            <div class="d-flex items-center gap-2">
+                        @empty
+                            <p class="text-sm text-[var(--ui-muted)]">Noch keine Gruppen zugewiesen.</p>
+                        @endforelse
+                        <x-ui-button size="sm" variant="secondary-outline" wire:click="addGroup" class="w-full">
+                            <div class="flex items-center justify-center gap-2">
                                 @svg('heroicon-o-plus', 'w-4 h-4')
                                 Gruppe zuweisen
                             </div>
                         </x-ui-button>
                     </div>
-                </div>
+                </section>
             </div>
         </x-ui-page-sidebar>
     </x-slot>
@@ -92,9 +94,8 @@
 
     <x-ui-page-container>
         {{-- Drucker-Daten --}}
-        <div>
-            <h3 class="text-lg font-semibold mb-4 text-secondary">Drucker-Daten</h3>
-            <div class="grid grid-cols-2 gap-4">
+        <x-ui-panel title="Drucker-Daten">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <x-ui-input-text
                     name="printer_name"
                     label="Name"
@@ -110,8 +111,6 @@
                     placeholder="Standort eingeben..."
                     :errorKey="'printer_location'"
                 />
-            </div>
-            <div class="grid grid-cols-2 gap-4 mt-4">
                 <x-ui-input-text
                     name="printer_username"
                     label="Benutzername"
@@ -119,10 +118,10 @@
                     placeholder="Benutzername (optional)"
                     :errorKey="'printer_username'"
                 />
-                <div class="space-y-2">
-                    <label class="font-semibold text-sm">Passwort</label>
-                    <div class="d-flex items-center gap-2">
-                        <div class="flex-grow-1 p-2 border rounded-lg bg-muted-5 font-mono text-sm">
+                <div class="space-y-1.5">
+                    <label class="block text-sm font-medium text-[var(--ui-secondary)]">Passwort</label>
+                    <div class="flex items-center gap-2">
+                        <div class="flex-1 min-w-0 px-3 py-2 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-muted-5)] font-mono text-sm truncate">
                             {{ $this->currentPassword }}
                         </div>
                         <x-ui-button
@@ -148,17 +147,26 @@
                     </div>
                 </div>
             </div>
-        </div>
+
+            <div class="mt-4 pt-4 border-t border-[var(--ui-border)]">
+                <x-ui-input-checkbox
+                    model="printer_is_active"
+                    checked-label="Aktiv"
+                    unchecked-label="Drucker ist aktiv"
+                    size="md"
+                    block="true"
+                />
+            </div>
+        </x-ui-panel>
 
         {{-- API-Informationen --}}
         @if($printer->username && $printer->password)
-            <div>
-                <h3 class="text-lg font-semibold mb-4 text-secondary">API-Informationen</h3>
+            <x-ui-panel title="API-Informationen" subtitle="Zugangsdaten und Endpunkte für CloudPRNT">
                 <div class="space-y-4">
-                    <div class="p-4 bg-muted-5 rounded-lg">
-                        <h4 class="font-semibold mb-2">Basic Auth Header</h4>
-                        <div class="d-flex items-center gap-2">
-                            <code class="flex-grow-1 p-2 bg-[var(--ui-surface)] border rounded text-sm font-mono break-all">
+                    <div>
+                        <div class="text-xs font-medium text-[var(--ui-muted)] mb-1.5">Basic Auth Header</div>
+                        <div class="flex items-center gap-2">
+                            <code class="flex-1 min-w-0 px-3 py-2 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-muted-5)] text-xs font-mono break-all">
                                 {{ $this->basicAuthHeader }}
                             </code>
                             <x-ui-button
@@ -171,55 +179,40 @@
                             </x-ui-button>
                         </div>
                     </div>
-                    <div class="p-4 bg-muted-5 rounded-lg">
-                        <h4 class="font-semibold mb-2">API-Endpoints</h4>
-                        <div class="space-y-2 text-sm">
-                            <div class="d-flex justify-between">
-                                <span class="font-medium">Poll:</span>
-                                <code class="text-xs">POST {{ url('api/printing/poll') }}</code>
+                    <div>
+                        <div class="text-xs font-medium text-[var(--ui-muted)] mb-1.5">API-Endpoints</div>
+                        <dl class="rounded-lg border border-[var(--ui-border)] divide-y divide-[var(--ui-border)] overflow-hidden">
+                            <div class="flex items-center justify-between gap-3 px-3 py-2">
+                                <dt class="text-sm font-medium text-[var(--ui-secondary)]">Poll</dt>
+                                <dd class="text-xs font-mono text-[var(--ui-muted)] m-0 truncate">POST {{ url('api/printing/poll') }}</dd>
                             </div>
-                            <div class="d-flex justify-between">
-                                <span class="font-medium">Job Download:</span>
-                                <code class="text-xs">GET {{ url('api/printing/job/{uuid}') }}</code>
+                            <div class="flex items-center justify-between gap-3 px-3 py-2">
+                                <dt class="text-sm font-medium text-[var(--ui-secondary)]">Job Download</dt>
+                                <dd class="text-xs font-mono text-[var(--ui-muted)] m-0 truncate">GET {{ url('api/printing/job/{uuid}') }}</dd>
                             </div>
-                            <div class="d-flex justify-between">
-                                <span class="font-medium">Job Confirmation:</span>
-                                <code class="text-xs">DELETE {{ url('api/printing/confirm/{uuid}') }}</code>
+                            <div class="flex items-center justify-between gap-3 px-3 py-2">
+                                <dt class="text-sm font-medium text-[var(--ui-secondary)]">Job Confirmation</dt>
+                                <dd class="text-xs font-mono text-[var(--ui-muted)] m-0 truncate">DELETE {{ url('api/printing/confirm/{uuid}') }}</dd>
                             </div>
-                        </div>
+                        </dl>
                     </div>
                 </div>
-            </div>
+            </x-ui-panel>
         @endif
 
-        {{-- Status & Einstellungen --}}
-        <div>
-            <h3 class="text-lg font-semibold mb-4 text-secondary">Status & Einstellungen</h3>
-            <div class="grid grid-cols-2 gap-4">
-                <x-ui-input-checkbox
-                    model="printer_is_active"
-                    checked-label="Aktiv"
-                    unchecked-label="Drucker ist aktiv"
-                    size="md"
-                    block="true"
-                />
+        {{-- Statistiken --}}
+        <x-ui-panel title="Statistiken">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <x-ui-dashboard-tile title="Gesamt Jobs" :count="$stats['total']" icon="document-text" variant="primary" size="sm" />
+                <x-ui-dashboard-tile title="Wartend" :count="$stats['pending']" icon="clock" variant="warning" size="sm" />
+                <x-ui-dashboard-tile title="Abgeschlossen" :count="$stats['completed']" icon="check-circle" variant="success" size="sm" />
+                <x-ui-dashboard-tile title="Fehlgeschlagen" :count="$stats['failed']" icon="x-circle" variant="danger" size="sm" />
             </div>
-        </div>
-
-        {{-- Kennzahlen --}}
-        <div>
-            <h3 class="text-lg font-semibold mb-4 text-secondary">Statistiken</h3>
-            <div class="grid grid-cols-4 gap-4">
-                <x-ui-dashboard-tile title="Gesamt Jobs" :count="$stats['total']" icon="document-text" variant="primary" size="lg" />
-                <x-ui-dashboard-tile title="Wartend" :count="$stats['pending']" icon="clock" variant="warning" size="lg" />
-                <x-ui-dashboard-tile title="Abgeschlossen" :count="$stats['completed']" icon="check-circle" variant="success" size="lg" />
-                <x-ui-dashboard-tile title="Fehlgeschlagen" :count="$stats['failed']" icon="x-circle" variant="danger" size="lg" />
-            </div>
-        </div>
+        </x-ui-panel>
 
         {{-- Print Jobs --}}
-        <div>
-            <h3 class="text-lg font-semibold mb-4 text-secondary">Print Jobs</h3>
+        <div class="space-y-3">
+            <h3 class="text-base font-semibold text-[var(--ui-secondary)] m-0">Print Jobs</h3>
             @if($jobs->count() > 0)
                 <x-ui-table>
                     <x-ui-table-header>
@@ -236,37 +229,35 @@
                                 :href="route('printing.jobs.show', ['job' => $job->id])"
                             >
                                 <x-ui-table-cell>
-                                    <div class="font-medium">{{ $job->template }}</div>
+                                    <span class="font-medium text-[var(--ui-secondary)]">{{ $job->template }}</span>
                                 </x-ui-table-cell>
                                 <x-ui-table-cell>
                                     <x-ui-badge
                                         variant="{{ in_array($job->status, ['pending','processing']) ? 'warning' : ($job->status === 'completed' ? 'success' : ($job->status === 'failed' ? 'danger' : 'secondary')) }}"
                                         size="sm"
                                     >
-                                        {{ ucfirst($job->status) }}
+                                        {{ $job->status_description }}
                                     </x-ui-badge>
                                 </x-ui-table-cell>
                                 <x-ui-table-cell>
-                                    <div class="text-sm text-muted">{{ $job->printable_type }} #{{ $job->printable_id }}</div>
+                                    <span class="text-sm text-[var(--ui-muted)]">{{ $job->printable_name }} #{{ $job->printable_id }}</span>
                                 </x-ui-table-cell>
-                                <x-ui-table-cell>
-                                    <div class="text-sm">{{ $job->created_at->diffForHumans() }}</div>
-                                </x-ui-table-cell>
+                                <x-ui-table-cell>{{ $job->created_at->diffForHumans() }}</x-ui-table-cell>
                             </x-ui-table-row>
                         @endforeach
                     </x-ui-table-body>
                 </x-ui-table>
-                <div class="mt-4">{{ $jobs->links() }}</div>
+                <div>{{ $jobs->links() }}</div>
             @else
-                <div class="text-center py-8 text-[var(--ui-muted)]">
-                    <x-heroicon-o-queue-list class="w-12 h-12 text-[var(--ui-muted)] mx-auto mb-3"/>
-                    <div class="text-lg font-medium">Keine Jobs gefunden</div>
-                    <div>Für diesen Drucker sind aktuell keine Jobs vorhanden.</div>
+                <div class="rounded-xl bg-[var(--ui-surface)] border border-[var(--ui-border)] shadow-sm p-12 text-center">
+                    @svg('heroicon-o-queue-list', 'w-10 h-10 mx-auto text-[var(--ui-muted)] opacity-40 mb-3')
+                    <div class="text-base font-medium text-[var(--ui-secondary)]">Keine Jobs gefunden</div>
+                    <div class="text-sm text-[var(--ui-muted)] mt-1">Für diesen Drucker sind aktuell keine Jobs vorhanden.</div>
                 </div>
             @endif
         </div>
 
-        <!-- Group Assignment Modal -->
+        {{-- Group Assignment Modal --}}
         <x-ui-modal model="groupAssignmentModalShow" size="md">
             <x-slot name="header">
                 Gruppe zuweisen
@@ -288,7 +279,7 @@
             </div>
 
             <x-slot name="footer">
-                <div class="d-flex justify-end gap-2">
+                <div class="flex justify-end gap-2">
                     <x-ui-button type="button" variant="secondary-outline" @click="$wire.closeGroupAssignmentModal()">
                         Abbrechen
                     </x-ui-button>
@@ -299,18 +290,18 @@
             </x-slot>
         </x-ui-modal>
 
-        <!-- Remove Group Confirm Modal -->
+        {{-- Remove Group Confirm Modal --}}
         <x-ui-modal model="removeGroupModalShow" size="sm">
             <x-slot name="header">
                 Gruppe entfernen
             </x-slot>
 
             <div class="space-y-2">
-                <p class="text-sm">Soll diese Gruppe wirklich entfernt werden?</p>
+                <p class="text-sm text-[var(--ui-secondary)]">Soll diese Gruppe wirklich entfernt werden?</p>
             </div>
 
             <x-slot name="footer">
-                <div class="d-flex justify-end gap-2">
+                <div class="flex justify-end gap-2">
                     <x-ui-button type="button" variant="secondary-outline" @click="$wire.closeRemoveGroupModal()">
                         Abbrechen
                     </x-ui-button>
@@ -325,14 +316,14 @@
             </x-slot>
         </x-ui-modal>
 
-        <!-- Password Change Modal -->
+        {{-- Password Change Modal --}}
         <x-ui-modal model="passwordModalShow" size="md">
             <x-slot name="header">
                 Passwort ändern
             </x-slot>
 
             <div class="space-y-4">
-                <div class="text-sm text-muted">
+                <div class="text-sm text-[var(--ui-muted)]">
                     Geben Sie ein neues Passwort für den Drucker ein. Das Passwort wird für die Basic Auth-Authentifizierung verwendet.
                 </div>
 
@@ -358,7 +349,7 @@
             </div>
 
             <x-slot name="footer">
-                <div class="d-flex justify-end gap-2">
+                <div class="flex justify-end gap-2">
                     <x-ui-button type="button" variant="secondary-outline" @click="$wire.closePasswordModal()">
                         Abbrechen
                     </x-ui-button>

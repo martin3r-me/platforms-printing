@@ -9,7 +9,7 @@
             ['label' => 'Gruppen', 'icon' => 'folder'],
         ]">
             <x-ui-button variant="primary" size="sm" wire:click="openCreateModal">
-                <div class="d-flex items-center gap-2">
+                <div class="flex items-center gap-2">
                     @svg('heroicon-o-plus', 'w-4 h-4')
                     <span>Neue Gruppe</span>
                 </div>
@@ -18,63 +18,60 @@
     </x-slot>
 
     <x-ui-page-container>
-        <!-- Tabelle -->
-        <div class="bg-[var(--ui-surface)] rounded-lg shadow-sm border border-[var(--ui-border)]">
-            @if($groups->count() > 0)
-                <x-ui-table>
-                    <x-ui-table-header>
-                        <x-ui-table-header-cell>Name</x-ui-table-header-cell>
-                        <x-ui-table-header-cell>Beschreibung</x-ui-table-header-cell>
-                        <x-ui-table-header-cell>Drucker</x-ui-table-header-cell>
-                        <x-ui-table-header-cell>Status</x-ui-table-header-cell>
-                        <x-ui-table-header-cell align="right">Aktionen</x-ui-table-header-cell>
-                    </x-ui-table-header>
+        @if($groups->count() > 0)
+            <x-ui-table>
+                <x-ui-table-header>
+                    <x-ui-table-header-cell>Name</x-ui-table-header-cell>
+                    <x-ui-table-header-cell>Beschreibung</x-ui-table-header-cell>
+                    <x-ui-table-header-cell>Drucker</x-ui-table-header-cell>
+                    <x-ui-table-header-cell>Status</x-ui-table-header-cell>
+                    <x-ui-table-header-cell align="right">Aktionen</x-ui-table-header-cell>
+                </x-ui-table-header>
 
-                    <x-ui-table-body>
-                        @foreach($groups as $group)
-                            <x-ui-table-row
-                                clickable="true"
-                                :href="route('printing.groups.show', ['group' => $group->id])"
-                            >
-                                <x-ui-table-cell>
-                                    {{ $group->name }}
-                                </x-ui-table-cell>
-                                <x-ui-table-cell>{{ $group->description ?: '–' }}</x-ui-table-cell>
-                                <x-ui-table-cell>{{ $group->printers->count() }}</x-ui-table-cell>
-                                <x-ui-table-cell>
-                                    <x-ui-badge variant="{{ $group->is_active ? 'success' : 'secondary' }}" size="sm">
-                                        {{ $group->is_active ? 'Aktiv' : 'Inaktiv' }}
-                                    </x-ui-badge>
-                                </x-ui-table-cell>
-                                <x-ui-table-cell align="right">
-                                    <div class="d-flex items-center gap-2 justify-end">
-                                        <x-ui-button wire:click="openEditModal({{ $group->id }})" size="sm" variant="secondary">
-                                            Bearbeiten
-                                        </x-ui-button>
-                                        <x-ui-button wire:click="toggleActive({{ $group->id }})" size="sm" variant="secondary">
-                                            {{ $group->is_active ? 'Deaktivieren' : 'Aktivieren' }}
-                                        </x-ui-button>
-                                        <x-ui-button variant="danger" wire:click="deleteGroup({{ $group->id }})" size="sm">
-                                            Löschen
-                                        </x-ui-button>
-                                    </div>
-                                </x-ui-table-cell>
-                            </x-ui-table-row>
-                        @endforeach
-                    </x-ui-table-body>
-                </x-ui-table>
-            @else
-                <div class="text-center py-12 text-[var(--ui-muted)]">
-                    <x-heroicon-o-folder class="w-12 h-12 text-[var(--ui-muted)] mx-auto mb-3"/>
-                    <div class="text-lg font-medium">Keine Gruppen gefunden</div>
-                    <div>Erstellen Sie die erste Gruppe, um zu starten.</div>
-                </div>
-            @endif
-        </div>
+                <x-ui-table-body>
+                    @foreach($groups as $group)
+                        <x-ui-table-row
+                            clickable="true"
+                            :href="route('printing.groups.show', ['group' => $group->id])"
+                        >
+                            <x-ui-table-cell>
+                                <span class="font-medium text-[var(--ui-secondary)]">{{ $group->name }}</span>
+                            </x-ui-table-cell>
+                            <x-ui-table-cell>{{ $group->description ?: '–' }}</x-ui-table-cell>
+                            <x-ui-table-cell>{{ $group->printers->count() }}</x-ui-table-cell>
+                            <x-ui-table-cell>
+                                <x-ui-badge variant="{{ $group->is_active ? 'success' : 'secondary' }}" size="sm">
+                                    {{ $group->is_active ? 'Aktiv' : 'Inaktiv' }}
+                                </x-ui-badge>
+                            </x-ui-table-cell>
+                            <x-ui-table-cell align="right">
+                                <div class="flex items-center gap-2 justify-end">
+                                    <x-ui-button wire:click="openEditModal({{ $group->id }})" size="sm" variant="secondary">
+                                        Bearbeiten
+                                    </x-ui-button>
+                                    <x-ui-button wire:click="toggleActive({{ $group->id }})" size="sm" variant="secondary">
+                                        {{ $group->is_active ? 'Deaktivieren' : 'Aktivieren' }}
+                                    </x-ui-button>
+                                    <x-ui-button variant="danger" wire:click="deleteGroup({{ $group->id }})" size="sm">
+                                        Löschen
+                                    </x-ui-button>
+                                </div>
+                            </x-ui-table-cell>
+                        </x-ui-table-row>
+                    @endforeach
+                </x-ui-table-body>
+            </x-ui-table>
 
-        <div class="mt-4">{{ $groups->links() }}</div>
+            <div>{{ $groups->links() }}</div>
+        @else
+            <div class="rounded-xl bg-[var(--ui-surface)] border border-[var(--ui-border)] shadow-sm p-12 text-center">
+                @svg('heroicon-o-folder', 'w-10 h-10 mx-auto text-[var(--ui-muted)] opacity-40 mb-3')
+                <div class="text-base font-medium text-[var(--ui-secondary)]">Keine Gruppen gefunden</div>
+                <div class="text-sm text-[var(--ui-muted)] mt-1">Erstellen Sie die erste Gruppe, um zu starten.</div>
+            </div>
+        @endif
 
-        <!-- Create Modal -->
+        {{-- Create Modal --}}
         <x-ui-modal wire:model="modalShow" size="lg">
             <x-slot name="header">
                 Gruppe anlegen
@@ -90,7 +87,7 @@
             </div>
 
             <x-slot name="footer">
-                <div class="d-flex justify-end gap-2">
+                <div class="flex justify-end gap-2">
                     <x-ui-button type="button" variant="secondary-outline" @click="$wire.closeCreateModal()">
                         Abbrechen
                     </x-ui-button>
@@ -101,7 +98,7 @@
             </x-slot>
         </x-ui-modal>
 
-        <!-- Edit Modal -->
+        {{-- Edit Modal --}}
         <x-ui-modal wire:model="editModalShow" size="lg">
             <x-slot name="header">
                 Gruppe bearbeiten
@@ -117,7 +114,7 @@
             </div>
 
             <x-slot name="footer">
-                <div class="d-flex justify-end gap-2">
+                <div class="flex justify-end gap-2">
                     <x-ui-button type="button" variant="secondary-outline" @click="$wire.closeEditModal()">
                         Abbrechen
                     </x-ui-button>

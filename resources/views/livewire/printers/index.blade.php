@@ -9,7 +9,7 @@
             ['label' => 'Drucker', 'icon' => 'printer'],
         ]">
             <x-ui-button variant="primary" size="sm" wire:click="openCreateModal">
-                <div class="d-flex items-center gap-2">
+                <div class="flex items-center gap-2">
                     @svg('heroicon-o-plus', 'w-4 h-4')
                     <span>Neuer Drucker</span>
                 </div>
@@ -18,63 +18,60 @@
     </x-slot>
 
     <x-ui-page-container>
-        <!-- Tabelle -->
-        <div class="bg-[var(--ui-surface)] rounded-lg shadow-sm border border-[var(--ui-border)]">
-            @if($printers->count() > 0)
-                <x-ui-table>
-                    <x-ui-table-header>
-                        <x-ui-table-header-cell>Name</x-ui-table-header-cell>
-                        <x-ui-table-header-cell>Standort</x-ui-table-header-cell>
-                        <x-ui-table-header-cell>Benutzername</x-ui-table-header-cell>
-                        <x-ui-table-header-cell>Status</x-ui-table-header-cell>
-                        <x-ui-table-header-cell align="right">Aktionen</x-ui-table-header-cell>
-                    </x-ui-table-header>
+        @if($printers->count() > 0)
+            <x-ui-table>
+                <x-ui-table-header>
+                    <x-ui-table-header-cell>Name</x-ui-table-header-cell>
+                    <x-ui-table-header-cell>Standort</x-ui-table-header-cell>
+                    <x-ui-table-header-cell>Benutzername</x-ui-table-header-cell>
+                    <x-ui-table-header-cell>Status</x-ui-table-header-cell>
+                    <x-ui-table-header-cell align="right">Aktionen</x-ui-table-header-cell>
+                </x-ui-table-header>
 
-                    <x-ui-table-body>
-                        @foreach($printers as $printer)
-                            <x-ui-table-row
-                                clickable="true"
-                                :href="route('printing.printers.show', ['printer' => $printer->id])"
-                            >
-                                <x-ui-table-cell>
-                                    {{ $printer->name }}
-                                </x-ui-table-cell>
-                                <x-ui-table-cell>{{ $printer->location }}</x-ui-table-cell>
-                                <x-ui-table-cell>{{ $printer->username ?: '–' }}</x-ui-table-cell>
-                                <x-ui-table-cell>
-                                    <x-ui-badge variant="{{ $printer->is_active ? 'success' : 'secondary' }}" size="sm">
-                                        {{ $printer->is_active ? 'Aktiv' : 'Inaktiv' }}
-                                    </x-ui-badge>
-                                </x-ui-table-cell>
-                                <x-ui-table-cell align="right">
-                                    <div class="d-flex items-center gap-2 justify-end">
-                                        <x-ui-button wire:click="openEditModal({{ $printer->id }})" size="sm" variant="secondary">
-                                            Bearbeiten
-                                        </x-ui-button>
-                                        <x-ui-button wire:click="toggleActive({{ $printer->id }})" size="sm" variant="secondary">
-                                            {{ $printer->is_active ? 'Deaktivieren' : 'Aktivieren' }}
-                                        </x-ui-button>
-                                        <x-ui-button variant="danger" wire:click="deletePrinter({{ $printer->id }})" size="sm">
-                                            Löschen
-                                        </x-ui-button>
-                                    </div>
-                                </x-ui-table-cell>
-                            </x-ui-table-row>
-                        @endforeach
-                    </x-ui-table-body>
-                </x-ui-table>
-            @else
-                <div class="text-center py-12 text-[var(--ui-muted)]">
-                    <x-heroicon-o-printer class="w-12 h-12 text-[var(--ui-muted)] mx-auto mb-3"/>
-                    <div class="text-lg font-medium">Keine Drucker gefunden</div>
-                    <div>Erstellen Sie den ersten Drucker, um zu starten.</div>
-                </div>
-            @endif
-        </div>
+                <x-ui-table-body>
+                    @foreach($printers as $printer)
+                        <x-ui-table-row
+                            clickable="true"
+                            :href="route('printing.printers.show', ['printer' => $printer->id])"
+                        >
+                            <x-ui-table-cell>
+                                <span class="font-medium text-[var(--ui-secondary)]">{{ $printer->name }}</span>
+                            </x-ui-table-cell>
+                            <x-ui-table-cell>{{ $printer->location ?: '–' }}</x-ui-table-cell>
+                            <x-ui-table-cell>{{ $printer->username ?: '–' }}</x-ui-table-cell>
+                            <x-ui-table-cell>
+                                <x-ui-badge variant="{{ $printer->is_active ? 'success' : 'secondary' }}" size="sm">
+                                    {{ $printer->is_active ? 'Aktiv' : 'Inaktiv' }}
+                                </x-ui-badge>
+                            </x-ui-table-cell>
+                            <x-ui-table-cell align="right">
+                                <div class="flex items-center gap-2 justify-end">
+                                    <x-ui-button wire:click="openEditModal({{ $printer->id }})" size="sm" variant="secondary">
+                                        Bearbeiten
+                                    </x-ui-button>
+                                    <x-ui-button wire:click="toggleActive({{ $printer->id }})" size="sm" variant="secondary">
+                                        {{ $printer->is_active ? 'Deaktivieren' : 'Aktivieren' }}
+                                    </x-ui-button>
+                                    <x-ui-button variant="danger" wire:click="deletePrinter({{ $printer->id }})" size="sm">
+                                        Löschen
+                                    </x-ui-button>
+                                </div>
+                            </x-ui-table-cell>
+                        </x-ui-table-row>
+                    @endforeach
+                </x-ui-table-body>
+            </x-ui-table>
 
-        <div class="mt-4">{{ $printers->links() }}</div>
+            <div>{{ $printers->links() }}</div>
+        @else
+            <div class="rounded-xl bg-[var(--ui-surface)] border border-[var(--ui-border)] shadow-sm p-12 text-center">
+                @svg('heroicon-o-printer', 'w-10 h-10 mx-auto text-[var(--ui-muted)] opacity-40 mb-3')
+                <div class="text-base font-medium text-[var(--ui-secondary)]">Keine Drucker gefunden</div>
+                <div class="text-sm text-[var(--ui-muted)] mt-1">Erstellen Sie den ersten Drucker, um zu starten.</div>
+            </div>
+        @endif
 
-        <!-- Create Modal -->
+        {{-- Create Modal --}}
         <x-ui-modal wire:model="modalShow" size="lg">
             <x-slot name="header">
                 Drucker anlegen
@@ -104,7 +101,7 @@
             </div>
 
             <x-slot name="footer">
-                <div class="d-flex justify-end gap-2">
+                <div class="flex justify-end gap-2">
                     <x-ui-button type="button" variant="secondary-outline" @click="$wire.closeCreateModal()">
                         Abbrechen
                     </x-ui-button>
@@ -115,7 +112,7 @@
             </x-slot>
         </x-ui-modal>
 
-        <!-- Edit Modal -->
+        {{-- Edit Modal --}}
         <x-ui-modal wire:model="editModalShow" size="lg">
             <x-slot name="header">
                 Drucker bearbeiten
@@ -133,7 +130,7 @@
             </div>
 
             <x-slot name="footer">
-                <div class="d-flex justify-end gap-2">
+                <div class="flex justify-end gap-2">
                     <x-ui-button type="button" variant="secondary-outline" @click="$wire.closeEditModal()">
                         Abbrechen
                     </x-ui-button>

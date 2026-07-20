@@ -5,22 +5,22 @@
     {{-- Abschnitt: Allgemein --}}
     <x-ui-sidebar-list label="Allgemein">
         <x-ui-sidebar-item :href="route('printing.dashboard')" :active="request()->routeIs('printing.dashboard')">
-            @svg('heroicon-o-chart-bar', 'w-5 h-5 flex-shrink-0')
+            @svg('heroicon-o-chart-bar', 'w-5 h-5 shrink-0')
             <span class="ml-2 text-sm truncate">Dashboard</span>
         </x-ui-sidebar-item>
 
         <x-ui-sidebar-item :href="route('printing.groups.index')" :active="request()->routeIs('printing.groups.*')">
-            @svg('heroicon-o-folder', 'w-5 h-5 flex-shrink-0')
+            @svg('heroicon-o-folder', 'w-5 h-5 shrink-0')
             <span class="ml-2 text-sm truncate">Gruppen</span>
         </x-ui-sidebar-item>
 
         <x-ui-sidebar-item :href="route('printing.printers.index')" :active="request()->routeIs('printing.printers.*')">
-            @svg('heroicon-o-printer', 'w-5 h-5 flex-shrink-0')
+            @svg('heroicon-o-printer', 'w-5 h-5 shrink-0')
             <span class="ml-2 text-sm truncate">Drucker</span>
         </x-ui-sidebar-item>
 
         <x-ui-sidebar-item :href="route('printing.jobs.index')" :active="request()->routeIs('printing.jobs.*')">
-            @svg('heroicon-o-document-text', 'w-5 h-5 flex-shrink-0')
+            @svg('heroicon-o-document-text', 'w-5 h-5 shrink-0')
             <span class="ml-2 text-sm truncate">Print Jobs</span>
         </x-ui-sidebar-item>
     </x-ui-sidebar-list>

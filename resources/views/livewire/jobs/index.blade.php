@@ -10,6 +10,34 @@
         ]" />
     </x-slot>
 
+    {{-- Filter --}}
+    <x-slot name="sidebar">
+        <x-ui-page-sidebar title="Filter" icon="heroicon-o-funnel" width="w-72" :defaultOpen="true">
+            <div class="p-4 space-y-6">
+                <section>
+                    <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--ui-muted)] mb-2">Suche</h3>
+                    <div class="relative">
+                        @svg('heroicon-o-magnifying-glass', 'w-4 h-4 text-[var(--ui-muted)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none')
+                        <input type="text" wire:model.live.debounce.300ms="search" placeholder="Template, UUID…"
+                            class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-[var(--ui-border)] bg-[var(--ui-surface)] text-[var(--ui-secondary)] placeholder-[var(--ui-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--ui-primary)]/20 focus:border-[var(--ui-primary)]" />
+                    </div>
+                </section>
+
+                <section>
+                    <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--ui-muted)] mb-2">Status</h3>
+                    <div class="space-y-1">
+                        @foreach(['all' => 'Alle', 'pending' => 'Wartend', 'processing' => 'In Bearbeitung', 'completed' => 'Gedruckt', 'failed' => 'Fehlgeschlagen', 'cancelled' => 'Abgebrochen'] as $val => $label)
+                            <button type="button" wire:click="$set('statusFilter', '{{ $val }}')"
+                                class="w-full flex items-center px-3 py-2 rounded-lg text-sm transition-colors {{ $statusFilter === $val ? 'bg-[var(--ui-primary)] text-[var(--ui-on-primary)] font-medium' : 'text-[var(--ui-secondary)] hover:bg-[var(--ui-muted-5)]' }}">
+                                {{ $label }}
+                            </button>
+                        @endforeach
+                    </div>
+                </section>
+            </div>
+        </x-ui-page-sidebar>
+    </x-slot>
+
     <x-ui-page-container>
         {{-- Kennzahlen --}}
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">

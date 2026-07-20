@@ -1,6 +1,6 @@
 <x-ui-page>
     <x-slot name="navbar">
-        <x-ui-page-navbar title="" />
+        <x-ui-page-navbar title="Printing" />
     </x-slot>
 
     <x-slot name="actionbar">
@@ -179,8 +179,8 @@
                 </x-ui-table>
                 <div class="mt-4">{{ $jobs->links() }}</div>
             @else
-                <div class="text-center py-8 text-gray-600">
-                    <x-heroicon-o-queue-list class="w-12 h-12 text-gray-400 mx-auto mb-3"/>
+                <div class="text-center py-8 text-[var(--ui-muted)]">
+                    <x-heroicon-o-queue-list class="w-12 h-12 text-[var(--ui-muted)] mx-auto mb-3"/>
                     <div class="text-lg font-medium">Keine Jobs gefunden</div>
                     <div>Für diese Gruppe sind aktuell keine Jobs vorhanden.</div>
                 </div>

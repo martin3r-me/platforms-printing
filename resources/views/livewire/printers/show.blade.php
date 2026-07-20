@@ -1,6 +1,6 @@
 <x-ui-page>
     <x-slot name="navbar">
-        <x-ui-page-navbar title="" />
+        <x-ui-page-navbar title="Printing" />
     </x-slot>
 
     <x-slot name="actionbar">
@@ -158,7 +158,7 @@
                     <div class="p-4 bg-muted-5 rounded-lg">
                         <h4 class="font-semibold mb-2">Basic Auth Header</h4>
                         <div class="d-flex items-center gap-2">
-                            <code class="flex-grow-1 p-2 bg-white border rounded text-sm font-mono break-all">
+                            <code class="flex-grow-1 p-2 bg-[var(--ui-surface)] border rounded text-sm font-mono break-all">
                                 {{ $this->basicAuthHeader }}
                             </code>
                             <x-ui-button
@@ -258,8 +258,8 @@
                 </x-ui-table>
                 <div class="mt-4">{{ $jobs->links() }}</div>
             @else
-                <div class="text-center py-8 text-gray-600">
-                    <x-heroicon-o-queue-list class="w-12 h-12 text-gray-400 mx-auto mb-3"/>
+                <div class="text-center py-8 text-[var(--ui-muted)]">
+                    <x-heroicon-o-queue-list class="w-12 h-12 text-[var(--ui-muted)] mx-auto mb-3"/>
                     <div class="text-lg font-medium">Keine Jobs gefunden</div>
                     <div>Für diesen Drucker sind aktuell keine Jobs vorhanden.</div>
                 </div>

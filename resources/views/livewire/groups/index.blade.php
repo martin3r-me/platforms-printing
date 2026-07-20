@@ -1,6 +1,6 @@
 <x-ui-page>
     <x-slot name="navbar">
-        <x-ui-page-navbar title="" />
+        <x-ui-page-navbar title="Printing" />
     </x-slot>
 
     <x-slot name="actionbar">
@@ -19,7 +19,7 @@
 
     <x-ui-page-container>
         <!-- Tabelle -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="bg-[var(--ui-surface)] rounded-lg shadow-sm border border-[var(--ui-border)]">
             @if($groups->count() > 0)
                 <x-ui-table>
                     <x-ui-table-header>
@@ -64,8 +64,8 @@
                     </x-ui-table-body>
                 </x-ui-table>
             @else
-                <div class="text-center py-12 text-gray-600">
-                    <x-heroicon-o-folder class="w-12 h-12 text-gray-400 mx-auto mb-3"/>
+                <div class="text-center py-12 text-[var(--ui-muted)]">
+                    <x-heroicon-o-folder class="w-12 h-12 text-[var(--ui-muted)] mx-auto mb-3"/>
                     <div class="text-lg font-medium">Keine Gruppen gefunden</div>
                     <div>Erstellen Sie die erste Gruppe, um zu starten.</div>
                 </div>

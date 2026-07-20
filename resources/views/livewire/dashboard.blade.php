@@ -1,6 +1,6 @@
 <x-ui-page>
     <x-slot name="navbar">
-        <x-ui-page-navbar title="" />
+        <x-ui-page-navbar title="Printing" />
     </x-slot>
 
     <x-slot name="actionbar">
@@ -9,13 +9,13 @@
             ['label' => 'Dashboard', 'icon' => 'chart-bar'],
         ]">
             <!-- Perspektive-Toggle -->
-            <div class="d-flex bg-gray-100 rounded-lg p-1">
+            <div class="d-flex bg-[var(--ui-muted-5)] rounded-lg p-1">
                 <button
                     wire:click="$set('perspective', 'personal')"
                     class="px-4 py-2 rounded-md text-sm font-medium transition"
                     :class="'{{ $perspective }}' === 'personal'
-                        ? 'bg-success text-on-success shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'"
+                        ? 'bg-[var(--ui-success)] text-[var(--ui-on-success)] shadow-sm'
+                        : 'text-[var(--ui-muted)] hover:text-[var(--ui-secondary)]'"
                 >
                     <div class="d-flex items-center gap-2">
                         @svg('heroicon-o-user', 'w-4 h-4')
@@ -26,8 +26,8 @@
                     wire:click="$set('perspective', 'team')"
                     class="px-4 py-2 rounded-md text-sm font-medium transition"
                     :class="'{{ $perspective }}' === 'team'
-                        ? 'bg-success text-on-success shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'"
+                        ? 'bg-[var(--ui-success)] text-[var(--ui-on-success)] shadow-sm'
+                        : 'text-[var(--ui-muted)] hover:text-[var(--ui-secondary)]'"
                 >
                     <div class="d-flex items-center gap-2">
                         @svg('heroicon-o-users', 'w-4 h-4')
@@ -41,20 +41,20 @@
     <x-ui-page-container>
         <!-- Perspektive-spezifische Info -->
         @if($perspective === 'personal')
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="bg-[var(--ui-info-5)] border border-[var(--ui-info-20)] rounded-lg p-4">
                 <div class="d-flex items-center gap-2 mb-2">
-                    @svg('heroicon-o-user', 'w-5 h-5 text-blue-600')
-                    <h3 class="text-lg font-semibold text-blue-900">Persönliche Druck-Übersicht</h3>
+                    @svg('heroicon-o-user', 'w-5 h-5 text-[var(--ui-info)]')
+                    <h3 class="text-lg font-semibold text-[var(--ui-info)]">Persönliche Druck-Übersicht</h3>
                 </div>
-                <p class="text-blue-700 text-sm">Deine eigenen Aufträge und dir zugewiesene Drucker.</p>
+                <p class="text-[var(--ui-info)] text-sm">Deine eigenen Aufträge und dir zugewiesene Drucker.</p>
             </div>
         @else
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div class="bg-[var(--ui-success-5)] border border-[var(--ui-success-20)] rounded-lg p-4">
                 <div class="d-flex items-center gap-2 mb-2">
-                    @svg('heroicon-o-users', 'w-5 h-5 text-green-600')
-                    <h3 class="text-lg font-semibold text-green-900">Team-Übersicht</h3>
+                    @svg('heroicon-o-users', 'w-5 h-5 text-[var(--ui-success)]')
+                    <h3 class="text-lg font-semibold text-[var(--ui-success)]">Team-Übersicht</h3>
                 </div>
-                <p class="text-green-700 text-sm">Alle Drucker und Jobs des Teams im Blick.</p>
+                <p class="text-[var(--ui-success)] text-sm">Alle Drucker und Jobs des Teams im Blick.</p>
             </div>
         @endif
 
@@ -121,14 +121,14 @@
         </div>
 
         <!-- Neueste Jobs Tabelle -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="p-6 border-b border-gray-200">
+        <div class="bg-[var(--ui-surface)] rounded-lg shadow-sm border border-[var(--ui-border)]">
+            <div class="p-6 border-b border-[var(--ui-border)]">
                 <div class="d-flex items-center gap-2">
-                    <x-heroicon-o-queue-list class="w-5 h-5 text-gray-700"/>
-                    <h3 class="text-lg font-semibold text-gray-900">Neueste Print Jobs</h3>
+                    <x-heroicon-o-queue-list class="w-5 h-5 text-[var(--ui-secondary)]"/>
+                    <h3 class="text-lg font-semibold text-[var(--ui-secondary)]">Neueste Print Jobs</h3>
                     <x-ui-badge variant="neutral" size="sm">{{ $recentJobs->count() }}</x-ui-badge>
                 </div>
-                <p class="text-sm text-gray-600 mt-1">Die letzten 10 Aufträge in deinem Team</p>
+                <p class="text-sm text-[var(--ui-muted)] mt-1">Die letzten 10 Aufträge in deinem Team</p>
             </div>
             <div class="p-6">
                 @if($recentJobs->count() > 0)
@@ -167,7 +167,7 @@
                         </x-ui-table-body>
                     </x-ui-table>
                 @else
-                    <div class="text-center py-8 text-gray-600">Keine Print Jobs gefunden</div>
+                    <div class="text-center py-8 text-[var(--ui-muted)]">Keine Print Jobs gefunden</div>
                 @endif
             </div>
         </div>

@@ -1,6 +1,6 @@
 <x-ui-page>
     <x-slot name="navbar">
-        <x-ui-page-navbar title="" />
+        <x-ui-page-navbar title="Printing" />
     </x-slot>
 
     <x-slot name="actionbar">
@@ -20,7 +20,7 @@
         </div>
 
         <!-- Tabelle -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="bg-[var(--ui-surface)] rounded-lg shadow-sm border border-[var(--ui-border)]">
             @if($jobs->count() > 0)
                 <x-ui-table>
                     <x-ui-table-header>
@@ -35,7 +35,7 @@
                         @foreach($jobs as $job)
                             <x-ui-table-row>
                                 <x-ui-table-cell>
-                                    <a href="{{ route('printing.jobs.show', $job) }}" class="text-primary hover:underline">{{ $job->template }}</a>
+                                    <a href="{{ route('printing.jobs.show', $job) }}" class="text-[var(--ui-primary)] hover:underline">{{ $job->template }}</a>
                                 </x-ui-table-cell>
                                 <x-ui-table-cell>
                                     <x-ui-badge
@@ -68,7 +68,7 @@
                     </x-ui-table-body>
                 </x-ui-table>
             @else
-                <div class="text-center py-12 text-gray-600">Keine Jobs gefunden</div>
+                <div class="text-center py-12 text-[var(--ui-muted)]">Keine Jobs gefunden</div>
             @endif
         </div>
 

@@ -34,32 +34,6 @@
         </x-ui-page-actionbar>
     </x-slot>
 
-    {{-- Schnellzugriff --}}
-    <x-slot name="sidebar">
-        <x-ui-page-sidebar title="Schnellzugriff" icon="heroicon-o-squares-2x2" width="w-72" :defaultOpen="true">
-            <div class="p-4 space-y-1">
-                <a href="{{ route('printing.printers.index') }}" wire:navigate
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-[var(--ui-secondary)] hover:bg-[var(--ui-muted-5)] transition-colors">
-                    @svg('heroicon-o-printer', 'w-5 h-5 text-[var(--ui-muted)] shrink-0')
-                    <span class="flex-1">Drucker</span>
-                    <span class="text-xs font-medium text-[var(--ui-muted)]">{{ $totalPrinters }}</span>
-                </a>
-                <a href="{{ route('printing.groups.index') }}" wire:navigate
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-[var(--ui-secondary)] hover:bg-[var(--ui-muted-5)] transition-colors">
-                    @svg('heroicon-o-folder', 'w-5 h-5 text-[var(--ui-muted)] shrink-0')
-                    <span class="flex-1">Gruppen</span>
-                    <span class="text-xs font-medium text-[var(--ui-muted)]">{{ $totalGroups }}</span>
-                </a>
-                <a href="{{ route('printing.jobs.index') }}" wire:navigate
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-[var(--ui-secondary)] hover:bg-[var(--ui-muted-5)] transition-colors">
-                    @svg('heroicon-o-document-text', 'w-5 h-5 text-[var(--ui-muted)] shrink-0')
-                    <span class="flex-1">Print Jobs</span>
-                    <span class="text-xs font-medium text-[var(--ui-muted)]">{{ $totalJobs }}</span>
-                </a>
-            </div>
-        </x-ui-page-sidebar>
-    </x-slot>
-
     {{-- Aktivitäten --}}
     <x-slot name="activity">
         <x-ui-page-sidebar title="Aktivitäten" icon="heroicon-o-bolt" width="w-80" :defaultOpen="false" storeKey="activityOpen" side="right">
@@ -133,7 +107,7 @@
             <div class="flex items-center gap-2">
                 @svg('heroicon-o-queue-list', 'w-5 h-5 text-[var(--ui-secondary)]')
                 <h3 class="text-base font-semibold text-[var(--ui-secondary)] m-0">Neueste Print Jobs</h3>
-                <x-ui-badge variant="neutral" size="sm">{{ $recentJobs->count() }}</x-ui-badge>
+                <x-ui-badge variant="secondary" size="sm">{{ $recentJobs->count() }}</x-ui-badge>
                 <span class="text-xs text-[var(--ui-muted)] ml-1">letzte 10 Aufträge im Team</span>
             </div>
 
@@ -157,7 +131,7 @@
                                 </x-ui-table-cell>
                                 <x-ui-table-cell>
                                     <x-ui-badge
-                                        variant="{{ in_array($job->status, ['pending','processing']) ? 'warning' : ($job->status === 'completed' ? 'success' : ($job->status === 'failed' ? 'danger' : 'secondary')) }}"
+                                        variant="{{ $job->status_color }}"
                                         size="sm"
                                     >
                                         {{ $job->status_description }}

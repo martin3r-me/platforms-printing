@@ -10,7 +10,7 @@
             ['label' => 'Job #' . $job->id],
         ]">
             <x-ui-badge
-                variant="{{ in_array($job->status, ['pending','processing']) ? 'warning' : ($job->status === 'completed' ? 'success' : ($job->status === 'failed' ? 'danger' : 'secondary')) }}"
+                variant="{{ $job->status_color }}"
                 size="sm"
             >
                 {{ $job->status_description }}
@@ -48,7 +48,7 @@
             <div class="rounded-xl bg-[var(--ui-surface)] border border-[var(--ui-border)] shadow-sm p-4">
                 <div class="text-[10px] font-semibold uppercase tracking-wider text-[var(--ui-muted)] mb-1.5">Status</div>
                 <x-ui-badge
-                    variant="{{ in_array($job->status, ['pending','processing']) ? 'warning' : ($job->status === 'completed' ? 'success' : ($job->status === 'failed' ? 'danger' : 'secondary')) }}"
+                    variant="{{ $job->status_color }}"
                     size="sm"
                 >
                     {{ $job->status_description }}
@@ -110,8 +110,8 @@
                 @elseif(trim((string) $preview) === '')
                     <div class="text-center py-8 text-sm text-[var(--ui-muted)]">Kein Inhalt vorhanden.</div>
                 @else
-                    <div class="rounded-lg bg-[var(--ui-muted-5)] border border-[var(--ui-border)] overflow-auto max-h-96">
-                        <pre class="p-4 text-xs font-mono text-[var(--ui-secondary)] whitespace-pre-wrap break-words">{{ $preview }}</pre>
+                    <div class="flex justify-center overflow-auto max-h-96 py-5 rounded-lg bg-[var(--ui-muted-5)] border border-[var(--ui-border)]">
+                        <pre class="w-[320px] max-w-full bg-[var(--ui-surface)] text-[var(--ui-secondary)] shadow-md rounded-sm px-5 py-4 text-[11px] leading-relaxed font-mono whitespace-pre-wrap break-words">{{ $preview }}</pre>
                     </div>
                 @endif
             </div>

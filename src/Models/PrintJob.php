@@ -168,8 +168,8 @@ class PrintJob extends Model
             'processing' => 'info',
             'completed' => 'success',
             'failed' => 'danger',
-            'cancelled' => 'neutral',
-            default => 'neutral',
+            'cancelled' => 'secondary',
+            default => 'secondary',
         };
     }
 

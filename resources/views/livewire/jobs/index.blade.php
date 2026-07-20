@@ -78,7 +78,7 @@
                             </x-ui-table-cell>
                             <x-ui-table-cell>
                                 <x-ui-badge
-                                    variant="{{ in_array($job->status, ['pending','processing']) ? 'warning' : ($job->status === 'completed' ? 'success' : ($job->status === 'failed' ? 'danger' : 'secondary')) }}"
+                                    variant="{{ $job->status_color }}"
                                     size="sm"
                                 >
                                     {{ $job->status_description }}

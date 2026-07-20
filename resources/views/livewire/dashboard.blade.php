@@ -64,6 +64,33 @@
     </x-slot>
 
     <x-ui-page-container>
+        {{-- Hero --}}
+        <div class="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--ui-primary-20)] bg-gradient-to-br from-[var(--ui-primary-10)] to-[var(--ui-primary-5)] px-6 py-5">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center justify-center w-12 h-12 rounded-2xl bg-[var(--ui-primary)] text-[var(--ui-on-primary)] shadow-sm shrink-0">
+                    @svg('heroicon-o-printer', 'w-6 h-6')
+                </div>
+                <div>
+                    <h1 class="text-lg font-semibold text-[var(--ui-secondary)] m-0">Printing Übersicht</h1>
+                    <p class="text-sm text-[var(--ui-muted)] m-0">
+                        {{ $perspective === 'team' ? 'Team-Ansicht' : 'Persönliche Ansicht' }} · {{ $currentDate }}
+                    </p>
+                </div>
+            </div>
+            @if($failedJobs > 0)
+                <a href="{{ route('printing.jobs.index') }}" wire:navigate
+                   class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--ui-danger-10)] text-[var(--ui-danger)] text-sm font-medium hover:bg-[var(--ui-danger-20)] transition-colors">
+                    @svg('heroicon-o-exclamation-triangle', 'w-4 h-4')
+                    {{ $failedJobs }} fehlgeschlagen
+                </a>
+            @else
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--ui-success-10)] text-[var(--ui-success)] text-sm font-medium">
+                    @svg('heroicon-o-check-circle', 'w-4 h-4')
+                    Alles im grünen Bereich
+                </div>
+            @endif
+        </div>
+
         {{-- Kennzahlen --}}
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <x-ui-dashboard-tile

@@ -43,35 +43,68 @@
     </x-slot>
 
     <x-ui-page-container>
-        {{-- Status-Zeitleiste --}}
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="rounded-xl bg-[var(--ui-surface)] border border-[var(--ui-border)] shadow-sm p-4">
-                <div class="text-[10px] font-semibold uppercase tracking-wider text-[var(--ui-muted)] mb-1.5">Status</div>
-                <x-ui-badge
-                    variant="{{ $job->status_color }}"
-                    size="sm"
-                >
-                    {{ $job->status_description }}
-                </x-ui-badge>
+        {{-- Lifecycle-Stepper --}}
+        @php
+            $stepStates = match($job->status) {
+                'pending'    => ['done', 'current', 'pending'],
+                'processing' => ['done', 'done', 'current'],
+                'completed'  => ['done', 'done', 'done'],
+                'failed'     => ['done', 'done', 'error'],
+                'cancelled'  => ['done', 'done', 'error'],
+                default      => ['current', 'pending', 'pending'],
+            };
+            $lastIcon = match($job->status) {
+                'completed' => 'heroicon-o-check-circle',
+                'failed'    => 'heroicon-o-x-circle',
+                'cancelled' => 'heroicon-o-no-symbol',
+                default     => 'heroicon-o-printer',
+            };
+            $lastLabel = match($job->status) {
+                'failed'    => 'Fehlgeschlagen',
+                'cancelled' => 'Abgebrochen',
+                default     => 'Gedruckt',
+            };
+            $steps = [
+                ['label' => 'Erstellt',   'icon' => 'heroicon-o-document-plus',   'time' => $job->created_at?->format('d.m.Y H:i')],
+                ['label' => 'An Drucker', 'icon' => 'heroicon-o-paper-airplane',  'time' => null],
+                ['label' => $lastLabel,   'icon' => $lastIcon,                    'time' => $job->printed_at?->format('d.m.Y H:i')],
+            ];
+        @endphp
+        <div class="rounded-xl bg-[var(--ui-surface)] border border-[var(--ui-border)] shadow-sm p-6">
+            {{-- Knoten + Verbinder --}}
+            <div class="flex items-center">
+                @foreach($steps as $i => $step)
+                    @php
+                        $nodeClass = match($stepStates[$i]) {
+                            'done'    => 'bg-[var(--ui-success)] text-[var(--ui-on-success)] border-transparent',
+                            'current' => 'bg-[var(--ui-primary)] text-[var(--ui-on-primary)] border-transparent ring-4 ring-[var(--ui-primary-10)]',
+                            'error'   => 'bg-[var(--ui-danger)] text-[var(--ui-on-danger)] border-transparent',
+                            default   => 'bg-[var(--ui-surface)] text-[var(--ui-muted)] border-[var(--ui-border)]',
+                        };
+                    @endphp
+                    <div class="flex items-center justify-center w-11 h-11 rounded-full border-2 shrink-0 transition-colors {{ $nodeClass }}">
+                        @svg($step['icon'], 'w-5 h-5')
+                    </div>
+                    @if(!$loop->last)
+                        <div class="flex-1 h-0.5 mx-1.5 rounded-full {{ $stepStates[$i] === 'done' ? 'bg-[var(--ui-success)]' : 'bg-[var(--ui-border)]' }}"></div>
+                    @endif
+                @endforeach
             </div>
-            <div class="rounded-xl bg-[var(--ui-surface)] border border-[var(--ui-border)] shadow-sm p-4">
-                <div class="text-[10px] font-semibold uppercase tracking-wider text-[var(--ui-muted)] mb-1.5">Erstellt</div>
-                <div class="text-sm font-medium text-[var(--ui-secondary)]">{{ $job->created_at->format('d.m.Y H:i') }}</div>
-                <div class="text-xs text-[var(--ui-muted)]">{{ $job->created_at->diffForHumans() }}</div>
+            {{-- Beschriftungen --}}
+            <div class="flex mt-3">
+                @foreach($steps as $i => $step)
+                    <div class="flex-1 {{ $loop->first ? 'text-left' : ($loop->last ? 'text-right' : 'text-center') }}">
+                        <div class="text-xs font-medium {{ in_array($stepStates[$i], ['done','current','error']) ? 'text-[var(--ui-secondary)]' : 'text-[var(--ui-muted)]' }}">{{ $step['label'] }}</div>
+                        <div class="text-[11px] text-[var(--ui-muted)] tabular-nums">{{ $step['time'] ?? '—' }}</div>
+                    </div>
+                @endforeach
             </div>
-            <div class="rounded-xl bg-[var(--ui-surface)] border border-[var(--ui-border)] shadow-sm p-4">
-                <div class="text-[10px] font-semibold uppercase tracking-wider text-[var(--ui-muted)] mb-1.5">Gedruckt am</div>
-                @if($job->printed_at)
-                    <div class="text-sm font-medium text-[var(--ui-secondary)]">{{ $job->printed_at->format('d.m.Y H:i') }}</div>
-                    <div class="text-xs text-[var(--ui-muted)]">{{ $job->printed_at->diffForHumans() }}</div>
-                @else
-                    <div class="text-sm text-[var(--ui-muted)]">– noch nicht –</div>
-                @endif
-            </div>
-            <div class="rounded-xl bg-[var(--ui-surface)] border border-[var(--ui-border)] shadow-sm p-4">
-                <div class="text-[10px] font-semibold uppercase tracking-wider text-[var(--ui-muted)] mb-1.5">Versuche</div>
-                <div class="text-sm font-medium text-[var(--ui-secondary)]">{{ $job->retry_count }}× / max. {{ config('printing.jobs.max_retries', 3) }}</div>
-            </div>
+            @if($job->retry_count > 0)
+                <div class="mt-5 pt-4 border-t border-[var(--ui-border)] flex items-center gap-2 text-xs text-[var(--ui-muted)]">
+                    @svg('heroicon-o-arrow-path', 'w-3.5 h-3.5')
+                    {{ $job->retry_count }} Wiederholung(en) · max. {{ config('printing.jobs.max_retries', 3) }}
+                </div>
+            @endif
         </div>
 
         {{-- Fehlermeldung --}}

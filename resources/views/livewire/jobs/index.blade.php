@@ -113,7 +113,9 @@
             <div>{{ $jobs->links() }}</div>
         @else
             <div class="rounded-xl bg-[var(--ui-surface)] border border-[var(--ui-border)] shadow-sm p-12 text-center">
-                @svg('heroicon-o-queue-list', 'w-10 h-10 mx-auto text-[var(--ui-muted)] opacity-40 mb-3')
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--ui-primary-10)] text-[var(--ui-primary)] mb-4">
+                    @svg('heroicon-o-queue-list', 'w-7 h-7')
+                </div>
                 <div class="text-base font-medium text-[var(--ui-secondary)]">Keine Jobs gefunden</div>
                 <div class="text-sm text-[var(--ui-muted)] mt-1">Sobald Aufträge erstellt werden, erscheinen sie hier.</div>
             </div>

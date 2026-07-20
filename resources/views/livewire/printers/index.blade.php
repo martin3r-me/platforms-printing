@@ -102,9 +102,17 @@
             <div>{{ $printers->links() }}</div>
         @else
             <div class="rounded-xl bg-[var(--ui-surface)] border border-[var(--ui-border)] shadow-sm p-12 text-center">
-                @svg('heroicon-o-printer', 'w-10 h-10 mx-auto text-[var(--ui-muted)] opacity-40 mb-3')
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--ui-primary-10)] text-[var(--ui-primary)] mb-4">
+                    @svg('heroicon-o-printer', 'w-7 h-7')
+                </div>
                 <div class="text-base font-medium text-[var(--ui-secondary)]">Keine Drucker gefunden</div>
-                <div class="text-sm text-[var(--ui-muted)] mt-1">Erstellen Sie den ersten Drucker, um zu starten.</div>
+                <div class="text-sm text-[var(--ui-muted)] mt-1 mb-4">Erstellen Sie den ersten Drucker, um zu starten.</div>
+                <x-ui-button variant="primary" size="sm" wire:click="openCreateModal">
+                    <div class="flex items-center gap-2">
+                        @svg('heroicon-o-plus', 'w-4 h-4')
+                        Neuer Drucker
+                    </div>
+                </x-ui-button>
             </div>
         @endif
 

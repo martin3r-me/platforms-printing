@@ -38,6 +38,15 @@
         </x-ui-page-sidebar>
     </x-slot>
 
+    {{-- Aktivitäten --}}
+    <x-slot name="activity">
+        <x-ui-page-sidebar title="Aktivitäten" icon="heroicon-o-bolt" width="w-80" :defaultOpen="false" storeKey="activityOpen" side="right">
+            <div class="p-4">
+                <livewire:printing.activity-feed wire:key="printing-activity-feed" />
+            </div>
+        </x-ui-page-sidebar>
+    </x-slot>
+
     <x-ui-page-container>
         {{-- Kennzahlen --}}
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">

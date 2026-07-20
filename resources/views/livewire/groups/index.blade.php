@@ -45,6 +45,15 @@
         </x-ui-page-sidebar>
     </x-slot>
 
+    {{-- Aktivitäten --}}
+    <x-slot name="activity">
+        <x-ui-page-sidebar title="Aktivitäten" icon="heroicon-o-bolt" width="w-80" :defaultOpen="false" storeKey="activityOpen" side="right">
+            <div class="p-4">
+                <livewire:printing.activity-feed wire:key="printing-activity-feed" />
+            </div>
+        </x-ui-page-sidebar>
+    </x-slot>
+
     <x-ui-page-container>
         @if($groups->count() > 0)
             <x-ui-table>

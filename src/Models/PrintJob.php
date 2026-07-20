@@ -6,9 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Str;
+use Platform\ActivityLog\Traits\LogsActivity;
 
 class PrintJob extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'uuid',
         'printable_type',
@@ -216,6 +219,9 @@ class PrintJob extends Model
     public function markAsProcessing(): void
     {
         $this->update(['status' => 'processing']);
+        $this->logActivity('An Drucker gesendet', [
+            'printer' => $this->printer?->name,
+        ]);
     }
 
     /**
@@ -227,17 +233,25 @@ class PrintJob extends Model
             'status' => 'completed',
             'printed_at' => now(),
         ]);
+        $this->logActivity('Gedruckt', [
+            'printer' => $this->printer?->name,
+            'printed_at' => $this->printed_at?->format('d.m.Y H:i:s'),
+        ]);
     }
 
     /**
      * Markiert den Job als fehlgeschlagen
      */
-    public function markAsFailed(string $errorMessage = null): void
+    public function markAsFailed(?string $errorMessage = null): void
     {
         $this->update([
             'status' => 'failed',
             'error_message' => $errorMessage,
             'retry_count' => $this->retry_count + 1,
+        ]);
+        $this->logActivity('Fehlgeschlagen', [
+            'error' => $errorMessage,
+            'retry_count' => $this->retry_count,
         ]);
     }
 
@@ -247,6 +261,7 @@ class PrintJob extends Model
     public function markAsCancelled(): void
     {
         $this->update(['status' => 'cancelled']);
+        $this->logActivity('Abgebrochen');
     }
 
     /**

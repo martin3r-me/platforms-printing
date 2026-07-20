@@ -7,31 +7,51 @@
         <x-ui-page-actionbar :breadcrumbs="[
             ['label' => 'Printing', 'href' => route('printing.dashboard'), 'icon' => 'printer'],
             ['label' => 'Dashboard', 'icon' => 'chart-bar'],
-        ]">
-            {{-- Perspektive-Toggle --}}
-            <div class="flex items-center gap-1 p-1 rounded-lg bg-[var(--ui-muted-5)] border border-[var(--ui-border)]">
-                <button
-                    wire:click="$set('perspective', 'personal')"
-                    class="flex items-center gap-1.5 px-3 py-1 rounded-md text-sm font-medium transition"
-                    :class="'{{ $perspective }}' === 'personal'
-                        ? 'bg-[var(--ui-surface)] text-[var(--ui-secondary)] shadow-sm'
-                        : 'text-[var(--ui-muted)] hover:text-[var(--ui-secondary)]'"
-                >
-                    @svg('heroicon-o-user', 'w-4 h-4')
-                    <span>Persönlich</span>
-                </button>
-                <button
-                    wire:click="$set('perspective', 'team')"
-                    class="flex items-center gap-1.5 px-3 py-1 rounded-md text-sm font-medium transition"
-                    :class="'{{ $perspective }}' === 'team'
-                        ? 'bg-[var(--ui-surface)] text-[var(--ui-secondary)] shadow-sm'
-                        : 'text-[var(--ui-muted)] hover:text-[var(--ui-secondary)]'"
-                >
-                    @svg('heroicon-o-users', 'w-4 h-4')
-                    <span>Team</span>
-                </button>
+        ]" />
+    </x-slot>
+
+    {{-- Ansicht --}}
+    <x-slot name="sidebar">
+        <x-ui-page-sidebar title="Ansicht" icon="heroicon-o-eye" width="w-72" :defaultOpen="true">
+            <div class="p-4 space-y-6">
+                <section>
+                    <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--ui-muted)] mb-2">Perspektive</h3>
+                    <div class="space-y-1">
+                        <button type="button" wire:click="$set('perspective', 'personal')"
+                            class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors {{ $perspective === 'personal' ? 'bg-[var(--ui-primary)] text-[var(--ui-on-primary)] font-medium' : 'text-[var(--ui-secondary)] hover:bg-[var(--ui-muted-5)]' }}">
+                            @svg('heroicon-o-user', 'w-5 h-5 shrink-0')
+                            <span>Persönlich</span>
+                        </button>
+                        <button type="button" wire:click="$set('perspective', 'team')"
+                            class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors {{ $perspective === 'team' ? 'bg-[var(--ui-primary)] text-[var(--ui-on-primary)] font-medium' : 'text-[var(--ui-secondary)] hover:bg-[var(--ui-muted-5)]' }}">
+                            @svg('heroicon-o-users', 'w-5 h-5 shrink-0')
+                            <span>Team</span>
+                        </button>
+                    </div>
+                    <p class="text-xs text-[var(--ui-muted)] mt-2 px-1">
+                        {{ $perspective === 'personal' ? 'Deine eigenen Aufträge und Drucker.' : 'Alle Drucker und Jobs des Teams.' }}
+                    </p>
+                </section>
+
+                <section>
+                    <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--ui-muted)] mb-2">Auf einen Blick</h3>
+                    <dl class="rounded-lg border border-[var(--ui-border)] divide-y divide-[var(--ui-border)] overflow-hidden">
+                        <div class="flex items-center justify-between gap-3 px-3 py-2">
+                            <dt class="text-xs text-[var(--ui-muted)]">Drucker aktiv</dt>
+                            <dd class="text-sm text-[var(--ui-secondary)] m-0">{{ $activePrinters }} / {{ $totalPrinters }}</dd>
+                        </div>
+                        <div class="flex items-center justify-between gap-3 px-3 py-2">
+                            <dt class="text-xs text-[var(--ui-muted)]">Gruppen aktiv</dt>
+                            <dd class="text-sm text-[var(--ui-secondary)] m-0">{{ $activeGroups }} / {{ $totalGroups }}</dd>
+                        </div>
+                        <div class="flex items-center justify-between gap-3 px-3 py-2">
+                            <dt class="text-xs text-[var(--ui-muted)]">Jobs wartend</dt>
+                            <dd class="text-sm text-[var(--ui-secondary)] m-0">{{ $pendingJobs }}</dd>
+                        </div>
+                    </dl>
+                </section>
             </div>
-        </x-ui-page-actionbar>
+        </x-ui-page-sidebar>
     </x-slot>
 
     {{-- Aktivitäten --}}
@@ -44,25 +64,6 @@
     </x-slot>
 
     <x-ui-page-container>
-        {{-- Perspektive-Hinweis --}}
-        @if($perspective === 'personal')
-            <div class="flex items-center gap-3 rounded-xl bg-[var(--ui-info-5)] border border-[var(--ui-info-20)] px-4 py-3">
-                @svg('heroicon-o-user', 'w-5 h-5 text-[var(--ui-info)] flex-shrink-0')
-                <div>
-                    <div class="text-sm font-semibold text-[var(--ui-secondary)]">Persönliche Druck-Übersicht</div>
-                    <div class="text-xs text-[var(--ui-muted)]">Deine eigenen Aufträge und dir zugewiesene Drucker.</div>
-                </div>
-            </div>
-        @else
-            <div class="flex items-center gap-3 rounded-xl bg-[var(--ui-success-5)] border border-[var(--ui-success-20)] px-4 py-3">
-                @svg('heroicon-o-users', 'w-5 h-5 text-[var(--ui-success)] flex-shrink-0')
-                <div>
-                    <div class="text-sm font-semibold text-[var(--ui-secondary)]">Team-Übersicht</div>
-                    <div class="text-xs text-[var(--ui-muted)]">Alle Drucker und Jobs des Teams im Blick.</div>
-                </div>
-            </div>
-        @endif
-
         {{-- Kennzahlen --}}
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <x-ui-dashboard-tile

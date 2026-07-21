@@ -245,6 +245,12 @@ class PrintingService implements PrintingServiceInterface
      */
     public function encodeForPrinter(string $content): string
     {
+        // Typografische Sonderzeichen (Middot, Bullet, Gedankenstriche,
+        // typografische Anführungszeichen, Ellipse …) auf sicheres ASCII
+        // abbilden – Bondrucker haben diese in ihrer Codepage oft nicht bzw.
+        // an abweichenden Positionen (z. B. · -> ø auf manchen Star-Geräten).
+        $content = $this->sanitizeForPrint($content);
+
         $codepage = config('printing.encoding.codepage', 'CP1252');
 
         if (strtoupper($codepage) !== 'UTF-8') {
@@ -258,6 +264,32 @@ class PrintingService implements PrintingServiceInterface
         // passende Zeichentabelle zu setzen. Muss NACH der Codepage-Umwandlung
         // passieren, da es sich um rohe Control-Bytes handelt.
         return $this->setupCommand() . $content;
+    }
+
+    /**
+     * Bildet typografische Sonderzeichen auf druckersicheres ASCII ab.
+     * Wird nur im Druck-Pfad angewandt (die Web-Vorschau bleibt UTF-8/hübsch).
+     */
+    protected function sanitizeForPrint(string $content): string
+    {
+        return strtr($content, [
+            "\u{00B7}" => '-',    // · Middot (Feld-Trenner)
+            "\u{2022}" => '-',    // • Bullet
+            "\u{2219}" => '-',    // ∙ Bullet operator
+            "\u{00A0}" => ' ',    // geschütztes Leerzeichen
+            "\u{2013}" => '-',    // – En-Dash
+            "\u{2014}" => '-',    // — Em-Dash
+            "\u{2212}" => '-',    // − Minus
+            "\u{2026}" => '...',  // … Ellipse
+            "\u{2018}" => "'",    // ‘
+            "\u{2019}" => "'",    // ’
+            "\u{201A}" => "'",    // ‚
+            "\u{201C}" => '"',    // “
+            "\u{201D}" => '"',    // ”
+            "\u{201E}" => '"',    // „
+            "\u{2039}" => '<',    // ‹
+            "\u{203A}" => '>',    // ›
+        ]);
     }
 
     /**

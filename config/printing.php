@@ -29,6 +29,25 @@ return [
     */
     'encoding' => [
         'codepage' => env('PRINTING_CODEPAGE', 'CP1252'),
+
+        /*
+        | Roher Steuerbefehl (Hex), der jedem Druckauftrag vorangestellt wird,
+        | um den Drucker auf einen definierten Zeichensatz zu zwingen.
+        |
+        | Hintergrund: Steht der Drucker auf "International Character Set =
+        | Deutschland" (ISO-646-DE), druckt er @ als §, [ als Ä, \ als Ö usw.,
+        | und Umlaute (hohe Bytes) werden falsch dargestellt.
+        |
+        | Default (StarPRNT):
+        |   1B 52 00        ESC R 0   -> Internationaler Zeichensatz = USA
+        |                              (@ [ \ ] { | } ~ wieder normal)
+        |   1B 1D 74 10     ESC GS t 16 -> Codepage Windows-1252 (WPC1252)
+        |
+        | Bei Star Line Mode / Epson ESC-POS oder anderem Modell ggf. anpassen,
+        | z. B. Epson CP1252: 1B 74 10 (ESC t 16) + 1B 52 00.
+        | Leerer String = kein Steuerbefehl.
+        */
+        'setup_command_hex' => env('PRINTING_SETUP_COMMAND', '1B 52 00 1B 1D 74 10'),
     ],
 
     'navigation' => [

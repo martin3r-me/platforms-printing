@@ -247,13 +247,36 @@ class PrintingService implements PrintingServiceInterface
     {
         $codepage = config('printing.encoding.codepage', 'CP1252');
 
-        if (strtoupper($codepage) === 'UTF-8') {
-            return $content;
+        if (strtoupper($codepage) !== 'UTF-8') {
+            $encoded = @iconv('UTF-8', $codepage . '//TRANSLIT//IGNORE', $content);
+            if ($encoded !== false) {
+                $content = $encoded;
+            }
         }
 
-        $encoded = @iconv('UTF-8', $codepage . '//TRANSLIT//IGNORE', $content);
+        // Steuerbefehl (rohe Bytes) voranstellen, um den Drucker auf die
+        // passende Zeichentabelle zu setzen. Muss NACH der Codepage-Umwandlung
+        // passieren, da es sich um rohe Control-Bytes handelt.
+        return $this->setupCommand() . $content;
+    }
 
-        return $encoded === false ? $content : $encoded;
+    /**
+     * Rohe Steuer-Bytes, die jedem Druckauftrag vorangestellt werden, um den
+     * Drucker auf einen definierten Zeichensatz zu setzen (z. B. Star/Epson
+     * "International Character Set = USA" + Codepage Windows-1252). Ohne das
+     * druckt ein auf "Deutschland" stehender Drucker @ als § und Umlaute falsch.
+     *
+     * Konfigurierbar als Hex-String über printing.encoding.setup_command_hex.
+     */
+    protected function setupCommand(): string
+    {
+        $hex = preg_replace('/[^0-9A-Fa-f]/', '', (string) config('printing.encoding.setup_command_hex', ''));
+
+        if ($hex === '' || strlen($hex) % 2 !== 0) {
+            return '';
+        }
+
+        return (string) hex2bin($hex);
     }
 
     /**

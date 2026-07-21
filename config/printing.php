@@ -28,26 +28,31 @@ return [
     |   UTF-8   – nur wenn der Drucker echtes UTF-8 kann
     */
     'encoding' => [
-        'codepage' => env('PRINTING_CODEPAGE', 'CP1252'),
+        /*
+        | Ziel-Codepage des Druckers. Die getesteten Star-CloudPRNT-Geräte
+        | drucken in einer DOS-Codepage (CP437/CP850), in der ä/ö/ü/ß an den
+        | Positionen 84/94/81/E1 liegen. CP850 (DOS Westeuropa) trifft das und
+        | ist der robuste Default. Alternativen: CP437, CP858 (inkl. €),
+        | CP1252 (nur wenn der Drucker wirklich auf Windows-1252 steht), UTF-8
+        | (nur wenn der Drucker echtes UTF-8 kann – die meisten Bondrucker NICHT,
+        | dann werden Umlaute als zwei Zeichen gedruckt).
+        */
+        'codepage' => env('PRINTING_CODEPAGE', 'CP850'),
 
         /*
         | Roher Steuerbefehl (Hex), der jedem Druckauftrag vorangestellt wird,
-        | um den Drucker auf einen definierten Zeichensatz zu zwingen.
+        | um den internationalen Zeichensatz des Druckers zu setzen.
         |
         | Hintergrund: Steht der Drucker auf "International Character Set =
-        | Deutschland" (ISO-646-DE), druckt er @ als §, [ als Ä, \ als Ö usw.,
-        | und Umlaute (hohe Bytes) werden falsch dargestellt.
+        | Deutschland" (ISO-646-DE), druckt er @ als §, [ als Ä, \ als Ö usw.
         |
-        | Default (StarPRNT):
-        |   1B 52 00        ESC R 0   -> Internationaler Zeichensatz = USA
-        |                              (@ [ \ ] { | } ~ wieder normal)
-        |   1B 1D 74 10     ESC GS t 16 -> Codepage Windows-1252 (WPC1252)
+        | Default: 1B 52 00 = ESC R 0 -> Internationaler Zeichensatz = USA
+        | (@ [ \ ] { | } ~ wieder normal). Im Test bestätigt wirksam.
         |
-        | Bei Star Line Mode / Epson ESC-POS oder anderem Modell ggf. anpassen,
-        | z. B. Epson CP1252: 1B 74 10 (ESC t 16) + 1B 52 00.
-        | Leerer String = kein Steuerbefehl.
+        | Optional zusätzlich eine Codepage erzwingen (modellabhängig, im Test
+        | ignorierte der Drucker ESC GS t 16). Leerer String = kein Befehl.
         */
-        'setup_command_hex' => env('PRINTING_SETUP_COMMAND', '1B 52 00 1B 1D 74 10'),
+        'setup_command_hex' => env('PRINTING_SETUP_COMMAND', '1B 52 00'),
     ],
 
     'navigation' => [

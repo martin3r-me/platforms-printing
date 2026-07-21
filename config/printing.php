@@ -12,6 +12,25 @@ return [
 
     'guard' => 'web',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Zeichenkodierung für den Druck
+    |--------------------------------------------------------------------------
+    | Star/Epson CloudPRNT-Drucker interpretieren text/plain in ihrer
+    | eingestellten Zeichentabelle (Codepage), NICHT in UTF-8. Der Inhalt wird
+    | daher vor dem Ausliefern in diese Codepage umgewandelt.
+    |
+    | Muss zur Drucker-Einstellung passen. Übliche Werte:
+    |   CP1252  (Windows-1252) – deckt deutsche Umlaute/ß/€ ab (Default)
+    |   CP850   – DOS Westeuropa (viele Bondrucker)
+    |   CP858   – wie CP850 inkl. €
+    |   CP437   – DOS US
+    |   UTF-8   – nur wenn der Drucker echtes UTF-8 kann
+    */
+    'encoding' => [
+        'codepage' => env('PRINTING_CODEPAGE', 'CP1252'),
+    ],
+
     'navigation' => [
         'printing' => [
             'title' => 'Drucken',

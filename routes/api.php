@@ -98,18 +98,21 @@ Route::group([], function () {
             $job->update(['status' => 'processing']);
         }
 
-        // Generiere Job-Content
-        $content = app(PrintingService::class)->generateJobContent($job);
+        // Generiere Job-Content (UTF-8) und wandle in die Drucker-Codepage um
+        $service = app(PrintingService::class);
+        $content = $service->encodeForPrinter($service->generateJobContent($job));
 
         Log::info('CloudPRNT Job Download - Content generiert', [
             'job_id' => $job->id,
             'job_uuid' => $job->uuid,
             'content_length' => strlen($content),
+            'codepage' => config('printing.encoding.codepage'),
         ]);
 
-        // CloudPRNT-kompatible Antwort (roher Text, kein JSON)
+        // CloudPRNT-kompatible Antwort: rohe Bytes in der Drucker-Codepage,
+        // daher bewusst OHNE charset=utf-8 (Drucker druckt Bytes 1:1).
         return Response::make($content, 200, [
-            'Content-Type' => 'text/plain; charset=utf-8',
+            'Content-Type' => 'text/plain',
         ]);
     })->name('printing.api.job.download');
 

@@ -16,7 +16,7 @@ class PrintingService implements PrintingServiceInterface
      */
     public function createJob(
         Model $printable,
-        string $template = null,
+        ?string $template = null,
         array $data = [],
         ?int $printerId = null,
         ?int $printerGroupId = null
@@ -157,7 +157,7 @@ class PrintingService implements PrintingServiceInterface
     /**
      * Markiert einen Job als fehlgeschlagen
      */
-    public function markJobAsFailed(int $jobId, string $errorMessage = null): bool
+    public function markJobAsFailed(int $jobId, ?string $errorMessage = null): bool
     {
         $job = PrintJob::find($jobId);
         
@@ -207,7 +207,7 @@ class PrintingService implements PrintingServiceInterface
                 'module' => $this->getModuleName($printable),
                 'model' => class_basename($printable),
             ]);
-            return view($bladeTemplate, $templateData)->render();
+            return $this->normalizeContent(view($bladeTemplate, $templateData)->render());
         }
 
         // Fallback: Einfache Text-Generierung
@@ -218,7 +218,42 @@ class PrintingService implements PrintingServiceInterface
             'module' => $this->getModuleName($printable),
             'model' => class_basename($printable),
         ]);
-        return $this->renderSimpleTemplate($printable, $templateData);
+        return $this->normalizeContent($this->renderSimpleTemplate($printable, $templateData));
+    }
+
+    /**
+     * Normalisiert gerenderten Template-Inhalt für den Bon-Druck.
+     *
+     * Blade escaped in {{ }} die Zeichen & < > " ' als HTML-Entities
+     * (z. B. & -> &amp;). Auf einem Text-Bon würden diese wörtlich erscheinen,
+     * daher hier zurück in reine Zeichen wandeln. Das Ergebnis bleibt UTF-8
+     * (für die Web-Vorschau); die Codepage-Umwandlung für den Drucker erfolgt
+     * erst beim Ausliefern (siehe encodeForPrinter()).
+     */
+    public function normalizeContent(string $content): string
+    {
+        return html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
+    /**
+     * Wandelt den UTF-8-Inhalt in die Zeichentabelle (Codepage) des Druckers um.
+     *
+     * Star/Epson CloudPRNT-Drucker drucken text/plain in ihrer eingestellten
+     * Zeichentabelle, nicht in UTF-8. Ohne Umwandlung werden Umlaute/ß falsch
+     * dargestellt. Die Ziel-Codepage ist über printing.encoding.codepage
+     * konfigurierbar und muss zur Drucker-Einstellung passen.
+     */
+    public function encodeForPrinter(string $content): string
+    {
+        $codepage = config('printing.encoding.codepage', 'CP1252');
+
+        if (strtoupper($codepage) === 'UTF-8') {
+            return $content;
+        }
+
+        $encoded = @iconv('UTF-8', $codepage . '//TRANSLIT//IGNORE', $content);
+
+        return $encoded === false ? $content : $encoded;
     }
 
     /**

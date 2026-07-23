@@ -43,6 +43,10 @@
                             </div>
                         @endif
                         <div class="flex items-center justify-between gap-3 px-3 py-2">
+                            <dt class="text-xs text-[var(--ui-muted)]">MAC</dt>
+                            <dd class="text-xs font-mono text-[var(--ui-secondary)] m-0 truncate">{{ $printer->mac_address ?: '–' }}</dd>
+                        </div>
+                        <div class="flex items-center justify-between gap-3 px-3 py-2">
                             <dt class="text-xs text-[var(--ui-muted)]">Status</dt>
                             <dd class="m-0">
                                 <x-ui-badge variant="{{ $printer->is_active ? 'success' : 'secondary' }}" size="xs">
@@ -146,6 +150,17 @@
                         </x-ui-button>
                     </div>
                 </div>
+            </div>
+
+            <div class="mt-4">
+                <x-ui-input-text
+                    name="printer_mac_address"
+                    label="MAC-Adresse"
+                    wire:model.live.debounce.500ms="printer_mac_address"
+                    placeholder="z. B. 00:11:62:AA:BB:CC"
+                    :errorKey="'printer_mac_address'"
+                />
+                <p class="mt-1 text-xs text-[var(--ui-muted)]">Über diese Adresse wird der Drucker beim CloudPRNT-Polling erkannt (Header <code>x-star-mac</code>). Genau so eintragen, wie der Drucker sie sendet.</p>
             </div>
 
             <div class="mt-4 pt-4 border-t border-[var(--ui-border)]">

@@ -130,6 +130,10 @@
                         <x-ui-input-text name="username" wire:model.live="username" label="Benutzername" />
                         <x-ui-input-text name="password" wire:model.live="password" type="password" label="Passwort" />
                     </div>
+                    <div>
+                        <x-ui-input-text name="mac_address" wire:model.live="mac_address" label="MAC-Adresse" placeholder="z. B. 00:11:62:AA:BB:CC" />
+                        <p class="mt-1 text-xs text-[var(--ui-muted)]">Zuordnung des Druckers beim CloudPRNT-Polling (Header <code>x-star-mac</code>). Genau so eintragen, wie der Drucker sie sendet.</p>
+                    </div>
                     <div class="grid grid-cols-1 gap-4">
                         <x-ui-input-select
                             name="group_id"
@@ -170,6 +174,10 @@
                         <x-ui-input-text name="edit_location" wire:model.live="edit_location" label="Standort" />
                         <x-ui-input-text name="edit_username" wire:model.live="edit_username" label="Benutzername" />
                         <x-ui-input-text name="edit_password" wire:model.live="edit_password" type="password" label="Passwort" />
+                    </div>
+                    <div>
+                        <x-ui-input-text name="edit_mac_address" wire:model.live="edit_mac_address" label="MAC-Adresse" placeholder="z. B. 00:11:62:AA:BB:CC" />
+                        <p class="mt-1 text-xs text-[var(--ui-muted)]">Zuordnung des Druckers beim CloudPRNT-Polling (Header <code>x-star-mac</code>).</p>
                     </div>
                 </form>
             </div>

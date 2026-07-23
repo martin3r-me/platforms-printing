@@ -26,6 +26,7 @@ class Index extends Component
     public $location = '';
     public $username = '';
     public $password = '';
+    public $mac_address = '';
     public $group_id = null;
 
     // Form fields for editing printer
@@ -33,6 +34,7 @@ class Index extends Component
     public $edit_location = '';
     public $edit_username = '';
     public $edit_password = '';
+    public $edit_mac_address = '';
     public $editingPrinterId = null;
 
     protected $queryString = [
@@ -128,6 +130,7 @@ class Index extends Component
             $this->edit_location = $printer->location;
             $this->edit_username = $printer->username;
             $this->edit_password = '';
+            $this->edit_mac_address = $printer->mac_address;
             $this->editModalShow = true;
         }
     }
@@ -136,7 +139,7 @@ class Index extends Component
     {
         $this->editModalShow = false;
         $this->editingPrinterId = null;
-        $this->reset(['edit_name', 'edit_location', 'edit_username', 'edit_password']);
+        $this->reset(['edit_name', 'edit_location', 'edit_username', 'edit_password', 'edit_mac_address']);
     }
 
     // Rückwärtskompatibilität
@@ -169,6 +172,7 @@ class Index extends Component
             'location' => 'nullable|string|max:255',
             'username' => 'nullable|string|max:255|unique:printers,username',
             'password' => 'nullable|string|max:255',
+            'mac_address' => 'nullable|string|max:255|unique:printers,mac_address',
             'group_id' => 'nullable|exists:printer_groups,id',
         ]);
 
@@ -186,6 +190,10 @@ class Index extends Component
             $data['password'] = $this->password;
         }
 
+        if ($this->mac_address) {
+            $data['mac_address'] = $this->mac_address;
+        }
+
         if ($this->group_id) {
             $data['printer_group_id'] = $this->group_id;
         }
@@ -193,7 +201,7 @@ class Index extends Component
         Printer::create($data);
 
         $this->closeCreateModal();
-        $this->reset(['name', 'location', 'username', 'password', 'group_id']);
+        $this->reset(['name', 'location', 'username', 'password', 'mac_address', 'group_id']);
 
         $this->dispatch('notify', [
             'type' => 'success',
@@ -208,6 +216,7 @@ class Index extends Component
             'edit_location' => 'nullable|string|max:255',
             'edit_username' => 'nullable|string|max:255|unique:printers,username,' . $this->editingPrinterId,
             'edit_password' => 'nullable|string|max:255',
+            'edit_mac_address' => 'nullable|string|max:255|unique:printers,mac_address,' . $this->editingPrinterId,
         ]);
 
         $printer = Printer::find($this->editingPrinterId);
@@ -215,6 +224,7 @@ class Index extends Component
             $data = [
                 'name' => $this->edit_name,
                 'location' => $this->edit_location,
+                'mac_address' => $this->edit_mac_address ?: null,
             ];
 
             if ($this->edit_username) {

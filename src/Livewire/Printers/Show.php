@@ -25,6 +25,7 @@ class Show extends Component
     public $printer_location = '';
     public $printer_username = '';
     public $printer_password = '';
+    public $printer_mac_address = '';
     public $printer_is_active = false;
     public $showPassword = false;
     public $passwordModalShow = false;
@@ -46,13 +47,14 @@ class Show extends Component
         $this->printer_location = $printer->location;
         $this->printer_username = $printer->username;
         $this->printer_password = '';
+        $this->printer_mac_address = $printer->mac_address;
         $this->printer_is_active = $printer->is_active;
         $this->showPassword = false;
     }
 
     public function updated($propertyName)
     {
-        if (in_array($propertyName, ['printer_name', 'printer_location', 'printer_username', 'printer_password', 'printer_is_active'])) {
+        if (in_array($propertyName, ['printer_name', 'printer_location', 'printer_username', 'printer_password', 'printer_mac_address', 'printer_is_active'])) {
             $this->isDirty = true;
         }
     }
@@ -135,12 +137,14 @@ class Show extends Component
             'printer_location' => 'nullable|string|max:255',
             'printer_username' => 'nullable|string|max:255|unique:printers,username,' . $this->printer->id,
             'printer_password' => 'nullable|string|max:255',
+            'printer_mac_address' => 'nullable|string|max:255|unique:printers,mac_address,' . $this->printer->id,
         ]);
 
         $data = [
             'name' => $this->printer_name,
             'location' => $this->printer_location,
             'username' => $this->printer_username,
+            'mac_address' => $this->printer_mac_address ?: null,
             'is_active' => $this->printer_is_active,
         ];
 

@@ -273,6 +273,11 @@ class PrintingService implements PrintingServiceInterface
     protected function sanitizeForPrint(string $content): string
     {
         return strtr($content, [
+            // ß rendert dieser Bondrucker an CP850 0xE1 nicht als ß -> deutsche
+            // Standard-Ersatzschreibung. (Umlaute ä/ö/ü liegen im 0x80-Block
+            // und drucken korrekt, daher bleiben sie.)
+            "\u{00DF}" => 'ss',   // ß
+            "\u{1E9E}" => 'SS',   // ẞ (großes ß)
             "\u{00B7}" => '-',    // · Middot (Feld-Trenner)
             "\u{2022}" => '-',    // • Bullet
             "\u{2219}" => '-',    // ∙ Bullet operator

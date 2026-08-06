@@ -102,12 +102,15 @@ Route::group([], function () {
         $service = app(PrintingService::class);
         $content = $service->encodeForPrinter($service->generateJobContent($job));
 
-        Log::info('CloudPRNT Job Download - Content generiert', [
+        // Neben der konfigurierten Codepage auch protokollieren, was tatsächlich
+        // rausgeht (siehe describeEncoding): looks_like_utf8=true verrät, dass
+        // die Umwandlung nicht griff und der Drucker UTF-8 bekommt.
+        Log::info('CloudPRNT Job Download - Content generiert', array_merge([
             'job_id' => $job->id,
             'job_uuid' => $job->uuid,
             'content_length' => strlen($content),
             'codepage' => config('printing.encoding.codepage'),
-        ]);
+        ], $service->describeEncoding($content)));
 
         // CloudPRNT-kompatible Antwort: rohe Bytes in der Drucker-Codepage,
         // daher bewusst OHNE charset=utf-8 (Drucker druckt Bytes 1:1).

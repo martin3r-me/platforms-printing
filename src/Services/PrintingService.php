@@ -251,19 +251,127 @@ class PrintingService implements PrintingServiceInterface
         // an abweichenden Positionen (z. B. · -> ø auf manchen Star-Geräten).
         $content = $this->sanitizeForPrint($content);
 
-        $codepage = config('printing.encoding.codepage', 'CP1252');
+        $codepage = strtoupper((string) config('printing.encoding.codepage', 'CP1252'));
 
-        if (strtoupper($codepage) !== 'UTF-8') {
-            $encoded = @iconv('UTF-8', $codepage . '//TRANSLIT//IGNORE', $content);
-            if ($encoded !== false) {
-                $content = $encoded;
-            }
+        if ($codepage !== 'UTF-8') {
+            $content = $this->toCodepage($content, $codepage);
         }
 
         // Steuerbefehl (rohe Bytes) voranstellen, um den Drucker auf die
         // passende Zeichentabelle zu setzen. Muss NACH der Codepage-Umwandlung
         // passieren, da es sich um rohe Control-Bytes handelt.
         return $this->setupCommand() . $content;
+    }
+
+    /**
+     * Wandelt UTF-8 in die Ziel-Codepage des Druckers um.
+     *
+     * iconv ist dafür allein nicht verlässlich: je nach libc der
+     * Laufzeitumgebung fehlen die DOS-Codepages komplett (musl/Alpine kennt
+     * kein CP850/CP437) oder die Suffixe //TRANSLIT und //IGNORE werden nicht
+     * akzeptiert. Vorher wurde ein fehlgeschlagenes iconv still verworfen –
+     * dann ging der Text als UTF-8 an den Drucker (Umlaute als zwei Zeichen),
+     * während das Log weiterhin "codepage: CP850" meldete. Der Fehler war so
+     * praktisch nicht auffindbar.
+     *
+     * Deshalb: mehrere iconv-Varianten versuchen und erst danach über eine
+     * eigene Byte-Tabelle abbilden – nie stillschweigend UTF-8 ausliefern.
+     */
+    protected function toCodepage(string $content, string $codepage): string
+    {
+        foreach (['//TRANSLIT//IGNORE', '//IGNORE', ''] as $suffix) {
+            $encoded = @iconv('UTF-8', $codepage . $suffix, $content);
+
+            if ($encoded !== false) {
+                return $encoded;
+            }
+        }
+
+        $map = $this->codepageMap($codepage);
+
+        Log::error('PrintingService: iconv kann nicht in die Drucker-Codepage wandeln', [
+            'codepage' => $codepage,
+            'iconv_impl' => ICONV_IMPL,
+            'iconv_version' => ICONV_VERSION,
+            'fallback' => $map === null ? 'keiner (Codepage unbekannt)' : 'eigene Byte-Tabelle',
+        ]);
+
+        if ($map === null) {
+            return $content;
+        }
+
+        // Ein Durchlauf über alle Nicht-ASCII-Zeichen: bekannte werden auf ihr
+        // Codepage-Byte gesetzt, unbekannte verworfen (besser als UTF-8-Müll
+        // auf dem Bon). Die eingesetzten Bytes werden nicht erneut betrachtet.
+        $mapped = preg_replace_callback(
+            '/[\x{0080}-\x{10FFFF}]/u',
+            fn (array $m) => $map[$m[0]] ?? '',
+            $content
+        );
+
+        // preg_* mit /u liefert null, wenn der Input kein gültiges UTF-8 ist
+        return $mapped ?? $content;
+    }
+
+    /**
+     * Byte-Positionen der gängigen Nicht-ASCII-Zeichen je Codepage.
+     * Alle Werte gegen iconv verifiziert. CP437/CP850/CP858 teilen die
+     * Positionen dieser Zeichen; CP850/CP858 können zusätzlich § und ³,
+     * CP858 zusätzlich €.
+     */
+    protected function codepageMap(string $codepage): ?array
+    {
+        $dos = [
+            'ä' => "\x84", 'ö' => "\x94", 'ü' => "\x81",
+            'Ä' => "\x8E", 'Ö' => "\x99", 'Ü' => "\x9A", 'ß' => "\xE1",
+            'é' => "\x82", 'è' => "\x8A", 'ê' => "\x88", 'É' => "\x90",
+            'à' => "\x85", 'â' => "\x83", 'ç' => "\x87",
+            'î' => "\x8C", 'ï' => "\x8B", 'ô' => "\x93", 'û' => "\x96", 'ù' => "\x97",
+            'ñ' => "\xA4", 'Ñ' => "\xA5",
+            '°' => "\xF8", '£' => "\x9C", 'µ' => "\xE6", '²' => "\xFD",
+        ];
+
+        return match ($codepage) {
+            'CP437' => $dos,
+            'CP850' => $dos + ['§' => "\xF5", '³' => "\xFC"],
+            'CP858' => $dos + ['§' => "\xF5", '³' => "\xFC", '€' => "\xD5"],
+            'CP1252', 'WINDOWS-1252' => [
+                'ä' => "\xE4", 'ö' => "\xF6", 'ü' => "\xFC",
+                'Ä' => "\xC4", 'Ö' => "\xD6", 'Ü' => "\xDC", 'ß' => "\xDF",
+                'é' => "\xE9", 'è' => "\xE8", 'ê' => "\xEA", 'É' => "\xC9",
+                'à' => "\xE0", 'â' => "\xE2", 'ç' => "\xE7",
+                'î' => "\xEE", 'ï' => "\xEF", 'ô' => "\xF4", 'û' => "\xFB", 'ù' => "\xF9",
+                'ñ' => "\xF1", 'Ñ' => "\xD1",
+                '°' => "\xB0", '£' => "\xA3", 'µ' => "\xB5", '²' => "\xB2",
+                '§' => "\xA7", '³' => "\xB3", '€' => "\x80",
+            ],
+            default => null,
+        };
+    }
+
+    /**
+     * Beschreibt die tatsächlich an den Drucker gehenden Bytes – damit im Log
+     * nachvollziehbar ist, ob die Codepage-Umwandlung wirklich stattgefunden
+     * hat, statt nur den konfigurierten Wunschwert zu protokollieren.
+     *
+     * looks_like_utf8 = true bei Nicht-ASCII-Inhalt bedeutet: es wurde NICHT
+     * umgewandelt, der Drucker erhält UTF-8 (Umlaute werden zwei Zeichen).
+     */
+    public function describeEncoding(string $encoded): array
+    {
+        preg_match_all('/[\x80-\xFF]/', $encoded, $matches);
+
+        $highBytes = array_values(array_unique(array_map(
+            fn (string $b) => strtoupper(bin2hex($b)),
+            $matches[0]
+        )));
+        sort($highBytes);
+
+        return [
+            'high_bytes' => implode(' ', $highBytes),
+            'has_non_ascii' => $highBytes !== [],
+            'looks_like_utf8' => $highBytes !== [] && mb_check_encoding($encoded, 'UTF-8'),
+        ];
     }
 
     /**

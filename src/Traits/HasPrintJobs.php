@@ -5,6 +5,13 @@ namespace Platform\Printing\Traits;
 use Platform\Printing\Models\PrintJob;
 use Platform\Printing\Services\PrintingService;
 
+/**
+ * Komfort-Methoden für druckbare Models.
+ *
+ * Hinweis: das Mitlöschen der Print Jobs braucht hier KEINEN Hook. Es hängt
+ * zentral am Model-Event im PrintingServiceProvider und greift damit für jedes
+ * druckbare Model – auch für die, die diesen Trait nicht verwenden.
+ */
 trait HasPrintJobs
 {
     /**

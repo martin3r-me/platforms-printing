@@ -2,14 +2,19 @@
 
 namespace Platform\Printing;
 
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
 use Platform\Core\PlatformCore;
 use Platform\Core\Routing\ModuleRouter;
+use Platform\Printing\Console\CleanupPrintJobsCommand;
 use Platform\Printing\Contracts\PrintingServiceInterface;
+use Platform\Printing\Models\PrintJob;
 use Platform\Printing\Services\PrintingService;
 use Platform\Printing\Http\Middleware\VerifyPrinterBasicAuth;
 use RecursiveDirectoryIterator;
@@ -93,6 +98,82 @@ class PrintingServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'printing');
         $this->registerLivewireComponents();
+
+        $this->registerOrphanCleanup();
+        $this->registerCleanupCommand();
+    }
+
+    /**
+     * Löscht die Print Jobs eines Datensatzes mit, wenn dieser gelöscht wird.
+     *
+     * print_jobs.printable_type/-_id sind nicht nullable, eine polymorphe
+     * Beziehung kann aber keinen Fremdschlüssel haben. Ohne diesen Listener
+     * bleiben Jobs verwaist zurück – und ein verwaister Job lief im
+     * CloudPRNT-Download in einen Fehler.
+     *
+     * Bewusst zentral über das Model-Event statt im HasPrintJobs-Trait: den
+     * Trait nutzt derzeit kein Modul, ein Hook darin würde also nichts
+     * bewirken. So greift es für jedes druckbare Model ohne Modul-Änderung.
+     */
+    protected function registerOrphanCleanup(): void
+    {
+        Event::listen('eloquent.deleted: *', function (string $event, array $payload) {
+            $model = $payload[0] ?? null;
+
+            if (!$model instanceof Model || $model instanceof PrintJob) {
+                return;
+            }
+
+            // Soft Delete: der Datensatz existiert weiter und kann
+            // wiederhergestellt werden -> seine Jobs bleiben erhalten.
+            if (method_exists($model, 'isForceDeleting') && !$model->isForceDeleting()) {
+                return;
+            }
+
+            // Einmal pro Prozess prüfen, damit Deletes vor der Migration
+            // (z. B. bei migrate:fresh) nicht in einen Fehler laufen.
+            static $tableExists = null;
+            $tableExists ??= Schema::hasTable('print_jobs');
+
+            if (!$tableExists) {
+                return;
+            }
+
+            // Sowohl Alias als auch FQCN prüfen: createJob() schreibt
+            // get_class($printable), einige Module registrieren aber zusätzlich
+            // eine Relation::morphMap – dann weicht getMorphClass() davon ab.
+            $types = array_unique([$model->getMorphClass(), $model::class]);
+
+            // Indexgestützt über ['printable_type', 'printable_id']
+            PrintJob::whereIn('printable_type', $types)
+                ->where('printable_id', $model->getKey())
+                ->delete();
+        });
+    }
+
+    /**
+     * Registriert printing:cleanup und plant es stündlich ein – die Config-
+     * Werte timeout_minutes/cleanup_after_days hatten vorher nichts, was sie
+     * angewendet hätte. Abschaltbar über PRINTING_CLEANUP_SCHEDULED=false.
+     */
+    protected function registerCleanupCommand(): void
+    {
+        if (!$this->app->runningInConsole()) {
+            return;
+        }
+
+        $this->commands([CleanupPrintJobsCommand::class]);
+
+        $this->app->booted(function () {
+            if (!config('printing.jobs.cleanup_scheduled', true)) {
+                return;
+            }
+
+            $this->app->make(Schedule::class)
+                ->command('printing:cleanup')
+                ->hourly()
+                ->withoutOverlapping();
+        });
     }
 
     protected function registerLivewireComponents(): void

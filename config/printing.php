@@ -93,9 +93,24 @@ return [
     ],
 
     'jobs' => [
+        /*
+        | Angewendet von printing:cleanup:
+        |   timeout_minutes    – ab wann ein Job als "hängend" gilt (der Drucker
+        |                        hat ihn geholt, aber nie bestätigt)
+        |   max_retries        – wie oft ein hängender Job zurückgeholt wird,
+        |                        bevor er endgültig als fehlgeschlagen gilt
+        |   cleanup_after_days – Aufbewahrungsfrist für abgeschlossene,
+        |                        abgebrochene und fehlgeschlagene Jobs
+        */
         'max_retries' => 3,
         'timeout_minutes' => 30,
         'cleanup_after_days' => 30,
+
+        /*
+        | printing:cleanup stündlich automatisch ausführen. false = nur manuell
+        | (dann sammeln sich hängende und alte Jobs wieder an).
+        */
+        'cleanup_scheduled' => env('PRINTING_CLEANUP_SCHEDULED', true),
         'statuses' => [
             'pending' => 'Wartend',
             'processing' => 'Wird gedruckt',

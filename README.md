@@ -91,6 +91,26 @@ Templates werden in der Config definiert:
 6. **Drucker druckt** und bestätigt
 7. **Service markiert** Job als abgeschlossen
 
+## Aufräumen
+
+`printing:cleanup` wendet die `jobs`-Config an und läuft stündlich automatisch
+(abschaltbar über `PRINTING_CLEANUP_SCHEDULED=false`):
+
+```bash
+php artisan printing:cleanup --dry-run   # nur berichten
+php artisan printing:cleanup
+```
+
+1. **Hängende Jobs** – der Drucker hat den Job geholt, aber nie bestätigt
+   (Papierstau, Gerät aus). Nach `timeout_minutes` zurück in die Warteschlange,
+   nach `max_retries` Versuchen endgültig als fehlgeschlagen.
+2. **Verwaiste Jobs** – der zugehörige Datensatz existiert nicht mehr. Neue
+   Waisen verhindert das Model-Event im ServiceProvider; hier werden Altlasten
+   entfernt. Soft-deleted Datensätze zählen nicht als gelöscht, und Jobs eines
+   nicht ladbaren Typs (deaktiviertes Modul) werden bewusst übersprungen.
+3. **Alte Jobs** – abgeschlossen/abgebrochen/fehlgeschlagen und älter als
+   `cleanup_after_days`. Wartende und laufende Jobs bleiben unberührt.
+
 ## Sicherheit
 
 - Drucker-Authentifizierung via Username/Password

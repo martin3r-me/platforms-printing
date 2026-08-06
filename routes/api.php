@@ -100,7 +100,26 @@ Route::group([], function () {
 
         // Generiere Job-Content (UTF-8) und wandle in die Drucker-Codepage um
         $service = app(PrintingService::class);
-        $content = $service->encodeForPrinter($service->generateJobContent($job));
+
+        try {
+            $content = $service->encodeForPrinter($service->generateJobContent($job));
+        } catch (\Throwable $e) {
+            // Fehler nicht als HTTP 500 durchreichen: der Drucker würde den Job
+            // endlos erneut anfragen und er bliebe für immer auf "processing".
+            // Stattdessen als fehlgeschlagen markieren – so verlässt er die
+            // Warteschlange und ist im Backend samt Grund sichtbar.
+            $service->markJobAsFailed($job->id, $e->getMessage());
+
+            Log::error('CloudPRNT Job Download - Content konnte nicht erzeugt werden', [
+                'job_id' => $job->id,
+                'job_uuid' => $job->uuid,
+                'printer_id' => $printer->id,
+                'exception' => $e::class,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response('', 404);
+        }
 
         // Neben der konfigurierten Codepage auch protokollieren, was tatsächlich
         // rausgeht (siehe describeEncoding): looks_like_utf8=true verrät, dass

@@ -5,6 +5,7 @@ namespace Platform\Printing\Services;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Platform\Printing\Contracts\PrintingServiceInterface;
+use Platform\Printing\Exceptions\PrintableMissingException;
 use Platform\Printing\Models\PrintJob;
 use Platform\Printing\Models\Printer;
 use Platform\Printing\Models\PrinterGroup;
@@ -184,6 +185,14 @@ class PrintingService implements PrintingServiceInterface
         $template = $job->template;
         $data = $job->data;
         $printable = $job->printable;
+
+        // Ist der Datensatz gelöscht, ist die polymorphe Beziehung null. Ohne
+        // diese Prüfung lief das in einen TypeError in findBladeTemplate() –
+        // in der Vorschau als unlesbarer Stacktrace, im CloudPRNT-Download als
+        // HTTP 500, wodurch der Drucker den Job endlos erneut anfragte.
+        if (!$printable) {
+            throw PrintableMissingException::forJob($job);
+        }
 
         // Basis-Daten für alle Templates
         $baseData = [

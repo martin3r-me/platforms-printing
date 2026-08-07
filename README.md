@@ -114,7 +114,20 @@ Ausdruck ablesen, welches Byte `ä`, `ö` und `ü` ergibt:
 |---|---|
 | `84=ä 94=ö 81=ü` | CP850/CP437/CP858 |
 | `E4=ä F6=ö FC=ü` | CP1252 |
-| etwas anderes | Gerät nutzt eine eigene Tabelle – die gefundenen Positionen sind die Antwort (dann `codepageMap()` in `PrintingService` erweitern) |
+| `CD=ä B9=ö BE=ü` | `STAR-DE` – Gerätetabelle des Star-CloudPRNT (siehe unten) |
+| etwas anderes | wieder eine eigene Tabelle – die gefundenen Positionen in `codepageMap()` in `PrintingService` als neuen Eintrag ergänzen und in `DEVICE_CODEPAGES` aufnehmen |
+
+### STAR-DE
+
+Die getesteten Star-CloudPRNT-Geräte laufen in **keiner** Standard-Codepage.
+Per Testdruck ermittelt: `Ä=A0 Ö=A1 Ü=A2 ß=A3 ö=B9 ü=BE ä=CD`. Auf `84/94/81`
+– wo CP850 die Umlaute hätte – liegen dort Block- und Linienzeichen; daher kam
+„Minibrötchen“ als „Minibr•tchen“ heraus.
+
+`STAR-DE` enthält bewusst nur die am Bon zweifelsfrei abgelesenen Zeichen.
+Alles andere wird nach ASCII aufgelöst (`é` → `e`, `Café` → `Cafe`) – lesbar,
+statt ein Byte aus einer nur vermuteten Position zu drucken. Weitere Positionen
+lassen sich jederzeit per Testdruck ergänzen.
 
 Der Testdruck läuft bewusst an der Codepage-Umwandlung vorbei, sonst würden
 genau die zu testenden Bytes umgeschrieben.

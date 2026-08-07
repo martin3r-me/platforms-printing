@@ -13,6 +13,13 @@ use Platform\Printing\Models\PrinterGroup;
 class PrintingService implements PrintingServiceInterface
 {
     /**
+     * Zeichentabellen, die keine Standard-Codepage sind und die iconv daher
+     * nicht kennt. Sie werden ausschließlich über codepageMap() abgebildet.
+     */
+    protected const DEVICE_CODEPAGES = ['STAR-DE'];
+
+
+    /**
      * Erstellt einen Print Job für ein Model
      */
     public function createJob(
@@ -298,6 +305,13 @@ class PrintingService implements PrintingServiceInterface
      */
     protected function toCodepage(string $content, string $codepage): string
     {
+        // Gerätetabellen sind keine Standard-Codepages – iconv kennt sie nicht.
+        // Direkt über die Byte-Tabelle abbilden, ohne den iconv-Umweg (der
+        // sonst bei jedem Druck einen Fehler ins Log schreiben würde).
+        if (in_array($codepage, self::DEVICE_CODEPAGES, true)) {
+            return $this->mapToCodepageBytes($content, $codepage);
+        }
+
         foreach (['//TRANSLIT//IGNORE', '//IGNORE', ''] as $suffix) {
             $encoded = @iconv('UTF-8', $codepage . $suffix, $content);
 
@@ -306,30 +320,74 @@ class PrintingService implements PrintingServiceInterface
             }
         }
 
-        $map = $this->codepageMap($codepage);
-
         Log::error('PrintingService: iconv kann nicht in die Drucker-Codepage wandeln', [
             'codepage' => $codepage,
             'iconv_impl' => ICONV_IMPL,
             'iconv_version' => ICONV_VERSION,
-            'fallback' => $map === null ? 'keiner (Codepage unbekannt)' : 'eigene Byte-Tabelle',
+            'fallback' => $this->codepageMap($codepage) === null
+                ? 'keiner (Codepage unbekannt)'
+                : 'eigene Byte-Tabelle',
         ]);
+
+        return $this->mapToCodepageBytes($content, $codepage);
+    }
+
+    /**
+     * Bildet Nicht-ASCII-Zeichen über die Byte-Tabelle der Codepage ab.
+     *
+     * Ein Durchlauf über alle Nicht-ASCII-Zeichen: bekannte werden auf ihr
+     * Codepage-Byte gesetzt, alle anderen nach ASCII transliteriert (é -> e).
+     * Die eingesetzten Bytes werden dabei nicht erneut betrachtet.
+     */
+    protected function mapToCodepageBytes(string $content, string $codepage): string
+    {
+        $map = $this->codepageMap($codepage);
 
         if ($map === null) {
             return $content;
         }
 
-        // Ein Durchlauf über alle Nicht-ASCII-Zeichen: bekannte werden auf ihr
-        // Codepage-Byte gesetzt, unbekannte verworfen (besser als UTF-8-Müll
-        // auf dem Bon). Die eingesetzten Bytes werden nicht erneut betrachtet.
         $mapped = preg_replace_callback(
             '/[\x{0080}-\x{10FFFF}]/u',
-            fn (array $m) => $map[$m[0]] ?? '',
+            fn (array $m) => $map[$m[0]] ?? $this->toAscii($m[0]),
             $content
         );
 
         // preg_* mit /u liefert null, wenn der Input kein gültiges UTF-8 ist
         return $mapped ?? $content;
+    }
+
+    /**
+     * Letzter Ausweg für ein Zeichen, das die Zeichentabelle nicht enthält:
+     * nach ASCII transliterieren (é -> e, € -> EUR). Auf einem Bon bleibt das
+     * lesbar – deutlich besser, als das Zeichen ersatzlos zu verschlucken oder
+     * ein Byte aus einer nur vermuteten Position zu drucken.
+     */
+    protected function toAscii(string $char): string
+    {
+        // Bewusst eine feste Tabelle statt iconv('ASCII//TRANSLIT'): dessen
+        // Ergebnis hängt an der libc und ist auf einem Bon unbrauchbar –
+        // macOS macht aus "Café Crème" ein "Caf'e Cr`eme" und aus "°C" ein
+        // "^0C". Umlaute werden nach deutscher Konvention aufgelöst; das
+        // greift nur, wenn die Zeichentabelle sie nicht selbst enthält.
+        static $fold = [
+            'à' => 'a', 'á' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'ae', 'å' => 'a', 'æ' => 'ae',
+            'è' => 'e', 'é' => 'e', 'ê' => 'e', 'ë' => 'e',
+            'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i',
+            'ò' => 'o', 'ó' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'oe', 'ø' => 'o',
+            'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ü' => 'ue',
+            'ç' => 'c', 'ñ' => 'n', 'ý' => 'y', 'ÿ' => 'y', 'ß' => 'ss',
+            'À' => 'A', 'Á' => 'A', 'Â' => 'A', 'Ã' => 'A', 'Ä' => 'Ae', 'Å' => 'A', 'Æ' => 'Ae',
+            'È' => 'E', 'É' => 'E', 'Ê' => 'E', 'Ë' => 'E',
+            'Ì' => 'I', 'Í' => 'I', 'Î' => 'I', 'Ï' => 'I',
+            'Ò' => 'O', 'Ó' => 'O', 'Ô' => 'O', 'Õ' => 'O', 'Ö' => 'Oe', 'Ø' => 'O',
+            'Ù' => 'U', 'Ú' => 'U', 'Û' => 'U', 'Ü' => 'Ue',
+            'Ç' => 'C', 'Ñ' => 'N',
+            '€' => 'EUR', '£' => 'GBP', '§' => 'S', 'µ' => 'u',
+            '°' => '', '²' => '2', '³' => '3', '½' => '1/2', '¼' => '1/4',
+        ];
+
+        return $fold[$char] ?? '';
     }
 
     /**
@@ -351,6 +409,24 @@ class PrintingService implements PrintingServiceInterface
         ];
 
         return match ($codepage) {
+            /*
+             * Tabelle des Star-CloudPRNT-Geräts, per printing:test-codepage am
+             * echten Drucker ausgelesen. Das Gerät läuft in KEINER DOS- oder
+             * Windows-Codepage: dort läge ä auf 84, ö auf 94, ü auf 81 – hier
+             * liegen an diesen Stellen Block- und Linienzeichen. Genau deshalb
+             * kam "Minibrötchen" als "Minibr•tchen" und "Erdnüsse" als
+             * "Erdnlsse" heraus.
+             *
+             * Bewusst nur die am Bon zweifelsfrei abgelesenen Zeichen. Alles
+             * andere wird nach ASCII transliteriert (é -> e), was auf einem Bon
+             * lesbar bleibt – besser als ein falsches Zeichen aus einer nur
+             * vermuteten Position. Weitere Positionen lassen sich jederzeit per
+             * Testdruck ergänzen.
+             */
+            'STAR-DE' => [
+                'Ä' => "\xA0", 'Ö' => "\xA1", 'Ü' => "\xA2", 'ß' => "\xA3",
+                'ö' => "\xB9", 'ü' => "\xBE", 'ä' => "\xCD",
+            ],
             'CP437' => $dos,
             'CP850' => $dos + ['§' => "\xF5", '³' => "\xFC"],
             'CP858' => $dos + ['§' => "\xF5", '³' => "\xFC", '€' => "\xD5"],
@@ -400,11 +476,11 @@ class PrintingService implements PrintingServiceInterface
     protected function sanitizeForPrint(string $content): string
     {
         return strtr($content, [
-            // ß rendert dieser Bondrucker an CP850 0xE1 nicht als ß -> deutsche
-            // Standard-Ersatzschreibung. (Umlaute ä/ö/ü liegen im 0x80-Block
-            // und drucken korrekt, daher bleiben sie.)
-            "\u{00DF}" => 'ss',   // ß
-            "\u{1E9E}" => 'SS',   // ẞ (großes ß)
+            // ß wird NICHT mehr zu "ss" ersetzt. Dass es an CP850 0xE1 falsch
+            // kam, lag nicht am Zeichen, sondern daran, dass das Gerät gar
+            // nicht in CP850 läuft (siehe STAR-DE in codepageMap): dort liegt
+            // ß auf 0xA3. Mit der richtigen Tabelle druckt es korrekt.
+            "\u{1E9E}" => 'SS',   // ẞ (großes ß) – in keiner der Tabellen enthalten
             "\u{00B7}" => '-',    // · Middot (Feld-Trenner)
             "\u{2022}" => '-',    // • Bullet
             "\u{2219}" => '-',    // ∙ Bullet operator

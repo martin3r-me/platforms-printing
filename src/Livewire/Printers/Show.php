@@ -183,6 +183,7 @@ class Show extends Component
     public function codepageOptions(): array
     {
         return [
+            'STAR-DE' => 'Gerätetabelle Star (ä=CD ö=B9 ü=BE Ä=A0 Ö=A1 Ü=A2 ß=A3)',
             'CP850' => 'CP850 – DOS Westeuropa (ä=84 ö=94 ü=81)',
             'CP437' => 'CP437 – DOS US (ä=84 ö=94 ü=81)',
             'CP858' => 'CP858 – wie CP850, zusätzlich € (ä=84 ö=94 ü=81)',

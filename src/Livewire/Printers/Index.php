@@ -19,7 +19,6 @@ class Index extends Component
 
     // CRM-konformes Modal-Flag
     public $modalShow = false;
-    public $editModalShow = false;
     public $deleteModalShow = false;
     public $printerToDeleteId = null;
     
@@ -30,14 +29,6 @@ class Index extends Component
     public $password = '';
     public $mac_address = '';
     public $group_id = null;
-
-    // Form fields for editing printer
-    public $edit_name = '';
-    public $edit_location = '';
-    public $edit_username = '';
-    public $edit_password = '';
-    public $edit_mac_address = '';
-    public $editingPrinterId = null;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -151,28 +142,6 @@ class Index extends Component
         $this->modalShow = false;
     }
 
-    // Edit Modal
-    public function openEditModal($printerId)
-    {
-        $printer = Printer::find($printerId);
-        if ($printer) {
-            $this->editingPrinterId = $printerId;
-            $this->edit_name = $printer->name;
-            $this->edit_location = $printer->location;
-            $this->edit_username = $printer->username;
-            $this->edit_password = '';
-            $this->edit_mac_address = $printer->mac_address;
-            $this->editModalShow = true;
-        }
-    }
-
-    public function closeEditModal()
-    {
-        $this->editModalShow = false;
-        $this->editingPrinterId = null;
-        $this->reset(['edit_name', 'edit_location', 'edit_username', 'edit_password', 'edit_mac_address']);
-    }
-
     // Rückwärtskompatibilität
     public function showCreateModal()
     {
@@ -238,42 +207,5 @@ class Index extends Component
             'type' => 'success',
             'message' => 'Drucker erfolgreich erstellt'
         ]);
-    }
-
-    public function updatePrinter()
-    {
-        $this->validate([
-            'edit_name' => 'required|string|max:255',
-            'edit_location' => 'nullable|string|max:255',
-            'edit_username' => 'nullable|string|max:255|unique:printers,username,' . $this->editingPrinterId,
-            'edit_password' => 'nullable|string|max:255',
-            'edit_mac_address' => 'nullable|string|max:255|unique:printers,mac_address,' . $this->editingPrinterId,
-        ]);
-
-        $printer = Printer::find($this->editingPrinterId);
-        if ($printer) {
-            $data = [
-                'name' => $this->edit_name,
-                'location' => $this->edit_location,
-                'mac_address' => $this->edit_mac_address ?: null,
-            ];
-
-            if ($this->edit_username) {
-                $data['username'] = $this->edit_username;
-            }
-
-            if ($this->edit_password) {
-                $data['password'] = $this->edit_password;
-            }
-
-            $printer->update($data);
-
-            $this->closeEditModal();
-
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => 'Drucker erfolgreich aktualisiert'
-            ]);
-        }
     }
 }

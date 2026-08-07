@@ -84,12 +84,18 @@
                             <x-ui-table-cell align="right">
                                 {{-- .stop ist hier zwingend: die Zeile trägt ein
                                      onclick="window.location.href=..." (siehe
-                                     clickable/href oben). Ohne das blubbert der
-                                     Klick hoch, die Seite navigiert weg und das
-                                     gerade geöffnete Modal verschwindet sofort. --}}
+                                     clickable/href oben). Ohne das blubbert jeder
+                                     Klick hoch und die Seite navigiert weg –
+                                     Deaktivieren und Löschen landeten so
+                                     ungewollt auf der Detailseite. --}}
                                 <div class="flex items-center gap-2 justify-end">
+                                    {{-- Bewusst ein Link auf die Detailseite: dort
+                                         lässt sich alles einstellen (Zeichensatz,
+                                         Gruppen, API). Das frühere Bearbeiten-Modal
+                                         konnte nur einen Teil davon und ist weg. --}}
                                     <x-ui-button size="sm" variant="secondary"
-                                        x-on:click.stop.prevent="$wire.openEditModal({{ $printer->id }})">
+                                        :href="route('printing.printers.show', ['printer' => $printer->id])"
+                                        x-on:click.stop>
                                         Bearbeiten
                                     </x-ui-button>
                                     <x-ui-button size="sm" variant="secondary"
@@ -164,39 +170,6 @@
                     </x-ui-button>
                     <x-ui-button type="button" variant="primary" wire:click="createPrinter">
                         Drucker anlegen
-                    </x-ui-button>
-                </div>
-            </x-slot>
-        </x-ui-modal>
-
-        {{-- Edit Modal --}}
-        <x-ui-modal wire:model="editModalShow" size="lg">
-            <x-slot name="header">
-                Drucker bearbeiten
-            </x-slot>
-
-            <div class="space-y-4">
-                <form class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <x-ui-input-text name="edit_name" wire:model.live="edit_name" label="Name" />
-                        <x-ui-input-text name="edit_location" wire:model.live="edit_location" label="Standort" />
-                        <x-ui-input-text name="edit_username" wire:model.live="edit_username" label="Benutzername" />
-                        <x-ui-input-text name="edit_password" wire:model.live="edit_password" type="password" label="Passwort" />
-                    </div>
-                    <div>
-                        <x-ui-input-text name="edit_mac_address" wire:model.live="edit_mac_address" label="MAC-Adresse" placeholder="z. B. 00:11:62:AA:BB:CC" />
-                        <p class="mt-1 text-xs text-[var(--ui-muted)]">Zuordnung des Druckers beim CloudPRNT-Polling (Header <code>x-star-mac</code>).</p>
-                    </div>
-                </form>
-            </div>
-
-            <x-slot name="footer">
-                <div class="flex justify-end gap-2">
-                    <x-ui-button type="button" variant="secondary-outline" @click="$wire.closeEditModal()">
-                        Abbrechen
-                    </x-ui-button>
-                    <x-ui-button type="button" variant="primary" wire:click="updatePrinter">
-                        Speichern
                     </x-ui-button>
                 </div>
             </x-slot>

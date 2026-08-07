@@ -83,8 +83,13 @@
                             </x-ui-table-cell>
                             <x-ui-table-cell align="right">
                                 <div class="flex items-center gap-2 justify-end">
+                                    {{-- Bewusst ein Link auf die Detailseite. Das
+                                         frühere Bearbeiten-Modal war toter Code:
+                                         sein Speichern rief updateGroup() auf, das
+                                         es im Component nie gab. --}}
                                     <x-ui-button size="sm" variant="secondary"
-                                        x-on:click.stop.prevent="$wire.openEditModal({{ $group->id }})">
+                                        :href="route('printing.groups.show', ['group' => $group->id])"
+                                        x-on:click.stop>
                                         Bearbeiten
                                     </x-ui-button>
                                     <x-ui-button size="sm" variant="secondary"
@@ -141,33 +146,6 @@
                     </x-ui-button>
                     <x-ui-button type="button" variant="primary" wire:click="createGroup">
                         Gruppe anlegen
-                    </x-ui-button>
-                </div>
-            </x-slot>
-        </x-ui-modal>
-
-        {{-- Edit Modal --}}
-        <x-ui-modal wire:model="editModalShow" size="lg">
-            <x-slot name="header">
-                Gruppe bearbeiten
-            </x-slot>
-
-            <div class="space-y-4">
-                <form class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <x-ui-input-text name="edit_name" wire:model.live="edit_name" label="Name" />
-                        <x-ui-input-text name="edit_description" wire:model.live="edit_description" label="Beschreibung" />
-                    </div>
-                </form>
-            </div>
-
-            <x-slot name="footer">
-                <div class="flex justify-end gap-2">
-                    <x-ui-button type="button" variant="secondary-outline" @click="$wire.closeEditModal()">
-                        Abbrechen
-                    </x-ui-button>
-                    <x-ui-button type="button" variant="primary" wire:click="updateGroup">
-                        Speichern
                     </x-ui-button>
                 </div>
             </x-slot>

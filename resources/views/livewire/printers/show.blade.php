@@ -254,15 +254,15 @@
                         <dl class="rounded-lg border border-[var(--ui-border)] divide-y divide-[var(--ui-border)] overflow-hidden">
                             <div class="flex items-center justify-between gap-3 px-3 py-2">
                                 <dt class="text-sm font-medium text-[var(--ui-secondary)]">Poll</dt>
-                                <dd class="text-xs font-mono text-[var(--ui-muted)] m-0 truncate">POST {{ route('printing.api.poll') }}</dd>
+                                <dd class="text-xs font-mono text-[var(--ui-muted)] m-0 truncate">POST {{ $this->apiEndpoints['poll'] }}</dd>
                             </div>
                             <div class="flex items-center justify-between gap-3 px-3 py-2">
                                 <dt class="text-sm font-medium text-[var(--ui-secondary)]">Job Download</dt>
-                                <dd class="text-xs font-mono text-[var(--ui-muted)] m-0 truncate">GET {{ urldecode(route('printing.api.job.download', ['uuid' => '{uuid}'])) }}</dd>
+                                <dd class="text-xs font-mono text-[var(--ui-muted)] m-0 truncate">GET {{ $this->apiEndpoints['download'] }}</dd>
                             </div>
                             <div class="flex items-center justify-between gap-3 px-3 py-2">
                                 <dt class="text-sm font-medium text-[var(--ui-secondary)]">Job Confirmation</dt>
-                                <dd class="text-xs font-mono text-[var(--ui-muted)] m-0 truncate">DELETE {{ urldecode(route('printing.api.job.confirm', ['uuid' => '{uuid}'])) }}</dd>
+                                <dd class="text-xs font-mono text-[var(--ui-muted)] m-0 truncate">DELETE {{ $this->apiEndpoints['confirm'] }}</dd>
                             </div>
                         </dl>
                     </div>

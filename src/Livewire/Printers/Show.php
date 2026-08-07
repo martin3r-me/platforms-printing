@@ -330,6 +330,36 @@ class Show extends Component
         return $this->showPassword ? $this->printer->password : str_repeat('•', 8);
     }
 
+    /**
+     * URLs der CloudPRNT-Endpunkte für die Anzeige.
+     *
+     * Aus den registrierten Routen abgeleitet und nicht von Hand
+     * zusammengesetzt – vorher stand hier /api/printing/... statt
+     * /printing/api/..., also genau die Segmente vertauscht.
+     *
+     * route() taugt dafür nicht: die Platzhalter müssten als Parameterwert
+     * übergeben werden ('uuid' => '{uuid}'), und Laravel wirft dann eine
+     * UrlGenerationException – nach dem Ersetzen stehen weiter geschweifte
+     * Klammern in der URI, was wie ein fehlender Parameter aussieht. Daher
+     * direkt die URI der Route nehmen.
+     */
+    public function getApiEndpointsProperty(): array
+    {
+        $routes = app('router')->getRoutes();
+
+        $uri = function (string $name) use ($routes): string {
+            $route = $routes->getByName($name);
+
+            return $route ? url($route->uri()) : '–';
+        };
+
+        return [
+            'poll' => $uri('printing.api.poll'),
+            'download' => $uri('printing.api.job.download'),
+            'confirm' => $uri('printing.api.job.confirm'),
+        ];
+    }
+
     public function getBasicAuthHeaderProperty()
     {
         if ($this->printer->username && $this->printer->password) {

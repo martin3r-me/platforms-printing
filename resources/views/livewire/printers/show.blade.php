@@ -47,6 +47,10 @@
                             <dd class="text-xs font-mono text-[var(--ui-secondary)] m-0 truncate">{{ $printer->mac_address ?: '–' }}</dd>
                         </div>
                         <div class="flex items-center justify-between gap-3 px-3 py-2">
+                            <dt class="text-xs text-[var(--ui-muted)]">Zeichensatz</dt>
+                            <dd class="text-xs font-mono text-[var(--ui-secondary)] m-0 truncate">{{ $printer->codepage() }}</dd>
+                        </div>
+                        <div class="flex items-center justify-between gap-3 px-3 py-2">
                             <dt class="text-xs text-[var(--ui-muted)]">Status</dt>
                             <dd class="m-0">
                                 <x-ui-badge variant="{{ $printer->is_active ? 'success' : 'secondary' }}" size="xs">
@@ -174,6 +178,57 @@
             </div>
         </x-ui-panel>
 
+        {{-- Zeichensatz --}}
+        <x-ui-panel title="Zeichensatz" subtitle="Wie Umlaute an dieses Gerät gesendet werden">
+            <div class="space-y-4">
+                <x-ui-input-select
+                    name="printer_codepage"
+                    label="Zeichentabelle (Codepage)"
+                    :options="collect($this->codepageOptions())->map(fn($label, $value) => ['value' => $value, 'label' => $label])->values()->all()"
+                    optionValue="value"
+                    optionLabel="label"
+                    wire:model.live="printer_codepage"
+                    :errorKey="'printer_codepage'"
+                />
+                <p class="-mt-2 text-xs text-[var(--ui-muted)]">
+                    Muss zur Tabelle des Geräts passen. Stimmt sie nicht, werden Umlaute
+                    durch andere Zeichen ersetzt (z.&nbsp;B. <code>ö</code> als <code>•</code>).
+                    Welche die richtige ist, verrät der Testdruck unten.
+                </p>
+
+                <x-ui-input-text
+                    name="printer_setup_hex"
+                    label="Setup-Bytes (Hex)"
+                    wire:model.live.debounce.500ms="printer_setup_hex"
+                    placeholder="z. B. 1B 52 00"
+                    :errorKey="'printer_setup_hex'"
+                />
+                <p class="-mt-2 text-xs text-[var(--ui-muted)]">
+                    Steuerbefehl, der jedem Auftrag vorangestellt wird. <code>1B 52 00</code>
+                    (ESC R 0) setzt den internationalen Zeichensatz auf USA – ohne das druckt
+                    ein auf „Deutschland“ stehendes Gerät <code>@</code> als <code>§</code>.
+                    Leer lassen = kein Befehl.
+                </p>
+
+                <div class="pt-4 border-t border-[var(--ui-border)] flex items-center justify-between gap-4">
+                    <div class="min-w-0">
+                        <div class="text-sm font-medium text-[var(--ui-secondary)]">Testdruck</div>
+                        <p class="text-xs text-[var(--ui-muted)] m-0">
+                            Druckt jedes Byte von <code>80</code> bis <code>FF</code> mit seinem Hex-Wert.
+                            Auf dem Bon ablesen, welches Byte <code>ä</code>, <code>ö</code> und <code>ü</code>
+                            ergibt, und die passende Tabelle oben auswählen.
+                        </p>
+                    </div>
+                    <x-ui-button variant="secondary-outline" size="sm" wire:click="testPrint" class="shrink-0">
+                        <div class="flex items-center gap-2">
+                            @svg('heroicon-o-printer', 'w-4 h-4')
+                            Testdruck
+                        </div>
+                    </x-ui-button>
+                </div>
+            </div>
+        </x-ui-panel>
+
         {{-- API-Informationen --}}
         @if($printer->username && $printer->password)
             <x-ui-panel title="API-Informationen" subtitle="Zugangsdaten und Endpunkte für CloudPRNT">
@@ -199,15 +254,15 @@
                         <dl class="rounded-lg border border-[var(--ui-border)] divide-y divide-[var(--ui-border)] overflow-hidden">
                             <div class="flex items-center justify-between gap-3 px-3 py-2">
                                 <dt class="text-sm font-medium text-[var(--ui-secondary)]">Poll</dt>
-                                <dd class="text-xs font-mono text-[var(--ui-muted)] m-0 truncate">POST {{ url('api/printing/poll') }}</dd>
+                                <dd class="text-xs font-mono text-[var(--ui-muted)] m-0 truncate">POST {{ route('printing.api.poll') }}</dd>
                             </div>
                             <div class="flex items-center justify-between gap-3 px-3 py-2">
                                 <dt class="text-sm font-medium text-[var(--ui-secondary)]">Job Download</dt>
-                                <dd class="text-xs font-mono text-[var(--ui-muted)] m-0 truncate">GET {{ url('api/printing/job/{uuid}') }}</dd>
+                                <dd class="text-xs font-mono text-[var(--ui-muted)] m-0 truncate">GET {{ urldecode(route('printing.api.job.download', ['uuid' => '{uuid}'])) }}</dd>
                             </div>
                             <div class="flex items-center justify-between gap-3 px-3 py-2">
                                 <dt class="text-sm font-medium text-[var(--ui-secondary)]">Job Confirmation</dt>
-                                <dd class="text-xs font-mono text-[var(--ui-muted)] m-0 truncate">DELETE {{ url('api/printing/confirm/{uuid}') }}</dd>
+                                <dd class="text-xs font-mono text-[var(--ui-muted)] m-0 truncate">DELETE {{ urldecode(route('printing.api.job.confirm', ['uuid' => '{uuid}'])) }}</dd>
                             </div>
                         </dl>
                     </div>

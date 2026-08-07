@@ -257,7 +257,7 @@ class PrintingService implements PrintingServiceInterface
      * dargestellt. Die Ziel-Codepage ist über printing.encoding.codepage
      * konfigurierbar und muss zur Drucker-Einstellung passen.
      */
-    public function encodeForPrinter(string $content): string
+    public function encodeForPrinter(string $content, ?Printer $printer = null): string
     {
         // Typografische Sonderzeichen (Middot, Bullet, Gedankenstriche,
         // typografische Anführungszeichen, Ellipse …) auf sicheres ASCII
@@ -265,7 +265,12 @@ class PrintingService implements PrintingServiceInterface
         // an abweichenden Positionen (z. B. · -> ø auf manchen Star-Geräten).
         $content = $this->sanitizeForPrint($content);
 
-        $codepage = strtoupper((string) config('printing.encoding.codepage', 'CP1252'));
+        // Codepage und Steuerbefehl kommen bevorzugt vom Drucker selbst –
+        // verschiedene Geräte drucken verschiedene Tabellen. Ohne Drucker
+        // (z. B. Web-Vorschau) gelten die Config-Werte.
+        $codepage = $printer
+            ? $printer->codepage()
+            : strtoupper((string) config('printing.encoding.codepage', 'CP1252'));
 
         if ($codepage !== 'UTF-8') {
             $content = $this->toCodepage($content, $codepage);
@@ -274,7 +279,7 @@ class PrintingService implements PrintingServiceInterface
         // Steuerbefehl (rohe Bytes) voranstellen, um den Drucker auf die
         // passende Zeichentabelle zu setzen. Muss NACH der Codepage-Umwandlung
         // passieren, da es sich um rohe Control-Bytes handelt.
-        return $this->setupCommand() . $content;
+        return $this->setupCommand($printer) . $content;
     }
 
     /**
@@ -427,9 +432,13 @@ class PrintingService implements PrintingServiceInterface
      *
      * Konfigurierbar als Hex-String über printing.encoding.setup_command_hex.
      */
-    protected function setupCommand(): string
+    protected function setupCommand(?Printer $printer = null): string
     {
-        $hex = preg_replace('/[^0-9A-Fa-f]/', '', (string) config('printing.encoding.setup_command_hex', ''));
+        $configured = $printer
+            ? $printer->setupCommandHex()
+            : (string) config('printing.encoding.setup_command_hex', '');
+
+        $hex = preg_replace('/[^0-9A-Fa-f]/', '', $configured);
 
         if ($hex === '' || strlen($hex) % 2 !== 0) {
             return '';

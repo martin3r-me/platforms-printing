@@ -93,6 +93,37 @@ class Printer extends Model
     }
 
     /**
+     * Zeichentabelle dieses Druckers.
+     *
+     * Bewusst pro Gerät und nicht nur global per ENV: unterschiedliche Modelle
+     * (und sogar dasselbe Modell mit anderen Speicherschaltern) drucken
+     * unterschiedliche Tabellen. Nicht gesetzt = Wert aus der Config.
+     */
+    public function codepage(): string
+    {
+        $value = $this->settings['codepage'] ?? null;
+
+        return strtoupper((string) ($value ?: config('printing.encoding.codepage', 'CP850')));
+    }
+
+    /**
+     * Steuerbefehl (Hex), der jedem Druckauftrag dieses Geräts vorangestellt
+     * wird. Nicht gesetzt = Wert aus der Config.
+     */
+    public function setupCommandHex(): string
+    {
+        $value = $this->settings['setup_command_hex'] ?? null;
+
+        // Bewusst mit array_key_exists: ein leerer String ist eine gültige
+        // Angabe ("kein Steuerbefehl") und darf nicht auf die Config zurückfallen.
+        if (is_array($this->settings) && array_key_exists('setup_command_hex', $this->settings)) {
+            return (string) $value;
+        }
+
+        return (string) config('printing.encoding.setup_command_hex', '');
+    }
+
+    /**
      * Generiert automatisch Username und Password
      */
     public static function generateCredentials(): array

@@ -107,6 +107,15 @@ return [
         'cleanup_after_days' => 30,
 
         /*
+        | Wie alt ein hängender Job höchstens sein darf, um noch einmal in die
+        | Warteschlange gestellt zu werden. Ältere gelten sofort als
+        | fehlgeschlagen: ein Bon von gestern hilft niemandem mehr, und bei
+        | einem gewachsenen Rückstau würde der Drucker sonst reihenweise alte
+        | Bestellungen nachdrucken.
+        */
+        'requeue_max_age_minutes' => 120,
+
+        /*
         | printing:cleanup stündlich automatisch ausführen. false = nur manuell
         | (dann sammeln sich hängende und alte Jobs wieder an).
         */

@@ -58,6 +58,7 @@ class CleanupPrintJobsCommand extends Command
     {
         $timeout = (int) config('printing.jobs.timeout_minutes', 30);
         $maxRetries = (int) config('printing.jobs.max_retries', 3);
+        $maxAge = (int) config('printing.jobs.requeue_max_age_minutes', 120);
 
         // updated_at wird beim Wechsel auf "processing" gesetzt
         $stuck = PrintJob::where('status', 'processing')
@@ -67,9 +68,16 @@ class CleanupPrintJobsCommand extends Command
         $requeued = 0;
 
         foreach ($stuck as $job) {
+            // Alte Jobs NICHT wieder in die Warteschlange stellen. Ein Bon von
+            // gestern hilft niemandem mehr, und bei einem über Wochen
+            // gewachsenen Rückstau würde der Drucker sonst reihenweise alte
+            // Bestellungen nachdrucken. Solche Jobs gelten direkt als
+            // fehlgeschlagen.
+            $tooOld = $job->created_at?->lt(now()->subMinutes($maxAge)) ?? false;
+
             // Bei jedem Zurückholen den Zähler erhöhen, sonst würde ein
             // dauerhaft defekter Drucker den Job endlos wiederholen.
-            if ($job->retry_count < $maxRetries) {
+            if (!$tooOld && $job->retry_count < $maxRetries) {
                 $requeued++;
 
                 if (!$dryRun) {

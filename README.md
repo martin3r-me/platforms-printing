@@ -91,13 +91,19 @@ Templates werden in der Config definiert:
 6. **Drucker druckt** und bestätigt
 7. **Service markiert** Job als abgeschlossen
 
-## Zeichensatz bestimmen
+## Zeichensatz
 
-Druckt der Bon Umlaute falsch, muss die Zeichentabelle des Geräts nicht geraten
-werden – der Drucker kann sie selbst ausgeben:
+Die Zeichentabelle wird **pro Drucker** gepflegt (Detailseite, Panel
+„Zeichensatz“) – verschiedene Geräte drucken verschiedene Tabellen. Ist am
+Drucker nichts hinterlegt, gelten die Config-Werte `printing.encoding.*` bzw.
+`PRINTING_CODEPAGE`/`PRINTING_SETUP_COMMAND`.
+
+Druckt ein Bon Umlaute falsch, muss die Tabelle nicht geraten werden – der
+Drucker kann sie selbst ausgeben. Auf der Drucker-Detailseite auf **Testdruck**
+klicken, oder:
 
 ```bash
-php artisan printing:test-codepage 3          # Drucker-ID oder -Name
+php artisan printing:test-codepage 3                # Drucker-ID oder -Name
 php artisan printing:test-codepage 3 --setup=none   # ohne Setup-Bytes testen
 ```
 
@@ -106,9 +112,9 @@ Ausdruck ablesen, welches Byte `ä`, `ö` und `ü` ergibt:
 
 | Gefunden | Bedeutung |
 |---|---|
-| `84=ä 94=ö 81=ü` | CP850/CP437 → `PRINTING_CODEPAGE=CP850` |
-| `E4=ä F6=ö FC=ü` | CP1252 → `PRINTING_CODEPAGE=CP1252` |
-| etwas anderes | Gerät nutzt eine eigene Tabelle – die gefundenen Positionen sind die Antwort |
+| `84=ä 94=ö 81=ü` | CP850/CP437/CP858 |
+| `E4=ä F6=ö FC=ü` | CP1252 |
+| etwas anderes | Gerät nutzt eine eigene Tabelle – die gefundenen Positionen sind die Antwort (dann `codepageMap()` in `PrintingService` erweitern) |
 
 Der Testdruck läuft bewusst an der Codepage-Umwandlung vorbei, sonst würden
 genau die zu testenden Bytes umgeschrieben.

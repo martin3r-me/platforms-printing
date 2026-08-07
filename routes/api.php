@@ -106,7 +106,7 @@ Route::group([], function () {
             // gerade bestimmte Bytes testen.
             $content = $job->isRaw()
                 ? $job->rawContent()
-                : $service->encodeForPrinter($service->generateJobContent($job));
+                : $service->encodeForPrinter($service->generateJobContent($job), $printer);
         } catch (\Throwable $e) {
             // Fehler nicht als HTTP 500 durchreichen: der Drucker würde den Job
             // endlos erneut anfragen und er bliebe für immer auf "processing".
@@ -132,7 +132,8 @@ Route::group([], function () {
             'job_id' => $job->id,
             'job_uuid' => $job->uuid,
             'content_length' => strlen($content),
-            'codepage' => config('printing.encoding.codepage'),
+            'codepage' => $printer->codepage(),
+            'raw' => $job->isRaw(),
         ], $service->describeEncoding($content)));
 
         // CloudPRNT-kompatible Antwort: rohe Bytes in der Drucker-Codepage,

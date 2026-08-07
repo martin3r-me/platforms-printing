@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use Platform\Printing\Models\Printer;
 use Platform\Printing\Models\PrintJob;
 use Platform\Printing\Models\PrinterGroup;
+use Platform\Printing\Services\CodepageTestPrint;
 
 class Show extends Component
 {
@@ -26,6 +27,8 @@ class Show extends Component
     public $printer_username = '';
     public $printer_password = '';
     public $printer_mac_address = '';
+    public $printer_codepage = '';
+    public $printer_setup_hex = '';
     public $printer_is_active = false;
     public $showPassword = false;
     public $passwordModalShow = false;
@@ -48,13 +51,15 @@ class Show extends Component
         $this->printer_username = $printer->username;
         $this->printer_password = '';
         $this->printer_mac_address = $printer->mac_address;
+        $this->printer_codepage = $printer->codepage();
+        $this->printer_setup_hex = $printer->setupCommandHex();
         $this->printer_is_active = $printer->is_active;
         $this->showPassword = false;
     }
 
     public function updated($propertyName)
     {
-        if (in_array($propertyName, ['printer_name', 'printer_location', 'printer_username', 'printer_password', 'printer_mac_address', 'printer_is_active'])) {
+        if (in_array($propertyName, ['printer_name', 'printer_location', 'printer_username', 'printer_password', 'printer_mac_address', 'printer_codepage', 'printer_setup_hex', 'printer_is_active'])) {
             $this->isDirty = true;
         }
     }
@@ -138,6 +143,11 @@ class Show extends Component
             'printer_username' => 'nullable|string|max:255|unique:printers,username,' . $this->printer->id,
             'printer_password' => 'nullable|string|max:255',
             'printer_mac_address' => 'nullable|string|max:255|unique:printers,mac_address,' . $this->printer->id,
+            'printer_codepage' => 'required|string|in:' . implode(',', array_keys($this->codepageOptions())),
+            // Nur Hex-Ziffern und Trenner, und immer vollständige Bytes
+            'printer_setup_hex' => ['nullable', 'string', 'regex:/^\s*([0-9A-Fa-f]{2}[\s,]*)*$/'],
+        ], [
+            'printer_setup_hex.regex' => 'Bitte Bytes als Hex-Paare angeben, z. B. "1B 52 00".',
         ]);
 
         $data = [
@@ -146,6 +156,10 @@ class Show extends Component
             'username' => $this->printer_username,
             'mac_address' => $this->printer_mac_address ?: null,
             'is_active' => $this->printer_is_active,
+            'settings' => array_merge($this->printer->settings ?? [], [
+                'codepage' => $this->printer_codepage,
+                'setup_command_hex' => $this->printer_setup_hex,
+            ]),
         ];
 
         if ($this->printer_password) {
@@ -158,6 +172,45 @@ class Show extends Component
         $this->dispatch('notify', [
             'type' => 'success',
             'message' => 'Drucker erfolgreich gespeichert'
+        ]);
+    }
+
+    /**
+     * Auswahl für die Zeichentabelle. CP437/CP850/CP858 legen ä/ö/ü an
+     * dieselben Positionen (84/94/81) und unterscheiden sich nur im übrigen
+     * oberen Bereich; CP1252 nutzt E4/F6/FC.
+     */
+    public function codepageOptions(): array
+    {
+        return [
+            'CP850' => 'CP850 – DOS Westeuropa (ä=84 ö=94 ü=81)',
+            'CP437' => 'CP437 – DOS US (ä=84 ö=94 ü=81)',
+            'CP858' => 'CP858 – wie CP850, zusätzlich € (ä=84 ö=94 ü=81)',
+            'CP1252' => 'CP1252 – Windows Westeuropa (ä=E4 ö=F6 ü=FC)',
+            'UTF-8' => 'UTF-8 – nur wenn der Drucker echtes UTF-8 kann',
+        ];
+    }
+
+    /**
+     * Reiht einen Testdruck ein, der die Zeichentabelle des Geräts ausdruckt.
+     * Damit lässt sich die richtige Codepage ablesen statt sie zu raten.
+     */
+    public function testPrint()
+    {
+        if (!$this->printer->is_active) {
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'Der Drucker ist inaktiv und holt keine Jobs ab.',
+            ]);
+
+            return;
+        }
+
+        $job = app(CodepageTestPrint::class)->queueFor($this->printer, (int) auth()->id());
+
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'message' => "Testdruck eingereiht (Job #{$job->id}) – der Drucker holt ihn beim nächsten Poll ab.",
         ]);
     }
 

@@ -210,6 +210,22 @@
                     Leer lassen = kein Befehl.
                 </p>
 
+                {{-- Speichern gehört hierher: der Button in der Actionbar ganz
+                     oben ist von hier aus nicht zu sehen und wurde übersehen. --}}
+                @if($this->isDirty)
+                    <div class="flex items-center justify-between gap-4 px-3 py-2 rounded-lg border border-[var(--ui-warning)] bg-[var(--ui-warning-5)]">
+                        <span class="text-xs text-[var(--ui-secondary)]">
+                            Nicht gespeichert – erst nach dem Speichern druckt das Gerät mit dieser Tabelle.
+                        </span>
+                        <x-ui-button variant="primary" size="sm" wire:click="save" class="shrink-0">
+                            <div class="flex items-center gap-2">
+                                @svg('heroicon-o-check', 'w-4 h-4')
+                                Speichern
+                            </div>
+                        </x-ui-button>
+                    </div>
+                @endif
+
                 <div class="pt-4 border-t border-[var(--ui-border)] flex items-center justify-between gap-4">
                     <div class="min-w-0">
                         <div class="text-sm font-medium text-[var(--ui-secondary)]">Testdruck</div>

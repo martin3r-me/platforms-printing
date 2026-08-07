@@ -198,6 +198,18 @@ class Show extends Component
      */
     public function testPrint()
     {
+        // Der Testdruck nutzt die GESPEICHERTE Einstellung des Druckers. Ohne
+        // diesen Hinweis testet man nach einer Umstellung ahnungslos noch die
+        // alte Tabelle und hält das Ergebnis für aussagekräftig.
+        if ($this->isDirty) {
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'Erst speichern – sonst druckt der Test noch mit der bisher gespeicherten Tabelle.',
+            ]);
+
+            return;
+        }
+
         if (!$this->printer->is_active) {
             $this->dispatch('notify', [
                 'type' => 'error',

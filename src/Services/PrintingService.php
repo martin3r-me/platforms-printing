@@ -426,6 +426,10 @@ class PrintingService implements PrintingServiceInterface
             'STAR-DE' => [
                 'Ä' => "\xA0", 'Ö' => "\xA1", 'Ü' => "\xA2", 'ß' => "\xA3",
                 'ö' => "\xB9", 'ü' => "\xBE", 'ä' => "\xCD",
+                // Am Bon abgelesen. B2 fehlt bewusst: dort war unklar, ob ë
+                // (Trema) oder ē (Makron) steht – bei Zweifel lieber die
+                // ASCII-Auflösung als ein falsches Zeichen auf dem Bon.
+                'é' => "\xB0", 'è' => "\xB1", 'ê' => "\xB3",
             ],
             'CP437' => $dos,
             'CP850' => $dos + ['§' => "\xF5", '³' => "\xFC"],

@@ -182,6 +182,11 @@ class PrintingService implements PrintingServiceInterface
      */
     public function generateJobContent(PrintJob $job): string
     {
+        // Roh-Job: der Inhalt liegt fertig im Job, kein Template nötig
+        if ($job->isRaw()) {
+            return $job->rawContent();
+        }
+
         $template = $job->template;
         $data = $job->data;
         $printable = $job->printable;

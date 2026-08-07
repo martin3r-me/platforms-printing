@@ -91,6 +91,28 @@ Templates werden in der Config definiert:
 6. **Drucker druckt** und bestätigt
 7. **Service markiert** Job als abgeschlossen
 
+## Zeichensatz bestimmen
+
+Druckt der Bon Umlaute falsch, muss die Zeichentabelle des Geräts nicht geraten
+werden – der Drucker kann sie selbst ausgeben:
+
+```bash
+php artisan printing:test-codepage 3          # Drucker-ID oder -Name
+php artisan printing:test-codepage 3 --setup=none   # ohne Setup-Bytes testen
+```
+
+Der Bon zeigt jedes Byte von `0x80` bis `0xFF` mit seinem Hex-Wert. Auf dem
+Ausdruck ablesen, welches Byte `ä`, `ö` und `ü` ergibt:
+
+| Gefunden | Bedeutung |
+|---|---|
+| `84=ä 94=ö 81=ü` | CP850/CP437 → `PRINTING_CODEPAGE=CP850` |
+| `E4=ä F6=ö FC=ü` | CP1252 → `PRINTING_CODEPAGE=CP1252` |
+| etwas anderes | Gerät nutzt eine eigene Tabelle – die gefundenen Positionen sind die Antwort |
+
+Der Testdruck läuft bewusst an der Codepage-Umwandlung vorbei, sonst würden
+genau die zu testenden Bytes umgeschrieben.
+
 ## Aufräumen
 
 `printing:cleanup` wendet die `jobs`-Config an und läuft stündlich automatisch

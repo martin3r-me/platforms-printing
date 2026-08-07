@@ -13,6 +13,7 @@ use Livewire\Livewire;
 use Platform\Core\PlatformCore;
 use Platform\Core\Routing\ModuleRouter;
 use Platform\Printing\Console\CleanupPrintJobsCommand;
+use Platform\Printing\Console\TestCodepageCommand;
 use Platform\Printing\Contracts\PrintingServiceInterface;
 use Platform\Printing\Models\PrintJob;
 use Platform\Printing\Services\PrintingService;
@@ -162,7 +163,10 @@ class PrintingServiceProvider extends ServiceProvider
             return;
         }
 
-        $this->commands([CleanupPrintJobsCommand::class]);
+        $this->commands([
+            CleanupPrintJobsCommand::class,
+            TestCodepageCommand::class,
+        ]);
 
         $this->app->booted(function () {
             if (!config('printing.jobs.cleanup_scheduled', true)) {

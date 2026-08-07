@@ -174,6 +174,28 @@ class PrintJob extends Model
     }
 
     /**
+     * Roh-Job: der Inhalt steht fertig in data und geht unverändert an den
+     * Drucker – ohne Template und ohne Codepage-Umwandlung.
+     *
+     * Gebraucht für Diagnose-Drucke (printing:test-codepage), die gezielt
+     * bestimmte Bytes senden müssen. Liefe so ein Job durch encodeForPrinter(),
+     * würden genau die zu testenden Bytes umgeschrieben.
+     */
+    public function isRaw(): bool
+    {
+        return (bool) ($this->data['raw'] ?? false);
+    }
+
+    /**
+     * Die rohen Bytes eines Roh-Jobs. In data base64-kodiert abgelegt, weil
+     * die Spalte JSON ist und beliebige Bytes kein gültiges UTF-8 sind.
+     */
+    public function rawContent(): string
+    {
+        return (string) base64_decode($this->data['content_base64'] ?? '', true);
+    }
+
+    /**
      * Prüft ob der Job wartend ist
      */
     public function isPending(): bool

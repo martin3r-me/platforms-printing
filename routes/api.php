@@ -102,7 +102,11 @@ Route::group([], function () {
         $service = app(PrintingService::class);
 
         try {
-            $content = $service->encodeForPrinter($service->generateJobContent($job));
+            // Roh-Jobs (Diagnose-Drucke) gehen unverändert raus – sie sollen ja
+            // gerade bestimmte Bytes testen.
+            $content = $job->isRaw()
+                ? $job->rawContent()
+                : $service->encodeForPrinter($service->generateJobContent($job));
         } catch (\Throwable $e) {
             // Fehler nicht als HTTP 500 durchreichen: der Drucker würde den Job
             // endlos erneut anfragen und er bliebe für immer auf "processing".

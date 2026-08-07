@@ -83,13 +83,16 @@
                             </x-ui-table-cell>
                             <x-ui-table-cell align="right">
                                 <div class="flex items-center gap-2 justify-end">
-                                    <x-ui-button wire:click="openEditModal({{ $group->id }})" size="sm" variant="secondary">
+                                    <x-ui-button size="sm" variant="secondary"
+                                        x-on:click.stop.prevent="$wire.openEditModal({{ $group->id }})">
                                         Bearbeiten
                                     </x-ui-button>
-                                    <x-ui-button wire:click="toggleActive({{ $group->id }})" size="sm" variant="secondary">
+                                    <x-ui-button size="sm" variant="secondary"
+                                        x-on:click.stop.prevent="$wire.toggleActive({{ $group->id }})">
                                         {{ $group->is_active ? 'Deaktivieren' : 'Aktivieren' }}
                                     </x-ui-button>
-                                    <x-ui-button variant="danger" wire:click="deleteGroup({{ $group->id }})" size="sm">
+                                    <x-ui-button size="sm" variant="danger"
+                                        x-on:click.stop.prevent="$wire.openDeleteModal({{ $group->id }})">
                                         Löschen
                                     </x-ui-button>
                                 </div>
@@ -165,6 +168,31 @@
                     </x-ui-button>
                     <x-ui-button type="button" variant="primary" wire:click="updateGroup">
                         Speichern
+                    </x-ui-button>
+                </div>
+            </x-slot>
+        </x-ui-modal>
+
+        {{-- Löschen bestätigen: der Button löschte bisher ohne Rückfrage --}}
+        <x-ui-modal wire:model="deleteModalShow" size="sm">
+            <x-slot name="header">
+                Gruppe löschen
+            </x-slot>
+
+            <p class="text-sm text-[var(--ui-secondary)]">
+                @if($this->groupToDelete)
+                    Soll die Gruppe <strong>{{ $this->groupToDelete->name }}</strong> wirklich gelöscht
+                    werden? Das lässt sich nicht rückgängig machen.
+                @endif
+            </p>
+
+            <x-slot name="footer">
+                <div class="flex justify-end gap-2">
+                    <x-ui-button type="button" variant="secondary-outline" @click="$wire.closeDeleteModal()">
+                        Abbrechen
+                    </x-ui-button>
+                    <x-ui-button type="button" variant="danger" wire:click="confirmDeleteGroup">
+                        Löschen
                     </x-ui-button>
                 </div>
             </x-slot>

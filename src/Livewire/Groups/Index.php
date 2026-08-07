@@ -19,6 +19,8 @@ class Index extends Component
     // CRM-konformes Modal-Flag
     public $modalShow = false;
     public $editModalShow = false;
+    public $deleteModalShow = false;
+    public $groupToDeleteId = null;
 
     // Formularfelder für neue Gruppe
     public $name = '';
@@ -77,6 +79,35 @@ class Index extends Component
             'type' => 'success',
             'message' => $group->is_active ? 'Gruppe aktiviert' : 'Gruppe deaktiviert'
         ]);
+    }
+
+    public function openDeleteModal($groupId)
+    {
+        $this->groupToDeleteId = $groupId;
+        $this->deleteModalShow = true;
+    }
+
+    public function closeDeleteModal()
+    {
+        $this->deleteModalShow = false;
+        $this->groupToDeleteId = null;
+    }
+
+    /** Für die Anzeige im Bestätigungs-Dialog */
+    public function getGroupToDeleteProperty(): ?PrinterGroup
+    {
+        return $this->groupToDeleteId ? PrinterGroup::find($this->groupToDeleteId) : null;
+    }
+
+    public function confirmDeleteGroup()
+    {
+        $group = $this->groupToDelete;
+
+        $this->closeDeleteModal();
+
+        if ($group) {
+            $this->deleteGroup($group);
+        }
     }
 
     public function deleteGroup(PrinterGroup $group)

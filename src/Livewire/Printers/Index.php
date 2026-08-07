@@ -20,6 +20,8 @@ class Index extends Component
     // CRM-konformes Modal-Flag
     public $modalShow = false;
     public $editModalShow = false;
+    public $deleteModalShow = false;
+    public $printerToDeleteId = null;
     
     // Form fields for creating printer
     public $name = '';
@@ -89,6 +91,35 @@ class Index extends Component
             'type' => 'success',
             'message' => $printer->is_active ? 'Drucker aktiviert' : 'Drucker deaktiviert'
         ]);
+    }
+
+    public function openDeleteModal($printerId)
+    {
+        $this->printerToDeleteId = $printerId;
+        $this->deleteModalShow = true;
+    }
+
+    public function closeDeleteModal()
+    {
+        $this->deleteModalShow = false;
+        $this->printerToDeleteId = null;
+    }
+
+    /** Für die Anzeige im Bestätigungs-Dialog */
+    public function getPrinterToDeleteProperty(): ?Printer
+    {
+        return $this->printerToDeleteId ? Printer::find($this->printerToDeleteId) : null;
+    }
+
+    public function confirmDeletePrinter()
+    {
+        $printer = $this->printerToDelete;
+
+        $this->closeDeleteModal();
+
+        if ($printer) {
+            $this->deletePrinter($printer);
+        }
     }
 
     public function deletePrinter(Printer $printer)

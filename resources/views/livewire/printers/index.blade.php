@@ -82,14 +82,22 @@
                                 </x-ui-badge>
                             </x-ui-table-cell>
                             <x-ui-table-cell align="right">
+                                {{-- .stop ist hier zwingend: die Zeile trägt ein
+                                     onclick="window.location.href=..." (siehe
+                                     clickable/href oben). Ohne das blubbert der
+                                     Klick hoch, die Seite navigiert weg und das
+                                     gerade geöffnete Modal verschwindet sofort. --}}
                                 <div class="flex items-center gap-2 justify-end">
-                                    <x-ui-button wire:click="openEditModal({{ $printer->id }})" size="sm" variant="secondary">
+                                    <x-ui-button size="sm" variant="secondary"
+                                        x-on:click.stop.prevent="$wire.openEditModal({{ $printer->id }})">
                                         Bearbeiten
                                     </x-ui-button>
-                                    <x-ui-button wire:click="toggleActive({{ $printer->id }})" size="sm" variant="secondary">
+                                    <x-ui-button size="sm" variant="secondary"
+                                        x-on:click.stop.prevent="$wire.toggleActive({{ $printer->id }})">
                                         {{ $printer->is_active ? 'Deaktivieren' : 'Aktivieren' }}
                                     </x-ui-button>
-                                    <x-ui-button variant="danger" wire:click="deletePrinter({{ $printer->id }})" size="sm">
+                                    <x-ui-button size="sm" variant="danger"
+                                        x-on:click.stop.prevent="$wire.openDeleteModal({{ $printer->id }})">
                                         Löschen
                                     </x-ui-button>
                                 </div>
@@ -189,6 +197,31 @@
                     </x-ui-button>
                     <x-ui-button type="button" variant="primary" wire:click="updatePrinter">
                         Speichern
+                    </x-ui-button>
+                </div>
+            </x-slot>
+        </x-ui-modal>
+
+        {{-- Löschen bestätigen: der Button löschte bisher ohne Rückfrage --}}
+        <x-ui-modal wire:model="deleteModalShow" size="sm">
+            <x-slot name="header">
+                Drucker löschen
+            </x-slot>
+
+            <p class="text-sm text-[var(--ui-secondary)]">
+                @if($this->printerToDelete)
+                    Soll der Drucker <strong>{{ $this->printerToDelete->name }}</strong> wirklich gelöscht
+                    werden? Das lässt sich nicht rückgängig machen.
+                @endif
+            </p>
+
+            <x-slot name="footer">
+                <div class="flex justify-end gap-2">
+                    <x-ui-button type="button" variant="secondary-outline" @click="$wire.closeDeleteModal()">
+                        Abbrechen
+                    </x-ui-button>
+                    <x-ui-button type="button" variant="danger" wire:click="confirmDeletePrinter">
+                        Löschen
                     </x-ui-button>
                 </div>
             </x-slot>

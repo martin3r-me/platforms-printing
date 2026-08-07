@@ -98,10 +98,10 @@
                             <x-ui-table-cell align="right">
                                 <div class="flex items-center gap-2 justify-end" @click.stop>
                                     @if($job->status === 'failed')
-                                        <x-ui-button wire:click="retryJob({{ $job->id }})" size="sm" variant="secondary">Wiederholen</x-ui-button>
+                                        <x-ui-button size="sm" variant="secondary" x-on:click.stop.prevent="$wire.retryJob({{ $job->id }})">Wiederholen</x-ui-button>
                                     @endif
                                     @if(in_array($job->status, ['pending', 'processing']))
-                                        <x-ui-button variant="danger-outline" wire:click="cancelJob({{ $job->id }})" size="sm">Abbrechen</x-ui-button>
+                                        <x-ui-button size="sm" variant="danger-outline" x-on:click.stop.prevent="$wire.cancelJob({{ $job->id }})">Abbrechen</x-ui-button>
                                     @endif
                                 </div>
                             </x-ui-table-cell>

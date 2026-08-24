@@ -49,7 +49,7 @@ class PrintingService implements PrintingServiceInterface
             'printer_id' => $printerId,
             'printer_group_id' => null, // Keine Gruppen-Jobs mehr
             'user_id' => auth()->id(),
-            'team_id' => auth()->user()->currentTeam->id,
+            'team_id' => $this->teamFor($printable, $printerId),
         ]);
 
         Log::info('Print Job erstellt', [
@@ -61,6 +61,54 @@ class PrintingService implements PrintingServiceInterface
         ]);
 
         return $printJob;
+    }
+
+    /**
+     * Zu welchem Team gehört der Druckauftrag?
+     *
+     * Bis hierher kam die Antwort aus auth(): der aktuelle Benutzer, sein Team.
+     * Das trägt nur, solange ein Mensch auf einen Knopf drückt. Löst ein Vorgang
+     * den Druck aus – eine eingehende Zahlung über einen Webhook, ein geplanter
+     * Auftrag –, ist niemand angemeldet, und "auth()->user()->currentTeam" brach
+     * mit einem Fehler auf null ab. Der Aufrufer fing ihn ab und protokollierte
+     * ihn; sichtbar war nur, dass kein Auftrag entstand.
+     *
+     * Gefragt wird deshalb in dieser Reihenfolge:
+     *
+     *   1. Der DRUCKER. Er ist einem Team fest zugeordnet und ist die
+     *      verlässlichste Quelle – gedruckt wird auf seinem Papier.
+     *   2. Das Druckobjekt, falls es ein Team führt (Buchung, Aufgabe …).
+     *   3. Der angemeldete Benutzer, wie gehabt.
+     *
+     * Bleibt alles leer, wird das laut gesagt statt still ein Feld leer zu
+     * lassen: Ohne Team gehört der Auftrag niemandem.
+     */
+    protected function teamFor(Model $printable, ?int $printerId = null): int
+    {
+        if ($printerId) {
+            $team = Printer::find($printerId)?->team_id;
+
+            if ($team) {
+                return (int) $team;
+            }
+        }
+
+        // getAttribute statt ->team_id: Nicht jedes Druckobjekt hat die Spalte.
+        $team = $printable->getAttribute('team_id');
+
+        if ($team) {
+            return (int) $team;
+        }
+
+        $team = auth()->user()?->currentTeam?->id;
+
+        if ($team) {
+            return (int) $team;
+        }
+
+        throw new \RuntimeException(
+            'Kein Team für den Druckauftrag: weder am Drucker, noch am Druckobjekt, noch am angemeldeten Benutzer.'
+        );
     }
 
     /**
@@ -93,7 +141,7 @@ class PrintingService implements PrintingServiceInterface
                 'printer_id' => $printer->id,
                 'printer_group_id' => null, // Keine Gruppen-Jobs mehr
                 'user_id' => auth()->id(),
-                'team_id' => auth()->user()->currentTeam->id,
+                'team_id' => $printer->team_id ?: $this->teamFor($printable, $printer->id),
             ]);
 
             $jobs[] = $job;

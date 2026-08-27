@@ -17,6 +17,7 @@ use Platform\Printing\Console\TestCodepageCommand;
 use Platform\Printing\Contracts\PrintingServiceInterface;
 use Platform\Printing\Models\PrintJob;
 use Platform\Printing\Services\PrintingService;
+use Platform\Printing\Http\Middleware\EnsureContentLength;
 use Platform\Printing\Http\Middleware\VerifyPrinterBasicAuth;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -74,7 +75,7 @@ class PrintingServiceProvider extends ServiceProvider
         // API Routes für CloudPRNT - außerhalb des Modul-Systems registrieren
         if (config('printing.api.cloudprnt.enabled')) {
             Route::prefix('printing/' . config('printing.api.prefix', 'api'))
-                ->middleware(array_merge(config('printing.api.middleware', []), ['verify.printer.basic']))
+                ->middleware(array_merge(config('printing.api.middleware', []), ['printer.content-length', 'verify.printer.basic']))
                 ->group(function () {
                     require __DIR__.'/../routes/api.php';
                 });
@@ -94,6 +95,10 @@ class PrintingServiceProvider extends ServiceProvider
 
         // Middleware registrieren
         $this->app['router']->aliasMiddleware('verify.printer.basic', VerifyPrinterBasicAuth::class);
+        // Muss VOR der Authentifizierung laufen, damit auch abgelehnte
+        // Antworten (401) eine Laenge tragen - sonst wartet der Drucker
+        // auch auf die in sein Timeout.
+        $this->app['router']->aliasMiddleware('printer.content-length', EnsureContentLength::class);
 
         // Migrations, Views, Livewire-Komponenten
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');

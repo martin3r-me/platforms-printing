@@ -93,9 +93,13 @@ Route::group([], function () {
             return response('', 404);
         }
 
-        // Markiere Job als verarbeitet, falls noch pending
+        // Ab hier holt der Drucker den Auftrag wirklich ab - das ist der
+        // Moment, in dem er "processing" wird. Der Poll davor lässt den
+        // Zustand bewusst unangetastet (siehe getNextJobForPrinter).
+        // markAsProcessing() statt rohem update: es schreibt zugleich den
+        // Protokolleintrag "An Drucker gesendet".
         if ($job->status === 'pending') {
-            $job->update(['status' => 'processing']);
+            $job->markAsProcessing();
         }
 
         // Generiere Job-Content (UTF-8) und wandle in die Drucker-Codepage um

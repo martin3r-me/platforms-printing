@@ -170,22 +170,38 @@ class PrintingService implements PrintingServiceInterface
 
 
     /**
-     * Holt den nächsten wartenden Job für einen Drucker
+     * Holt den nächsten wartenden Job für einen Drucker.
+     *
+     * Beantwortet nur die Frage "was steht als Nächstes an?" und ändert dabei
+     * NICHTS am Zustand. Auf "processing" setzt den Auftrag erst der Download –
+     * also der Moment, in dem der Drucker ihn tatsächlich abholt.
+     *
+     * Vorgeschichte: Der Poll hat den Auftrag früher sofort beansprucht. Das
+     * trägt genau so lange, wie immer nur ein Auftrag in der Warteschlange
+     * steht – dann sind Beanspruchen und Abholen derselbe Zyklus. Liegen
+     * mehrere an (etwa alle Bons einer Veranstaltung auf einmal), pollt der
+     * Drucker weiter, während er noch am ersten druckt. Dieser Poll hat den
+     * zweiten Auftrag auf "processing" gesetzt, obwohl der Drucker ihn – weil
+     * beschäftigt – nie abgeholt hat. Da die Abfrage nur nach "pending" sucht,
+     * wurde er danach nie wieder angeboten: ein Bon blieb für immer im Status
+     * "Wird gedruckt" liegen, ohne dass Papier kam.
+     *
+     * Ohne Beanspruchen wird derselbe Auftrag beim nächsten Poll einfach
+     * erneut angeboten, bis der Drucker ihn wirklich holt. Doppelt gedruckt
+     * werden kann dadurch nichts: Sobald der Download läuft, steht der Auftrag
+     * auf "processing" und fällt aus dieser Abfrage heraus.
      */
     public function getNextJobForPrinter(int $printerId): ?PrintJob
     {
-        // Suche nach Jobs für diesen spezifischen Drucker
-        $job = PrintJob::where('printer_id', $printerId)
+        // created_at ist sekundengenau. Werden mehrere Aufträge in derselben
+        // Sekunde erzeugt - bei einem Stapeldruck der Normalfall -, ist die
+        // Reihenfolge ohne zweites Kriterium unbestimmt. Die ID entscheidet
+        // dann, damit der Papierstapel der Anlage-Reihenfolge folgt.
+        return PrintJob::where('printer_id', $printerId)
             ->where('status', 'pending')
             ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc')
             ->first();
-
-        if ($job) {
-            $job->markAsProcessing();
-            return $job;
-        }
-
-        return null;
     }
 
     /**

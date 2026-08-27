@@ -28,7 +28,10 @@ interface PrintingServiceInterface
     ): array;
 
     /**
-     * Holt den nächsten wartenden Job für einen Drucker
+     * Holt den nächsten wartenden Job für einen Drucker.
+     *
+     * Reine Abfrage: ändert den Zustand des Auftrags NICHT. Auf "processing"
+     * setzt ihn erst der Download, wenn der Drucker ihn abholt.
      */
     public function getNextJobForPrinter(int $printerId): ?\Platform\Printing\Models\PrintJob;
 

@@ -78,6 +78,12 @@ return [
         'middleware' => [],
         'cloudprnt' => [
             'enabled' => true,
+
+            // jobGetUrl/jobConfirmationUrl in der Poll-Antwort mitschicken.
+            // Aus: Der Drucker nimmt den Standardweg ueber die Poll-URL, so
+            // wie CloudPRNT es vorsieht. Nur einschalten, wenn ein Geraet den
+            // Standardweg nicht beherrscht.
+            'alternative_urls' => false,
             'endpoints' => [
                 'poll' => '/poll',
                 'job' => '/job/{id}',

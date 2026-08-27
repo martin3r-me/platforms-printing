@@ -87,15 +87,33 @@ Route::group([], function () {
             'job_uuid' => $job->uuid,
         ]);
 
-        // CloudPRNT-kompatible Antwort
-        return response()->json([
-            'jobReady' => true,
-            'mediaTypes' => ['text/plain'],
-            'jobToken' => $job->uuid,
-            'jobGetUrl' => route('printing.api.job.download', ['uuid' => $job->uuid]),
+        // CloudPRNT-kompatible Antwort.
+        //
+        // Ohne jobGetUrl/jobConfirmationUrl holt der Drucker den Auftrag ueber
+        // DIE URL, die er ohnehin pollt - den Standardweg, den es seit dem
+        // Ergaenzen von GET und DELETE auf /poll gibt.
+        //
+        // Warum das ueberhaupt eine Rolle spielt: Zwischen "gemeldet" und
+        // "abgeholt" liegen rund 28 Sekunden, und im Verkehr ist zu sehen,
+        // dass der Drucker in dieser Zeit die alternative URL ansteuert. Der
+        // Verdacht ist, dass ihn genau deren Verarbeitung aufhaelt. Bleibt nur
+        // der Standardweg, faellt das weg.
+        //
+        // Ueber printing.api.cloudprnt.alternative_urls wieder einschaltbar,
+        // falls ein anderes Geraet die Alternative braucht.
+        $antwort = [
+            'jobReady'     => true,
+            'mediaTypes'   => ['text/plain'],
+            'jobToken'     => $job->uuid,
             'deleteMethod' => 'DELETE',
-            'jobConfirmationUrl' => route('printing.api.job.confirm', ['uuid' => $job->uuid]),
-        ]);
+        ];
+
+        if (config('printing.api.cloudprnt.alternative_urls', false)) {
+            $antwort['jobGetUrl']          = route('printing.api.job.download', ['uuid' => $job->uuid]);
+            $antwort['jobConfirmationUrl'] = route('printing.api.job.confirm', ['uuid' => $job->uuid]);
+        }
+
+        return response()->json($antwort);
     })->name('printing.api.poll');
 
     // --- Der Standardweg -----------------------------------------------

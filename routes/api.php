@@ -142,8 +142,22 @@ Route::group([], function () {
 
         // CloudPRNT-kompatible Antwort: rohe Bytes in der Drucker-Codepage,
         // daher bewusst OHNE charset=utf-8 (Drucker druckt Bytes 1:1).
+        //
+        // Content-Length ist hier NICHT optional, auch wenn HTTP sie nicht
+        // verlangt. Ohne sie liefert nginx die Antwort als "Transfer-Encoding:
+        // chunked" ueber eine keep-alive-Verbindung aus. Der Drucker erfaehrt
+        // dann nirgends, wie lang der Bon ist, und wartet auf das Ende der
+        // Uebertragung - bis sein eigener HTTP Response Timeout zuschlaegt.
+        // Genau das kostete jeden einzelnen Bon 60 Sekunden: abgeholt war er
+        // sofort, gedruckt wurde er erst beim Timeout.
+        //
+        // strlen() statt mb_strlen(): Gebraucht wird die Laenge in BYTES. Der
+        // Inhalt liegt bereits in der Codepage des Druckers vor, und Umlaute
+        // sind dort ein Byte - mb_strlen zaehlte Zeichen und wuerde die
+        // Antwort abschneiden.
         return Response::make($content, 200, [
-            'Content-Type' => 'text/plain',
+            'Content-Type'   => 'text/plain',
+            'Content-Length' => (string) strlen($content),
         ]);
     })->name('printing.api.job.download');
 

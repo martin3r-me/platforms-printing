@@ -56,9 +56,23 @@ class Show extends Component
         ]);
     }
 
+    /**
+     * Auftrag erneut in die Warteschlange stellen.
+     *
+     * Auch aus "processing" heraus: Bleibt ein Auftrag dort liegen, weil der
+     * Drucker ihn angeboten bekam, aber nie abgeholt hat, war er bis hier
+     * nicht mehr einzuholen - er wurde weder erneut angeboten noch liess er
+     * sich wiederholen. Genau dieser Fall ist der Grund, warum man den Knopf
+     * ueberhaupt sucht.
+     *
+     * Laeuft der Auftrag wirklich noch, kann das ein zweites Exemplar
+     * bedeuten. Das ist bewusst in Kauf genommen: Der Status steht daneben,
+     * die Entscheidung trifft ein Mensch, und ein Bon zu viel ist besser als
+     * einer zu wenig.
+     */
     public function retryJob()
     {
-        if ($this->job->status !== 'failed') {
+        if (! in_array($this->job->status, ['failed', 'processing'], true)) {
             return;
         }
 

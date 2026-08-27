@@ -286,6 +286,21 @@
             </x-ui-panel>
         @endif
 
+        {{-- Selbstauskunft des Geraets: Antwort auf die clientAction-Rueckfrage
+             (echter Poll-Takt und unterstuetzte Formate). Erscheint, sobald der
+             Drucker das naechste Mal ohne anstehenden Auftrag gepollt hat. --}}
+        @php $selbstauskunft = ($printer->settings ?? [])['self_report'] ?? null; @endphp
+        @if ($selbstauskunft)
+            <x-ui-panel title="Selbstauskunft des Druckers" subtitle="Was das Gerät über sich meldet – erfasst am {{ $selbstauskunft['erfasst_am'] ?? '–' }}">
+                <pre class="m-0 overflow-x-auto whitespace-pre-wrap break-all text-xs font-mono text-[var(--ui-secondary)]">{{ json_encode($selbstauskunft['antwort'] ?? null, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</pre>
+                <p class="mt-2 text-xs text-[var(--ui-muted)]">
+                    <strong>GetPollInterval</strong> ist der Takt, in dem der Drucker wirklich fragt.
+                    <strong>Encodings</strong> sind die Formate, die er versteht – steht dort
+                    <code>application/vnd.star.line</code>, können mehrere Bons mit je eigenem Schnitt in einen Auftrag.
+                </p>
+            </x-ui-panel>
+        @endif
+
         {{-- Statistiken --}}
         <x-ui-panel title="Statistiken">
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">

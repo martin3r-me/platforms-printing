@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Platform\Printing\Models\Printer;
 use Platform\Printing\Models\PrintJob;
 use Platform\Printing\Services\PrintingService;
+use Platform\Printing\Support\PrinterSelfReport;
 
 // API-Routen (Prefix und Middleware werden vom ServiceProvider gesetzt)
 Route::group([], function () {
@@ -31,10 +32,30 @@ Route::group([], function () {
         // Drucker ist bereits durch Middleware validiert
         $printer = $request->attributes->get('printer');
 
+        // Antworten auf frühere Rückfragen mitnehmen, falls das Gerät welche
+        // angehängt hat.
+        PrinterSelfReport::einsammeln($request, $printer);
+
         // Hole nächsten Job für diesen Drucker
         $job = app(PrintingService::class)->getNextJobForPrinter($printer->id);
 
         if (!$job) {
+            // Nichts zu drucken - der richtige Moment, das Gerät einmalig nach
+            // seinem echten Poll-Takt und seinen Formaten zu fragen. Eine
+            // clientAction unterdrückt das Drucken in derselben Runde, deshalb
+            // ausschließlich hier. Danach pollt das Gerät sofort erneut.
+            if ($fragen = PrinterSelfReport::fragen($printer)) {
+                Log::info('CloudPRNT Poll - Rückfrage an den Drucker gestellt', [
+                    'printer_id' => $printer->id,
+                    'fragen' => array_column($fragen, 'request'),
+                ]);
+
+                return response()->json([
+                    'jobReady' => false,
+                    'clientAction' => $fragen,
+                ], 200);
+            }
+
             Log::info('CloudPRNT Poll - Keine Jobs verfügbar', [
                 'printer_id' => $printer->id,
                 'printer_name' => $printer->name,

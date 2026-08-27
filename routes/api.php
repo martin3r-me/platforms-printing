@@ -130,12 +130,41 @@ Route::group([], function () {
     Route::get('/poll', function (Request $request) {
         $printer   = $request->attributes->get('printer');
         $responder = app(CloudPrntJobResponder::class);
-        $job       = $responder->aktuellerAuftrag($printer);
+        $typ       = (string) $request->query('type', '');
+
+        // Ohne "type" ist das KEINE Job-Abholung, sondern die Server-Auskunft:
+        // Der Drucker fragt, welche CloudPRNT-Spielart der Server beherrscht.
+        //
+        // Das ist vermutlich die Ursache der 30 Sekunden. Bis hierher lief die
+        // Anfrage in ein "405 Method Not Allowed" - eine Antwort, die die
+        // Spezifikation gar nicht kennt. Dokumentiert sind 404 ("Server only
+        // supports CloudPRNT Version HTTP") oder diese JSON-Auskunft. Und
+        // scheitert die Auskunft, wartet das Gerät laut Spezifikation
+        // 30 Sekunden, bevor es weitermacht.
+        //
+        // Wir antworten mit der Auskunft statt mit 404: Sie sagt dasselbe,
+        // nur ausdrücklich, und nimmt dem Gerät den Anlass nachzufragen.
+        // reloadIntervalMin 0 heisst: nicht periodisch erneut fragen.
+        if ($typ === '') {
+            Log::info('CloudPRNT Server-Auskunft erteilt', [
+                'printer_id' => $printer?->id,
+                'query'      => $request->getQueryString(),
+            ]);
+
+            return response()->json([
+                'title'                 => 'star_cloudprnt_server_setting',
+                'version'               => '1.0.0',
+                'reloadIntervalMin'     => 0,
+                'serverSupportProtocol' => ['HTTP'],
+            ]);
+        }
+
+        $job = $responder->aktuellerAuftrag($printer);
 
         Log::info('CloudPRNT Job Download (Standardweg)', [
             'printer_id' => $printer?->id,
             'job_id'     => $job?->id,
-            'type'       => $request->query('type'),
+            'type'       => $typ,
         ]);
 
         if (! $job) {

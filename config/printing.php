@@ -83,7 +83,7 @@ return [
             // Aus: Der Drucker nimmt den Standardweg ueber die Poll-URL, so
             // wie CloudPRNT es vorsieht. Nur einschalten, wenn ein Geraet den
             // Standardweg nicht beherrscht.
-            'alternative_urls' => false,
+            'alternative_urls' => true,
             'endpoints' => [
                 'poll' => '/poll',
                 'job' => '/job/{id}',

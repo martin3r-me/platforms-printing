@@ -73,7 +73,7 @@ class VerifyPrinterBasicAuth
         PrinterSelfReport::verkehr(
             $printer,
             $request->method(),
-            $request->getPathInfo(),
+            $request->getPathInfo() . ($request->getQueryString() ? '?' . $request->getQueryString() : ''),
             $response->getStatusCode(),
         );
 

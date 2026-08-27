@@ -63,6 +63,23 @@ Route::group([], function () {
             return response()->json(['jobReady' => false], 200);
         }
 
+        // Wann wurde dieser Auftrag dem Drucker ZUERST gemeldet?
+        //
+        // Zwischen Anlegen und Abholen vergehen rund 33 Sekunden, obwohl das
+        // Geraet alle 5,4 Sekunden fragt. Zwei Erklaerungen sind moeglich, und
+        // nur diese Zahl trennt sie: Wird hier sofort gemeldet, laesst sich der
+        // Drucker Zeit. Wird hier spaet gemeldet, liegt der Fehler bei uns.
+        //
+        // Abgelegt im vorhandenen data-Feld statt in einer eigenen Spalte: Es
+        // ist eine Diagnose, die wieder verschwinden darf, und so braucht das
+        // Ausrollen keine Migration - eine fehlende Spalte wuerde hier sonst
+        // den gesamten Druck lahmlegen.
+        if (empty(($job->data ?? [])['angeboten_um'])) {
+            $job->forceFill([
+                'data' => array_merge($job->data ?? [], ['angeboten_um' => now()->toDateTimeString()]),
+            ])->save();
+        }
+
         Log::info('CloudPRNT Poll - Job gefunden', [
             'printer_id' => $printer->id,
             'job_id' => $job->id,

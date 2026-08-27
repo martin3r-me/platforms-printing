@@ -166,6 +166,15 @@
                         <dt class="text-xs text-[var(--ui-muted)]">Erstellt</dt>
                         <dd class="text-sm text-[var(--ui-secondary)] m-0">{{ $job->created_at->format('d.m.Y H:i:s') }}</dd>
                     </div>
+                    @if($job->fetched_at)
+                        <div class="flex items-center justify-between">
+                            <dt class="text-sm font-medium text-[var(--ui-secondary)] m-0">Abgeholt</dt>
+                            <dd class="text-sm text-[var(--ui-secondary)] m-0">
+                                {{ $job->fetched_at->format('d.m.Y H:i:s') }}
+                                <span class="text-[var(--ui-muted)]">(+{{ round(abs($job->fetched_at->diffInSeconds($job->created_at))) }}s)</span>
+                            </dd>
+                        </div>
+                    @endif
                     @if($job->printed_at)
                         <div class="flex items-center justify-between gap-3 px-3 py-2">
                             <dt class="text-xs text-[var(--ui-muted)]">Gedruckt</dt>

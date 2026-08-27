@@ -22,6 +22,7 @@ class PrintJob extends Model
         'retry_count',
         'error_message',
         'printed_at',
+        'fetched_at',
         'user_id',
         'team_id',
         'printer_id',
@@ -31,6 +32,7 @@ class PrintJob extends Model
     protected $casts = [
         'data' => 'array',
         'printed_at' => 'datetime',
+        'fetched_at' => 'datetime',
     ];
 
     /**
@@ -240,7 +242,11 @@ class PrintJob extends Model
      */
     public function markAsProcessing(): void
     {
-        $this->update(['status' => 'processing']);
+        // fetched_at gleich mitschreiben: Der Aufruf erfolgt genau dann, wenn
+        // der Drucker den Auftrag herunterlaedt. Zusammen mit created_at und
+        // printed_at laesst sich damit sekundengenau sagen, ob eine Verzoegerung
+        // vor oder nach der Uebergabe liegt.
+        $this->update(['status' => 'processing', 'fetched_at' => now()]);
         $this->logActivity('An Drucker gesendet', [
             'printer' => $this->printer?->name,
         ]);

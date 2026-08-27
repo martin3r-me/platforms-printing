@@ -78,7 +78,9 @@ class PrinterSelfReport
         $abstaende = $takt['abstaende'] ?? [];
 
         if ($zuletzt) {
-            $abstaende[] = $jetzt->diffInSeconds($zuletzt);
+            // abs(): diffInSeconds() ist vorzeichenbehaftet, und $zuletzt
+            // liegt in der Vergangenheit - sonst stuenden dort negative Werte.
+            $abstaende[] = round(abs($jetzt->diffInSeconds($zuletzt)), 1);
             $abstaende   = array_slice($abstaende, -10);
         }
 

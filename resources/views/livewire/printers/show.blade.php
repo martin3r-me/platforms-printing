@@ -293,8 +293,11 @@
             $einstellungen  = $printer->settings ?? [];
             $schnappschuss  = $einstellungen['poll_snapshot'] ?? null;
             $taktDaten      = $einstellungen['poll_takt'] ?? null;
-            $verkehr        = array_reverse($einstellungen['verkehr'] ?? []);
-            $abstaende      = $taktDaten['abstaende'] ?? [];
+            $diagnose       = \Platform\Printing\Support\PrinterSelfReport::diagnose();
+            // Nur zeigen, solange aufgezeichnet wird - stehengebliebene Werte
+            // sehen sonst aus wie aktuelle Messung.
+            $verkehr        = $diagnose ? array_reverse($einstellungen['verkehr'] ?? []) : [];
+            $abstaende      = $diagnose ? ($taktDaten['abstaende'] ?? []) : [];
             $selbstauskunft = $einstellungen['self_report'] ?? null;
             $alsText = fn ($w) => json_encode($w, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         @endphp

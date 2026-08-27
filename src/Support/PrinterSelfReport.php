@@ -50,6 +50,10 @@ class PrinterSelfReport
      */
     public static function mitschreiben(Request $request, Printer $printer): void
     {
+        if (! self::diagnose()) {
+            self::aufraeumen($printer);
+        }
+
         $settings = $printer->settings ?? [];
         $fertig   = ! empty($settings[self::SCHNAPPSCHUSS] ?? null)
                  && ! empty($settings[self::AUSKUNFT] ?? null);
@@ -89,6 +93,28 @@ class PrinterSelfReport
      * Gehalten werden die letzten zehn Abstaende - genug, um einen Takt zu
      * erkennen, und wenig genug, um in einem JSON-Feld nicht zu stoeren.
      */
+    /**
+     * Aufzeichnungen wegraeumen, wenn die Diagnose aus ist.
+     *
+     * Sonst blieben Verkehrsprotokoll und Taktmessung stehen und saehen auf
+     * der Drucker-Seite aus wie laufende Messwerte, obwohl seit dem
+     * Abschalten nichts mehr dazukommt. Alte Zahlen, die man fuer aktuelle
+     * haelt, sind schlechter als gar keine.
+     *
+     * Schreibt hoechstens einmal: Ist nichts mehr da, passiert nichts.
+     */
+    private static function aufraeumen(Printer $printer): void
+    {
+        $settings = $printer->settings ?? [];
+
+        if (! isset($settings[self::VERKEHR]) && ! isset($settings[self::TAKT])) {
+            return;
+        }
+
+        unset($settings[self::VERKEHR], $settings[self::TAKT]);
+        $printer->forceFill(['settings' => $settings])->save();
+    }
+
     /** Laeuft die Diagnose? Siehe config/printing.php. */
     public static function diagnose(): bool
     {

@@ -11,25 +11,6 @@ class VerifyPrinterBasicAuth
 {
     public function handle(Request $request, Closure $next)
     {
-        // Vollprotokoll jeder Anfrage - nur bei eingeschalteter Diagnose.
-        // Der Drucker fragt alle paar Sekunden an; liefe das mit, schriebe
-        // jede Anfrage saemtliche Header und den Rohinhalt ins Log.
-        if (PrinterSelfReport::diagnose()) {
-            \Illuminate\Support\Facades\Log::info('CloudPRNT API Request - Detailliert', [
-                'timestamp' => now()->toDateTimeString(),
-                'ip' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-                'method' => $request->method(),
-                'url' => $request->fullUrl(),
-                'all_input' => $request->all(),
-                'headers' => $request->headers->all(),
-                'content_type' => $request->header('Content-Type'),
-                'username' => $request->input('username'),
-                'password' => $request->has('password') ? '[HIDDEN]' : null,
-                'raw_content' => $request->getContent(),
-            ]);
-        }
-
         // CloudPRNT verwendet MAC-Adresse für Authentifizierung
         $macAddress = $request->header('x-star-mac') ?? $request->input('printerMAC');
 
@@ -55,6 +36,26 @@ class VerifyPrinterBasicAuth
 
         // Setze den Drucker in der Request für weitere Verwendung
         $request->attributes->set('printer', $printer);
+
+        // Vollprotokoll jeder Anfrage - nur bei eingeschalteter Diagnose.
+        // Der Drucker fragt alle paar Sekunden an; liefe das mit, schriebe
+        // jede Anfrage saemtliche Header und den Rohinhalt ins Log.
+        if (PrinterSelfReport::diagnose($printer)) {
+            \Illuminate\Support\Facades\Log::info('CloudPRNT API Request - Detailliert', [
+                'timestamp' => now()->toDateTimeString(),
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'method' => $request->method(),
+                'url' => $request->fullUrl(),
+                'all_input' => $request->all(),
+                'headers' => $request->headers->all(),
+                'content_type' => $request->header('Content-Type'),
+                'username' => $request->input('username'),
+                'password' => $request->has('password') ? '[HIDDEN]' : null,
+                'raw_content' => $request->getContent(),
+            ]);
+        }
+
 
         $response = $next($request);
 

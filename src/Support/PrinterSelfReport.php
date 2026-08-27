@@ -37,6 +37,7 @@ use Platform\Printing\Models\Printer;
  */
 class PrinterSelfReport
 {
+    private const SCHALTER      = 'diagnose';
     private const TAKT          = 'poll_takt';
     private const VERKEHR       = 'verkehr';
     private const SCHNAPPSCHUSS = 'poll_snapshot';
@@ -50,7 +51,7 @@ class PrinterSelfReport
      */
     public static function mitschreiben(Request $request, Printer $printer): void
     {
-        if (! self::diagnose()) {
+        if (! self::diagnose($printer)) {
             self::aufraeumen($printer);
         }
 
@@ -61,7 +62,7 @@ class PrinterSelfReport
         // Im Regelfall gibt es hier nichts zu tun: Beide Einmal-Erfassungen
         // stehen, die Diagnose ist aus. Dann auch nicht den Rumpf dekodieren -
         // das liefe sonst bei jedem Poll, den ganzen Tag.
-        if ($fertig && ! self::diagnose()) {
+        if ($fertig && ! self::diagnose($printer)) {
             return;
         }
 
@@ -75,7 +76,7 @@ class PrinterSelfReport
         // Laufende Messung dagegen kostet je Anfrage einen Schreibvorgang -
         // bei einem Poll alle fuenf Sekunden den ganzen Tag lang. Nur bei
         // eingeschalteter Diagnose.
-        if (! self::diagnose()) {
+        if (! self::diagnose($printer)) {
             return;
         }
 
@@ -115,10 +116,40 @@ class PrinterSelfReport
         $printer->forceFill(['settings' => $settings])->save();
     }
 
-    /** Laeuft die Diagnose? Siehe config/printing.php. */
-    public static function diagnose(): bool
+    /**
+     * Laeuft fuer diesen Drucker gerade eine Aufzeichnung?
+     *
+     * Je Drucker schaltbar, direkt auf der Drucker-Seite: Gesucht wird an
+     * einem Geraet, nicht an allen. Der Schalter in der Konfiguration bleibt
+     * als globales Ueberstimmen bestehen - etwa fuer eine Umgebung, in der
+     * ohnehin alles mitlaufen soll.
+     */
+    public static function diagnose(?Printer $printer = null): bool
     {
-        return (bool) config('printing.api.cloudprnt.diagnose', false);
+        if (config('printing.api.cloudprnt.diagnose', false)) {
+            return true;
+        }
+
+        return (bool) (($printer?->settings ?? [])[self::SCHALTER] ?? false);
+    }
+
+    /** Aufzeichnung fuer diesen Drucker ein- oder ausschalten. */
+    public static function umschalten(Printer $printer): bool
+    {
+        $settings = $printer->settings ?? [];
+        $an       = ! (bool) ($settings[self::SCHALTER] ?? false);
+
+        $settings[self::SCHALTER] = $an;
+
+        // Beim Ausschalten gleich wegraeumen, damit keine alten Messwerte
+        // stehenbleiben, die wie aktuelle aussehen.
+        if (! $an) {
+            unset($settings[self::VERKEHR], $settings[self::TAKT]);
+        }
+
+        $printer->forceFill(['settings' => $settings])->save();
+
+        return $an;
     }
 
     private static function takt(Printer $printer): void
@@ -163,7 +194,7 @@ class PrinterSelfReport
      */
     public static function verkehr(Printer $printer, string $methode, string $pfad, int $status): void
     {
-        if (! self::diagnose()) {
+        if (! self::diagnose($printer)) {
             return;
         }
 

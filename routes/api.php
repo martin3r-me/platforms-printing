@@ -15,26 +15,22 @@ Route::group([], function () {
 
     // CloudPRNT Poll Endpoint
     Route::post('/poll', function (Request $request) {
-        // Vollprotokoll des Polls - nur bei eingeschalteter Diagnose, siehe
-        // config/printing.php. Sonst schriebe jeder Poll Header und Rohinhalt.
-        if (PrinterSelfReport::diagnose()) {
+        // Drucker ist bereits durch Middleware validiert
+        $printer = $request->attributes->get('printer');
+
+        // Vollprotokoll des Polls - nur bei laufender Aufzeichnung. Sonst
+        // schriebe jeder Poll Header und Rohinhalt, alle paar Sekunden.
+        if (PrinterSelfReport::diagnose($printer)) {
             \Illuminate\Support\Facades\Log::info('CloudPRNT Poll - Detailliert', [
                 'timestamp' => now()->toDateTimeString(),
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
-                'method' => $request->method(),
                 'url' => $request->fullUrl(),
                 'all_input' => $request->all(),
                 'headers' => $request->headers->all(),
-                'content_type' => $request->header('Content-Type'),
                 'raw_content' => $request->getContent(),
-                'username' => $request->input('username'),
-                'password' => $request->has('password') ? '[HIDDEN]' : null,
             ]);
         }
-
-        // Drucker ist bereits durch Middleware validiert
-        $printer = $request->attributes->get('printer');
 
         // Festhalten, was der Drucker von sich aus mitschickt - und Antworten
         // auf frühere Rückfragen, falls welche dabei sind.

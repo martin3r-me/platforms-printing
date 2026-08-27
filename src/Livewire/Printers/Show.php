@@ -118,6 +118,27 @@ class Show extends Component
      * die Entscheidung trifft ein Mensch, und ein Bon zu viel ist besser als
      * einer zu wenig.
      */
+    /**
+     * Aufzeichnung fuer diesen Drucker ein- oder ausschalten.
+     *
+     * Bewusst je Drucker und in der Oberflaeche statt in der Umgebung:
+     * Gesucht wird an einem Geraet, meist waehrend jemand danebensteht, und
+     * dafuer soll niemand eine .env anfassen und neu ausrollen muessen.
+     */
+    public function toggleDiagnose()
+    {
+        $an = \Platform\Printing\Support\PrinterSelfReport::umschalten($this->printer);
+
+        $this->printer->refresh();
+
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'message' => $an
+                ? 'Aufzeichnung läuft – die ersten Werte erscheinen nach wenigen Sekunden.'
+                : 'Aufzeichnung gestoppt und Messwerte verworfen.',
+        ]);
+    }
+
     public function retryJob(PrintJob $job)
     {
         if (! in_array($job->status, ['failed', 'processing'], true)) {

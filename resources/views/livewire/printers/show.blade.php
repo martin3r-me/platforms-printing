@@ -293,7 +293,7 @@
             $einstellungen  = $printer->settings ?? [];
             $schnappschuss  = $einstellungen['poll_snapshot'] ?? null;
             $taktDaten      = $einstellungen['poll_takt'] ?? null;
-            $diagnose       = \Platform\Printing\Support\PrinterSelfReport::diagnose();
+            $diagnose       = \Platform\Printing\Support\PrinterSelfReport::diagnose($printer);
             // Nur zeigen, solange aufgezeichnet wird - stehengebliebene Werte
             // sehen sonst aus wie aktuelle Messung.
             $verkehr        = $diagnose ? array_reverse($einstellungen['verkehr'] ?? []) : [];
@@ -322,8 +322,9 @@
             </x-ui-panel>
         @endif
 
-        @if ($schnappschuss || $selbstauskunft || $abstaende)
-            <x-ui-panel title="Was der Drucker über sich meldet">
+        {{-- Immer sichtbar: Hier steckt auch der Schalter fuer die Aufzeichnung,
+             und den braucht man gerade dann, wenn noch nichts erfasst ist. --}}
+        <x-ui-panel title="Was der Drucker über sich meldet">
                 @if ($abstaende)
                     {{-- Der GEMESSENE Takt. GetPollInterval nennt nur den eingestellten
                          Wert; ob das Gerät ihn einhält, zeigt sich erst hier. --}}
@@ -358,15 +359,20 @@
                     </p>
                 @endif
 
-                @unless (\Platform\Printing\Support\PrinterSelfReport::diagnose())
-                    <p class="mt-3 border-t border-[var(--ui-border)] pt-3 text-xs text-[var(--ui-muted)]">
-                        Die laufende Aufzeichnung (Anfragen des Druckers, gemessener Takt) ist ausgeschaltet – sie kostet
-                        bei einer Abfrage alle paar Sekunden spürbar Log und Speicher. Zum Suchen mit
-                        <code>PRINTING_CLOUDPRNT_DIAGNOSE=true</code> einschalten und danach wieder aus.
+                <div class="mt-3 flex flex-wrap items-center gap-3 border-t border-[var(--ui-border)] pt-3">
+                    <x-ui-button size="sm" :variant="$diagnose ? 'danger' : 'secondary'" wire:click="toggleDiagnose">
+                        {{ $diagnose ? 'Aufzeichnung stoppen' : 'Aufzeichnung starten' }}
+                    </x-ui-button>
+                    <p class="m-0 text-xs text-[var(--ui-muted)]">
+                        @if ($diagnose)
+                            Jede Anfrage des Druckers wird mitgeschrieben. Beim Stoppen werden die Messwerte verworfen.
+                        @else
+                            Zeichnet jede Anfrage des Druckers auf – zum Suchen. Kostet bei einer Abfrage alle paar
+                            Sekunden spürbar Log und Speicher, deshalb danach wieder stoppen.
+                        @endif
                     </p>
-                @endunless
-            </x-ui-panel>
-        @endif
+                </div>
+        </x-ui-panel>
 
         {{-- Statistiken --}}
         <x-ui-panel title="Statistiken">

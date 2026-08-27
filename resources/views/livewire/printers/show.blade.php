@@ -289,15 +289,50 @@
         {{-- Selbstauskunft des Geraets: Antwort auf die clientAction-Rueckfrage
              (echter Poll-Takt und unterstuetzte Formate). Erscheint, sobald der
              Drucker das naechste Mal ohne anstehenden Auftrag gepollt hat. --}}
-        @php $selbstauskunft = ($printer->settings ?? [])['self_report'] ?? null; @endphp
-        @if ($selbstauskunft)
-            <x-ui-panel title="Selbstauskunft des Druckers" subtitle="Was das Gerät über sich meldet – erfasst am {{ $selbstauskunft['erfasst_am'] ?? '–' }}">
-                <pre class="m-0 overflow-x-auto whitespace-pre-wrap break-all text-xs font-mono text-[var(--ui-secondary)]">{{ json_encode($selbstauskunft['antwort'] ?? null, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</pre>
-                <p class="mt-2 text-xs text-[var(--ui-muted)]">
-                    <strong>GetPollInterval</strong> ist der Takt, in dem der Drucker wirklich fragt.
-                    <strong>Encodings</strong> sind die Formate, die er versteht – steht dort
-                    <code>application/vnd.star.line</code>, können mehrere Bons mit je eigenem Schnitt in einen Auftrag.
-                </p>
+        @php
+            $einstellungen  = $printer->settings ?? [];
+            $schnappschuss  = $einstellungen['poll_snapshot'] ?? null;
+            $taktDaten      = $einstellungen['poll_takt'] ?? null;
+            $abstaende      = $taktDaten['abstaende'] ?? [];
+            $selbstauskunft = $einstellungen['self_report'] ?? null;
+            $alsText = fn ($w) => json_encode($w, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        @endphp
+        @if ($schnappschuss || $selbstauskunft || $abstaende)
+            <x-ui-panel title="Was der Drucker über sich meldet">
+                @if ($abstaende)
+                    {{-- Der GEMESSENE Takt. GetPollInterval nennt nur den eingestellten
+                         Wert; ob das Gerät ihn einhält, zeigt sich erst hier. --}}
+                    <p class="m-0 mb-1 text-xs font-medium text-[var(--ui-secondary)]">
+                        Gemessener Abstand zwischen den Abfragen · zuletzt {{ $taktDaten['zuletzt'] ?? '–' }}
+                    </p>
+                    <p class="m-0 mb-4 font-mono text-xs text-[var(--ui-secondary)]">
+                        {{ implode(' · ', array_map(fn ($a) => $a . 's', $abstaende)) }}
+                        <span class="ml-2 text-[var(--ui-muted)]">(Ø {{ round(array_sum($abstaende) / max(1, count($abstaende)), 1) }}s)</span>
+                    </p>
+                @endif
+
+                @if ($schnappschuss)
+                    <p class="m-0 mb-1 text-xs font-medium text-[var(--ui-secondary)]">
+                        Erster Poll · erfasst am {{ $schnappschuss['erfasst_am'] ?? '–' }}
+                        @if (! empty($schnappschuss['protokoll'])) · HTTP {{ $schnappschuss['protokoll'] }} @endif
+                    </p>
+                    <pre class="m-0 mb-4 overflow-x-auto whitespace-pre-wrap break-all text-xs font-mono text-[var(--ui-secondary)]">{{ $alsText($schnappschuss['rumpf'] ?? null) }}</pre>
+                @endif
+
+                @if ($selbstauskunft)
+                    <p class="m-0 mb-1 text-xs font-medium text-[var(--ui-secondary)]">Antwort auf die Rückfrage · erfasst am {{ $selbstauskunft['erfasst_am'] ?? '–' }}</p>
+                    <pre class="m-0 overflow-x-auto whitespace-pre-wrap break-all text-xs font-mono text-[var(--ui-secondary)]">{{ $alsText($selbstauskunft['antwort'] ?? null) }}</pre>
+                    <p class="mt-2 text-xs text-[var(--ui-muted)]">
+                        <strong>GetPollInterval</strong> ist der Takt, in dem der Drucker wirklich fragt.
+                        <strong>Encodings</strong> sind die Formate, die er versteht – steht dort
+                        <code>application/vnd.star.line</code>, können mehrere Bons mit je eigenem Schnitt in einen Auftrag.
+                    </p>
+                @else
+                    <p class="m-0 text-xs text-[var(--ui-muted)]">
+                        Auf die Rückfrage (<code>GetPollInterval</code>, <code>Encodings</code>) hat das Gerät bisher nicht
+                        geantwortet. Laut Spezifikation unterstützt nicht jedes Gerät jede Anfrage – auch das ist eine Auskunft.
+                    </p>
+                @endif
             </x-ui-panel>
         @endif
 

@@ -32,9 +32,9 @@ Route::group([], function () {
         // Drucker ist bereits durch Middleware validiert
         $printer = $request->attributes->get('printer');
 
-        // Antworten auf frühere Rückfragen mitnehmen, falls das Gerät welche
-        // angehängt hat.
-        PrinterSelfReport::einsammeln($request, $printer);
+        // Festhalten, was der Drucker von sich aus mitschickt - und Antworten
+        // auf frühere Rückfragen, falls welche dabei sind.
+        PrinterSelfReport::mitschreiben($request, $printer);
 
         // Hole nächsten Job für diesen Drucker
         $job = app(PrintingService::class)->getNextJobForPrinter($printer->id);

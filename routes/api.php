@@ -181,6 +181,36 @@ Route::group([], function () {
             return response()->json(['error' => 'Job nicht gefunden'], 404);
         }
 
+        // Die Bestaetigung sagt nicht nur DASS der Drucker fertig ist, sondern
+        // auch WIE es ausging: "code" traegt den Druckerstatus (Star-Spezifikation,
+        // 3-4 Stellen, optional mit Text). Alles mit fuehrender 2 ist Erfolg
+        // (200 OK, 211 Papier niedrig), alles andere ein Fehler - 410 Out of
+        // paper, 411 Paper jam, 420 Cover open.
+        //
+        // Bis hier wurde der Code ignoriert und jeder Auftrag als "Gedruckt"
+        // verbucht. Bei leerem Papier stand der Bon damit als gedruckt in der
+        // Liste, obwohl nie einer herauskam - und genau dann muss man ja
+        // erkennen koennen, welcher fehlt.
+        //
+        // Fehlt der Code ganz, gilt der Auftrag wie bisher als gedruckt: Nicht
+        // jeder Client schickt ihn, und aus einem fehlenden Feld einen Fehler
+        // zu machen waere schlimmer als die Luecke.
+        $code = trim((string) $request->input('code', ''));
+        $erfolgreich = $code === '' || str_starts_with($code, '2');
+
+        if (! $erfolgreich) {
+            app(PrintingService::class)->markJobAsFailed($job->id, 'Drucker meldet: ' . $code);
+
+            Log::warning('CloudPRNT Job Confirmation - Drucker meldet Fehler', [
+                'job_id' => $job->id,
+                'job_uuid' => $job->uuid,
+                'printer_id' => $job->printer_id,
+                'code' => $code,
+            ]);
+
+            return response()->noContent(); // 204
+        }
+
         $success = app(PrintingService::class)->markJobAsCompleted($job->id);
 
         if ($success) {
@@ -188,6 +218,7 @@ Route::group([], function () {
                 'job_id' => $job->id,
                 'job_uuid' => $job->uuid,
                 'printer_id' => $job->printer_id,
+                'code' => $code !== '' ? $code : null,
             ]);
         } else {
             Log::error('CloudPRNT Job Confirmation - Fehlgeschlagen', [

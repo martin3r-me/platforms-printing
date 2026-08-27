@@ -38,6 +38,7 @@ use Platform\Printing\Models\Printer;
 class PrinterSelfReport
 {
     private const TAKT          = 'poll_takt';
+    private const VERKEHR       = 'verkehr';
     private const SCHNAPPSCHUSS = 'poll_snapshot';
     private const AUSKUNFT      = 'self_report';
 
@@ -88,6 +89,39 @@ class PrinterSelfReport
             'zuletzt'   => $jetzt->toDateTimeString(),
             'abstaende' => array_values($abstaende),
         ];
+
+        $printer->forceFill(['settings' => $settings])->save();
+    }
+
+    /**
+     * Jede Anfrage des Druckers mitschreiben - Zeit, Methode, Pfad, Status.
+     *
+     * Der Grund: Zwischen "gemeldet" und "abgeholt" liegen rund 29 Sekunden,
+     * obwohl das Geraet alle 5,4 Sekunden pollt. Was es in dieser Zeit
+     * versucht, war bisher nirgends abzulesen - im Log schon, aber dort kommt
+     * nicht jeder hin, und ohne diese Spur bleibt jede Erklaerung geraten.
+     * Fehlgeschlagene Versuche (404, 405, 401) sind hier genauso zu sehen wie
+     * eine Pause, in der das Geraet gar nichts tut. Das unterscheidet
+     * "der Drucker probiert etwas und scheitert" von "der Drucker wartet".
+     *
+     * Ringpuffer ueber die letzten 25 Anfragen. Das ist eine Diagnose und
+     * kostet einen Schreibvorgang je Anfrage; wenn die Ursache gefunden ist,
+     * darf das wieder verschwinden.
+     */
+    public static function verkehr(Printer $printer, string $methode, string $pfad, int $status): void
+    {
+        $settings = $printer->settings ?? [];
+        $eintrag  = [
+            'zeit'    => now()->format('H:i:s'),
+            'methode' => $methode,
+            'pfad'    => $pfad,
+            'status'  => $status,
+        ];
+
+        $settings[self::VERKEHR] = array_slice(
+            array_merge($settings[self::VERKEHR] ?? [], [$eintrag]),
+            -25
+        );
 
         $printer->forceFill(['settings' => $settings])->save();
     }

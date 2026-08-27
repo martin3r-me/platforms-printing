@@ -293,10 +293,31 @@
             $einstellungen  = $printer->settings ?? [];
             $schnappschuss  = $einstellungen['poll_snapshot'] ?? null;
             $taktDaten      = $einstellungen['poll_takt'] ?? null;
+            $verkehr        = array_reverse($einstellungen['verkehr'] ?? []);
             $abstaende      = $taktDaten['abstaende'] ?? [];
             $selbstauskunft = $einstellungen['self_report'] ?? null;
             $alsText = fn ($w) => json_encode($w, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         @endphp
+        @if ($verkehr)
+            {{-- Jede Anfrage des Geraets. Zeigt, was zwischen "gemeldet" und
+                 "abgeholt" passiert: scheiternde Versuche - oder gar nichts. --}}
+            <x-ui-panel title="Anfragen des Druckers" subtitle="Die letzten {{ count($verkehr) }}, neueste zuerst">
+                <dl class="rounded-lg border border-[var(--ui-border)] divide-y divide-[var(--ui-border)] overflow-hidden">
+                    @foreach ($verkehr as $eintrag)
+                        <div class="flex items-center justify-between gap-3 px-3 py-1.5">
+                            <dt class="text-xs font-mono text-[var(--ui-muted)]">{{ $eintrag['zeit'] ?? '–' }}</dt>
+                            <dd class="m-0 flex-1 text-xs font-mono text-[var(--ui-secondary)] truncate">
+                                {{ $eintrag['methode'] ?? '?' }} {{ $eintrag['pfad'] ?? '?' }}
+                            </dd>
+                            <dd class="m-0 text-xs font-mono {{ ($eintrag['status'] ?? 0) >= 400 ? 'text-[var(--ui-danger)] font-semibold' : 'text-[var(--ui-muted)]' }}">
+                                {{ $eintrag['status'] ?? '–' }}
+                            </dd>
+                        </div>
+                    @endforeach
+                </dl>
+            </x-ui-panel>
+        @endif
+
         @if ($schnappschuss || $selbstauskunft || $abstaende)
             <x-ui-panel title="Was der Drucker über sich meldet">
                 @if ($abstaende)

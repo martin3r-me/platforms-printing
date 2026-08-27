@@ -5,6 +5,7 @@ namespace Platform\Printing\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Platform\Printing\Models\Printer;
+use Platform\Printing\Support\PrinterSelfReport;
 
 class VerifyPrinterBasicAuth
 {
@@ -64,7 +65,18 @@ class VerifyPrinterBasicAuth
         $request->attributes->set('printer', $printer);
 
         $response = $next($request);
-        
+
+        // Jede Anfrage des Geraets mitschreiben - sichtbar auf der
+        // Drucker-Seite. Nur so laesst sich sehen, was der Drucker zwischen
+        // "gemeldet" und "abgeholt" tut: scheitern dort Versuche, oder
+        // passiert schlicht nichts?
+        PrinterSelfReport::verkehr(
+            $printer,
+            $request->method(),
+            $request->getPathInfo(),
+            $response->getStatusCode(),
+        );
+
         // Debug-Headers für Test
         $response->header('X-Debug-IP', $request->ip());
         $response->header('X-Debug-URL', $request->fullUrl());

@@ -300,8 +300,9 @@
         @endphp
         @if ($verkehr)
             {{-- Jede Anfrage des Geraets. Zeigt, was zwischen "gemeldet" und
-                 "abgeholt" passiert: scheiternde Versuche - oder gar nichts. --}}
-            <x-ui-panel title="Anfragen des Druckers" subtitle="Die letzten {{ count($verkehr) }}, neueste zuerst">
+                 "abgeholt" passiert: scheiternde Versuche - oder gar nichts.
+                 Faellt weg, sobald die Diagnose wieder aus ist. --}}
+            <x-ui-panel title="Anfragen des Druckers" subtitle="Die letzten {{ count($verkehr) }}, neueste zuerst · Aufzeichnung läuft">
                 <dl class="rounded-lg border border-[var(--ui-border)] divide-y divide-[var(--ui-border)] overflow-hidden">
                     @foreach ($verkehr as $eintrag)
                         <div class="flex items-center justify-between gap-3 px-3 py-1.5">
@@ -345,8 +346,7 @@
                     <pre class="m-0 overflow-x-auto whitespace-pre-wrap break-all text-xs font-mono text-[var(--ui-secondary)]">{{ $alsText($selbstauskunft['antwort'] ?? null) }}</pre>
                     <p class="mt-2 text-xs text-[var(--ui-muted)]">
                         <strong>GetPollInterval</strong> ist der Takt, in dem der Drucker wirklich fragt.
-                        <strong>Encodings</strong> sind die Formate, die er versteht – steht dort
-                        <code>application/vnd.star.line</code>, können mehrere Bons mit je eigenem Schnitt in einen Auftrag.
+                        <strong>Encodings</strong> sind die Formate, die er versteht.
                     </p>
                 @else
                     <p class="m-0 text-xs text-[var(--ui-muted)]">
@@ -354,6 +354,14 @@
                         geantwortet. Laut Spezifikation unterstützt nicht jedes Gerät jede Anfrage – auch das ist eine Auskunft.
                     </p>
                 @endif
+
+                @unless (\Platform\Printing\Support\PrinterSelfReport::diagnose())
+                    <p class="mt-3 border-t border-[var(--ui-border)] pt-3 text-xs text-[var(--ui-muted)]">
+                        Die laufende Aufzeichnung (Anfragen des Druckers, gemessener Takt) ist ausgeschaltet – sie kostet
+                        bei einer Abfrage alle paar Sekunden spürbar Log und Speicher. Zum Suchen mit
+                        <code>PRINTING_CLOUDPRNT_DIAGNOSE=true</code> einschalten und danach wieder aus.
+                    </p>
+                @endunless
             </x-ui-panel>
         @endif
 

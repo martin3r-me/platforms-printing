@@ -84,6 +84,20 @@ return [
             // wie CloudPRNT es vorsieht. Nur einschalten, wenn ein Geraet den
             // Standardweg nicht beherrscht.
             'alternative_urls' => true,
+
+            // Diagnose: Verkehrsprotokoll, Taktmessung und ausfuehrliches
+            // Logging. Standardmaessig AUS.
+            //
+            // Der Drucker fragt alle paar Sekunden an. Lief das mit, entstanden
+            // je Anfrage mehrere Log-Zeilen - zwei davon mit allen Headern und
+            // dem kompletten Rohinhalt - und zwei Schreibvorgaenge in der
+            // Datenbank. Ueber einen Tag summiert sich das auf zehntausende
+            // Zeilen je Drucker, ohne dass sie jemand liest.
+            //
+            // Zum Suchen einschalten (PRINTING_CLOUDPRNT_DIAGNOSE=true),
+            // danach wieder aus. Was einmalig erfasst wird - die Selbstauskunft
+            // des Geraets und sein erster Poll - bleibt davon unberuehrt.
+            'diagnose' => env('PRINTING_CLOUDPRNT_DIAGNOSE', false),
             'endpoints' => [
                 'poll' => '/poll',
                 'job' => '/job/{id}',

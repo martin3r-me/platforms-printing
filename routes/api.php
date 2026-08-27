@@ -15,20 +15,23 @@ Route::group([], function () {
 
     // CloudPRNT Poll Endpoint
     Route::post('/poll', function (Request $request) {
-        // Detailliertes Request-Logging direkt in der Route
-        \Illuminate\Support\Facades\Log::info('CloudPRNT Poll - Detailliert', [
-            'timestamp' => now()->toDateTimeString(),
-            'ip' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'method' => $request->method(),
-            'url' => $request->fullUrl(),
-            'all_input' => $request->all(),
-            'headers' => $request->headers->all(),
-            'content_type' => $request->header('Content-Type'),
-            'raw_content' => $request->getContent(),
-            'username' => $request->input('username'),
-            'password' => $request->has('password') ? '[HIDDEN]' : null,
-        ]);
+        // Vollprotokoll des Polls - nur bei eingeschalteter Diagnose, siehe
+        // config/printing.php. Sonst schriebe jeder Poll Header und Rohinhalt.
+        if (PrinterSelfReport::diagnose()) {
+            \Illuminate\Support\Facades\Log::info('CloudPRNT Poll - Detailliert', [
+                'timestamp' => now()->toDateTimeString(),
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'method' => $request->method(),
+                'url' => $request->fullUrl(),
+                'all_input' => $request->all(),
+                'headers' => $request->headers->all(),
+                'content_type' => $request->header('Content-Type'),
+                'raw_content' => $request->getContent(),
+                'username' => $request->input('username'),
+                'password' => $request->has('password') ? '[HIDDEN]' : null,
+            ]);
+        }
 
         // Drucker ist bereits durch Middleware validiert
         $printer = $request->attributes->get('printer');
@@ -57,10 +60,8 @@ Route::group([], function () {
                 ], 200);
             }
 
-            Log::info('CloudPRNT Poll - Keine Jobs verfügbar', [
-                'printer_id' => $printer->id,
-                'printer_name' => $printer->name,
-            ]);
+            // Der Normalfall - nichts zu tun. Kein Log: Das waere alle paar
+            // Sekunden eine Zeile, die niemand liest.
             return response()->json(['jobReady' => false], 200);
         }
 
@@ -199,7 +200,6 @@ Route::group([], function () {
             'ip' => $request->ip(),
             'user_agent' => $request->userAgent(),
             'job_uuid' => $uuid,
-            'headers' => $request->headers->all(),
         ]);
 
         // Drucker ist bereits durch Middleware validiert
@@ -236,7 +236,6 @@ Route::group([], function () {
             'ip' => $request->ip(),
             'user_agent' => $request->userAgent(),
             'job_uuid' => $uuid,
-            'headers' => $request->headers->all(),
         ]);
 
         // Drucker ist bereits durch Middleware validiert

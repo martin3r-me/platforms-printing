@@ -50,11 +50,32 @@ class PrinterSelfReport
      */
     public static function mitschreiben(Request $request, Printer $printer): void
     {
+        $settings = $printer->settings ?? [];
+        $fertig   = ! empty($settings[self::SCHNAPPSCHUSS] ?? null)
+                 && ! empty($settings[self::AUSKUNFT] ?? null);
+
+        // Im Regelfall gibt es hier nichts zu tun: Beide Einmal-Erfassungen
+        // stehen, die Diagnose ist aus. Dann auch nicht den Rumpf dekodieren -
+        // das liefe sonst bei jedem Poll, den ganzen Tag.
+        if ($fertig && ! self::diagnose()) {
+            return;
+        }
+
         $daten = self::rumpf($request);
 
-        self::takt($printer);
+        // Einmalig und damit dauerhaft billig: beides schreibt nur, solange
+        // noch nichts gespeichert ist.
         self::schnappschuss($printer, $daten, $request);
         self::auskunft($printer, $daten);
+
+        // Laufende Messung dagegen kostet je Anfrage einen Schreibvorgang -
+        // bei einem Poll alle fuenf Sekunden den ganzen Tag lang. Nur bei
+        // eingeschalteter Diagnose.
+        if (! self::diagnose()) {
+            return;
+        }
+
+        self::takt($printer);
     }
 
     /**
@@ -68,6 +89,12 @@ class PrinterSelfReport
      * Gehalten werden die letzten zehn Abstaende - genug, um einen Takt zu
      * erkennen, und wenig genug, um in einem JSON-Feld nicht zu stoeren.
      */
+    /** Laeuft die Diagnose? Siehe config/printing.php. */
+    public static function diagnose(): bool
+    {
+        return (bool) config('printing.api.cloudprnt.diagnose', false);
+    }
+
     private static function takt(Printer $printer): void
     {
         $settings = $printer->settings ?? [];
@@ -110,6 +137,10 @@ class PrinterSelfReport
      */
     public static function verkehr(Printer $printer, string $methode, string $pfad, int $status): void
     {
+        if (! self::diagnose()) {
+            return;
+        }
+
         $settings = $printer->settings ?? [];
         $eintrag  = [
             'zeit'    => now()->format('H:i:s'),

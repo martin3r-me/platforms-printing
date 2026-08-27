@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Platform\Printing\Models\Printer;
 use Platform\Printing\Models\PrintJob;
+use Platform\Printing\Http\CloudPrntJobResponder;
 use Platform\Printing\Services\PrintingService;
 use Platform\Printing\Support\PrinterSelfReport;
 
@@ -97,6 +98,53 @@ Route::group([], function () {
         ]);
     })->name('printing.api.poll');
 
+    // --- Der Standardweg -----------------------------------------------
+    //
+    // CloudPRNT holt den Auftrag ueber DIESELBE URL, die der Drucker pollt.
+    // jobGetUrl und jobConfirmationUrl heissen in der Spezifikation
+    // ausdruecklich "alternative URL" - sie sind der Umweg, nicht der Weg.
+    //
+    // Bis hierher gab es nur den Umweg, und ein GET auf die Poll-URL lief in
+    // ein "405 Method Not Allowed". Der Drucker versucht aber zuerst den
+    // Standardweg: gemessen lagen zwischen "gemeldet" und "abgeholt" rund 28
+    // Sekunden, bei einem Poll-Takt von 5,4 Sekunden.
+
+    Route::get('/poll', function (Request $request) {
+        $printer   = $request->attributes->get('printer');
+        $responder = app(CloudPrntJobResponder::class);
+        $job       = $responder->aktuellerAuftrag($printer);
+
+        Log::info('CloudPRNT Job Download (Standardweg)', [
+            'printer_id' => $printer?->id,
+            'job_id'     => $job?->id,
+            'type'       => $request->query('type'),
+        ]);
+
+        if (! $job) {
+            return response('', 404);
+        }
+
+        return $responder->ausliefern($request, $printer, $job);
+    })->name('printing.api.poll.job');
+
+    Route::delete('/poll', function (Request $request) {
+        $printer   = $request->attributes->get('printer');
+        $responder = app(CloudPrntJobResponder::class);
+        $job       = $responder->aktuellerAuftrag($printer, 'processing');
+
+        Log::info('CloudPRNT Job Confirmation (Standardweg)', [
+            'printer_id' => $printer?->id,
+            'job_id'     => $job?->id,
+            'code'       => $request->input('code'),
+        ]);
+
+        if (! $job) {
+            return response()->noContent();
+        }
+
+        return $responder->abschliessen($request, $printer, $job);
+    })->name('printing.api.poll.confirm');
+
     // Job Download Endpoint
     Route::get('/job/{uuid}', function (Request $request, string $uuid) {
         Log::info('CloudPRNT Job Download - Start', [
@@ -131,72 +179,7 @@ Route::group([], function () {
             return response('', 404);
         }
 
-        // Ab hier holt der Drucker den Auftrag wirklich ab - das ist der
-        // Moment, in dem er "processing" wird. Der Poll davor lässt den
-        // Zustand bewusst unangetastet (siehe getNextJobForPrinter).
-        // markAsProcessing() statt rohem update: es schreibt zugleich den
-        // Protokolleintrag "An Drucker gesendet".
-        if ($job->status === 'pending') {
-            $job->markAsProcessing();
-        }
-
-        // Generiere Job-Content (UTF-8) und wandle in die Drucker-Codepage um
-        $service = app(PrintingService::class);
-
-        try {
-            // Roh-Jobs (Diagnose-Drucke) gehen unverändert raus – sie sollen ja
-            // gerade bestimmte Bytes testen.
-            $content = $job->isRaw()
-                ? $job->rawContent()
-                : $service->encodeForPrinter($service->generateJobContent($job), $printer);
-        } catch (\Throwable $e) {
-            // Fehler nicht als HTTP 500 durchreichen: der Drucker würde den Job
-            // endlos erneut anfragen und er bliebe für immer auf "processing".
-            // Stattdessen als fehlgeschlagen markieren – so verlässt er die
-            // Warteschlange und ist im Backend samt Grund sichtbar.
-            $service->markJobAsFailed($job->id, $e->getMessage());
-
-            Log::error('CloudPRNT Job Download - Content konnte nicht erzeugt werden', [
-                'job_id' => $job->id,
-                'job_uuid' => $job->uuid,
-                'printer_id' => $printer->id,
-                'exception' => $e::class,
-                'error' => $e->getMessage(),
-            ]);
-
-            return response('', 404);
-        }
-
-        // Neben der konfigurierten Codepage auch protokollieren, was tatsächlich
-        // rausgeht (siehe describeEncoding): looks_like_utf8=true verrät, dass
-        // die Umwandlung nicht griff und der Drucker UTF-8 bekommt.
-        Log::info('CloudPRNT Job Download - Content generiert', array_merge([
-            'job_id' => $job->id,
-            'job_uuid' => $job->uuid,
-            'content_length' => strlen($content),
-            'codepage' => $printer->codepage(),
-            'raw' => $job->isRaw(),
-        ], $service->describeEncoding($content)));
-
-        // CloudPRNT-kompatible Antwort: rohe Bytes in der Drucker-Codepage,
-        // daher bewusst OHNE charset=utf-8 (Drucker druckt Bytes 1:1).
-        //
-        // Content-Length ist hier NICHT optional, auch wenn HTTP sie nicht
-        // verlangt. Ohne sie liefert nginx die Antwort als "Transfer-Encoding:
-        // chunked" ueber eine keep-alive-Verbindung aus. Der Drucker erfaehrt
-        // dann nirgends, wie lang der Bon ist, und wartet auf das Ende der
-        // Uebertragung - bis sein eigener HTTP Response Timeout zuschlaegt.
-        // Genau das kostete jeden einzelnen Bon 60 Sekunden: abgeholt war er
-        // sofort, gedruckt wurde er erst beim Timeout.
-        //
-        // strlen() statt mb_strlen(): Gebraucht wird die Laenge in BYTES. Der
-        // Inhalt liegt bereits in der Codepage des Druckers vor, und Umlaute
-        // sind dort ein Byte - mb_strlen zaehlte Zeichen und wuerde die
-        // Antwort abschneiden.
-        return Response::make($content, 200, [
-            'Content-Type'   => 'text/plain',
-            'Content-Length' => (string) strlen($content),
-        ]);
+        return app(CloudPrntJobResponder::class)->ausliefern($request, $printer, $job);
     })->name('printing.api.job.download');
 
     // Job Confirmation Endpoint
@@ -233,53 +216,7 @@ Route::group([], function () {
             return response()->json(['error' => 'Job nicht gefunden'], 404);
         }
 
-        // Die Bestaetigung sagt nicht nur DASS der Drucker fertig ist, sondern
-        // auch WIE es ausging: "code" traegt den Druckerstatus (Star-Spezifikation,
-        // 3-4 Stellen, optional mit Text). Alles mit fuehrender 2 ist Erfolg
-        // (200 OK, 211 Papier niedrig), alles andere ein Fehler - 410 Out of
-        // paper, 411 Paper jam, 420 Cover open.
-        //
-        // Bis hier wurde der Code ignoriert und jeder Auftrag als "Gedruckt"
-        // verbucht. Bei leerem Papier stand der Bon damit als gedruckt in der
-        // Liste, obwohl nie einer herauskam - und genau dann muss man ja
-        // erkennen koennen, welcher fehlt.
-        //
-        // Fehlt der Code ganz, gilt der Auftrag wie bisher als gedruckt: Nicht
-        // jeder Client schickt ihn, und aus einem fehlenden Feld einen Fehler
-        // zu machen waere schlimmer als die Luecke.
-        $code = trim((string) $request->input('code', ''));
-        $erfolgreich = $code === '' || str_starts_with($code, '2');
-
-        if (! $erfolgreich) {
-            app(PrintingService::class)->markJobAsFailed($job->id, 'Drucker meldet: ' . $code);
-
-            Log::warning('CloudPRNT Job Confirmation - Drucker meldet Fehler', [
-                'job_id' => $job->id,
-                'job_uuid' => $job->uuid,
-                'printer_id' => $job->printer_id,
-                'code' => $code,
-            ]);
-
-            return response()->noContent(); // 204
-        }
-
-        $success = app(PrintingService::class)->markJobAsCompleted($job->id);
-
-        if ($success) {
-            Log::info('CloudPRNT Job Confirmation - Erfolgreich', [
-                'job_id' => $job->id,
-                'job_uuid' => $job->uuid,
-                'printer_id' => $job->printer_id,
-                'code' => $code !== '' ? $code : null,
-            ]);
-        } else {
-            Log::error('CloudPRNT Job Confirmation - Fehlgeschlagen', [
-                'job_id' => $job->id,
-                'job_uuid' => $job->uuid,
-            ]);
-        }
-
-        return response()->noContent(); // 204
+        return app(CloudPrntJobResponder::class)->abschliessen($request, $printer, $job);
     })->name('printing.api.job.confirm');
 
     // Job Error Endpoint

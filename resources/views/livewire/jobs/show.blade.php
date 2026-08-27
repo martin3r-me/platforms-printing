@@ -168,20 +168,20 @@
                     </div>
                     @php $angeboten = ($job->data ?? [])['angeboten_um'] ?? null; @endphp
                     @if($angeboten)
-                        <div class="flex items-center justify-between">
-                            <dt class="text-sm font-medium text-[var(--ui-secondary)] m-0">Gemeldet</dt>
+                        <div class="flex items-center justify-between gap-3 px-3 py-2">
+                            <dt class="text-xs text-[var(--ui-muted)]">Gemeldet</dt>
                             <dd class="text-sm text-[var(--ui-secondary)] m-0">
                                 {{ \Illuminate\Support\Carbon::parse($angeboten)->format('d.m.Y H:i:s') }}
-                                <span class="text-[var(--ui-muted)]">(+{{ round(abs(\Illuminate\Support\Carbon::parse($angeboten)->diffInSeconds($job->created_at))) }}s)</span>
+                                <span class="text-xs text-[var(--ui-muted)]">(+{{ round(abs(\Illuminate\Support\Carbon::parse($angeboten)->diffInSeconds($job->created_at))) }}s)</span>
                             </dd>
                         </div>
                     @endif
                     @if($job->fetched_at)
-                        <div class="flex items-center justify-between">
-                            <dt class="text-sm font-medium text-[var(--ui-secondary)] m-0">Abgeholt</dt>
+                        <div class="flex items-center justify-between gap-3 px-3 py-2">
+                            <dt class="text-xs text-[var(--ui-muted)]">Abgeholt</dt>
                             <dd class="text-sm text-[var(--ui-secondary)] m-0">
                                 {{ $job->fetched_at->format('d.m.Y H:i:s') }}
-                                <span class="text-[var(--ui-muted)]">(+{{ round(abs($job->fetched_at->diffInSeconds($job->created_at))) }}s)</span>
+                                <span class="text-xs text-[var(--ui-muted)]">(+{{ round(abs($job->fetched_at->diffInSeconds($job->created_at))) }}s)</span>
                             </dd>
                         </div>
                     @endif

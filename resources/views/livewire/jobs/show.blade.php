@@ -119,7 +119,7 @@
         @endif
 
         {{-- Vorschau --}}
-        @php $hatVorschau = ! $previewError && trim((string) $preview) !== ''; @endphp
+        @php $hatVorschau = ! $previewError && $belege !== []; @endphp
         <section x-data="bonBild({{ $job->id }})" class="rounded-xl bg-[var(--ui-surface)] border border-[var(--ui-border)] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.03)]">
             <header class="px-4 py-3 border-b border-[var(--ui-border)] flex items-center justify-between gap-3">
                 <div class="min-w-0">
@@ -151,17 +151,29 @@
                     <div class="rounded-lg bg-[var(--ui-danger-5)] border border-[var(--ui-danger-20)] p-4 text-sm text-[var(--ui-danger)]">
                         Vorschau konnte nicht erzeugt werden: {{ $previewError }}
                     </div>
-                @elseif(trim((string) $preview) === '')
+                @elseif($belege === [])
                     <div class="text-center py-8 text-sm text-[var(--ui-muted)]">Kein Inhalt vorhanden.</div>
                 @else
-                    {{-- Das Blatt richtet sich nach dem Bon, nicht nach dem
+                    {{-- Ein Blatt je Beleg: Ein Sammelauftrag enthält mehrere
+                         Bons, zwischen denen der Drucker abschneidet. Genauso
+                         liegen sie hier untereinander – was aus dem Gerät
+                         kommt, ist auch hier ein eigenes Stück Papier.
+
+                         Das Blatt richtet sich nach dem Bon, nicht nach dem
                          Fenster: w-max/whitespace-pre lässt die Trennlinien in
                          einer Zeile bis zum Rand laufen statt sie umzubrechen,
                          items-start gibt dem Papier die Höhe seines Inhalts
                          statt der Höhe des Scroll-Bereichs. Nur Darstellung –
                          der gedruckte Inhalt bleibt unverändert. --}}
-                    <div class="flex justify-center items-start overflow-auto max-h-96 py-5 rounded-lg bg-[var(--ui-muted-5)] border border-[var(--ui-border)]">
-                        <pre x-ref="papier" class="shrink-0 w-max bg-[var(--ui-surface)] text-[var(--ui-secondary)] shadow-md rounded-sm px-5 py-4 text-[11px] leading-relaxed font-mono whitespace-pre">{{ $preview }}</pre>
+                    <div x-ref="papiere" class="flex flex-col items-center gap-5 overflow-auto max-h-96 py-5 rounded-lg bg-[var(--ui-muted-5)] border border-[var(--ui-border)]">
+                        @foreach($belege as $beleg)
+                            <div class="shrink-0 w-max">
+                                @if(count($belege) > 1)
+                                    <div class="text-[11px] text-[var(--ui-muted)] mb-1 text-center">Beleg {{ $loop->iteration }} von {{ count($belege) }}</div>
+                                @endif
+                                <pre class="bg-[var(--ui-surface)] text-[var(--ui-secondary)] shadow-md rounded-sm px-5 py-4 text-[11px] leading-relaxed font-mono whitespace-pre">{{ $beleg }}</pre>
+                            </div>
+                        @endforeach
                     </div>
                 @endif
             </div>
@@ -274,31 +286,43 @@
 // Screenshot-Bibliothek abfotografiert. Das spart eine Abhängigkeit, liefert
 // ein scharfes Bild in beliebiger Auflösung und ist unabhängig davon, wie die
 // Vorschau gerade im Fenster skaliert oder gescrollt ist.
+//
+// Ein Sammelauftrag bringt mehrere Blätter mit: Sie kommen untereinander auf
+// dasselbe Bild, jedes mit eigenem weißen Papier, damit man sieht, wo der
+// Drucker abschneidet.
 Alpine.data('bonBild', (jobId) => ({
     alsBild() {
-        const papier = this.$refs.papier;
-        if (! papier) return;
+        const bloecke = this.$refs.papiere
+            ? Array.from(this.$refs.papiere.querySelectorAll('pre'))
+            : [];
+
+        if (! bloecke.length) return;
 
         // Steuerzeichen (ESC/POS) gehören zum Druckstrom, nicht aufs Bild.
-        const zeilen = (papier.textContent || '')
-            .replace(/[ --]/g, '')
+        const belege = bloecke.map((pre) => (pre.textContent || '')
+            .replace(/[\u0000-\u0008\u000B-\u001F\u007F]/g, '')
             .replace(/\s+$/, '')
-            .split('\n');
+            .split('\n'));
 
         const schrift     = 14;                        // CSS-Pixel
         const zeilenhoehe = Math.round(schrift * 1.5);
         const rand        = 28;
+        const luecke      = 24;                        // Abstand zwischen zwei Belegen
         const skala       = Math.max(2, Math.ceil(window.devicePixelRatio || 1));
         const font        = schrift + 'px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 
-        // Breite aus der längsten Zeile: so endet das Papier genau dort, wo die
-        // Trennlinien enden - wie beim echten Bon.
+        // Breite aus der längsten Zeile aller Belege: so endet das Papier genau
+        // dort, wo die Trennlinien enden - und alle Blätter sind gleich breit.
         const mass = document.createElement('canvas').getContext('2d');
         mass.font = font;
-        const textbreite = zeilen.reduce((max, z) => Math.max(max, mass.measureText(z).width), 0);
+        const textbreite = belege.reduce(
+            (max, zeilen) => zeilen.reduce((m, z) => Math.max(m, mass.measureText(z).width), max),
+            0
+        );
 
         const breite = Math.ceil(textbreite) + rand * 2;
-        const hoehe  = zeilen.length * zeilenhoehe + rand * 2;
+        const hoehen = belege.map((zeilen) => zeilen.length * zeilenhoehe + rand * 2);
+        const hoehe  = hoehen.reduce((summe, h) => summe + h, 0) + luecke * (belege.length - 1);
 
         const canvas  = document.createElement('canvas');
         canvas.width  = breite * skala;
@@ -306,12 +330,24 @@ Alpine.data('bonBild', (jobId) => ({
 
         const ctx = canvas.getContext('2d');
         ctx.scale(skala, skala);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, breite, hoehe);
-        ctx.fillStyle = '#111111';
         ctx.font = font;
         ctx.textBaseline = 'top';
-        zeilen.forEach((z, i) => ctx.fillText(z, rand, rand + i * zeilenhoehe));
+
+        // Hintergrund liegt nur in den Lücken frei - bei einem einzelnen Beleg
+        // deckt das Papier ihn vollständig ab.
+        ctx.fillStyle = '#e5e7eb';
+        ctx.fillRect(0, 0, breite, hoehe);
+
+        let y = 0;
+        belege.forEach((zeilen, i) => {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, y, breite, hoehen[i]);
+
+            ctx.fillStyle = '#111111';
+            zeilen.forEach((z, k) => ctx.fillText(z, rand, y + rand + k * zeilenhoehe));
+
+            y += hoehen[i] + luecke;
+        });
 
         canvas.toBlob((blob) => {
             if (! blob) return;

@@ -13,6 +13,15 @@ class Show extends Component
     /** Gerenderte Druck-Vorschau (Inhalt, der an den Drucker geht) */
     public ?string $preview = null;
 
+    /**
+     * Die Vorschau in einzelne Belege zerlegt - einer je Schnittbefehl.
+     *
+     * Ein Sammelauftrag enthaelt alle Bons einer Veranstaltung am Stueck,
+     * getrennt durch den Schnittbefehl des Druckers. Aus dem Geraet kommen
+     * dadurch einzelne Belege; die Vorschau zeigt sie genauso.
+     */
+    public array $belege = [];
+
     /** Fehlermeldung, falls die Vorschau nicht erzeugt werden konnte */
     public ?string $previewError = null;
 
@@ -35,15 +44,80 @@ class Show extends Component
     protected function buildPreview(): void
     {
         $this->preview = null;
+        $this->belege = [];
         $this->previewError = null;
 
         try {
-            $this->preview = $this->aufBonbreite(
-                app(PrintingService::class)->generateJobContent($this->job)
-            );
+            $this->preview = app(PrintingService::class)->generateJobContent($this->job);
+            $this->belege  = $this->alsBelege($this->preview);
         } catch (\Throwable $e) {
             $this->previewError = $e->getMessage();
         }
+    }
+
+    /**
+     * Schnittbefehle, an denen der Drucker den Bon abtrennt.
+     *
+     * Star kennt ESC d n (Teilschnitt mit Vorschub) sowie ESC i / ESC m,
+     * Epson-kompatible Geraete GS V. Welche Folge ein Auftrag benutzt, steht
+     * in der Konfiguration des jeweiligen Moduls - deshalb stehen hier alle
+     * gebraeuchlichen.
+     */
+    protected const SCHNITT = '/\x1b\x64.|\x1b[\x69\x6d]|\x1dV[\x41\x42].|\x1dV[\x00\x01]/s';
+
+    /**
+     * Zerlegt den Druckinhalt in die Belege, die aus dem Geraet kommen.
+     *
+     * Der Schnittbefehl ist eine Folge aus Steuerzeichen: ESC d 3. Der Drucker
+     * verschluckt sie und schneidet, ein Browser zeigt vom ESC nichts und vom
+     * Rest die beiden sichtbaren Zeichen - in der Vorschau stand deshalb
+     * mitten im Sammelbon ein rätselhaftes "d3". Jetzt steht dort, was es
+     * bedeutet: hier faengt der naechste Beleg an.
+     *
+     * Nur Darstellung. Gedruckt wird weiterhin, was das Template liefert.
+     */
+    protected function alsBelege(string $inhalt): array
+    {
+        $breite = $this->bonbreite($inhalt);
+
+        $belege = [];
+        foreach (preg_split(self::SCHNITT, $inhalt) ?: [$inhalt] as $stueck) {
+            $stueck = $this->aufBonbreite($stueck, $breite);
+
+            // Leerzeilen am Rand sind Papiervorschub, kein Inhalt: Der Bon
+            // endet mit ein paar Zeilen Vorlauf, damit der Schnitt nicht in
+            // die letzte Textzeile faellt.
+            $stueck = trim($stueck, "\n");
+
+            if (trim($stueck) !== '') {
+                $belege[] = $stueck;
+            }
+        }
+
+        return $belege;
+    }
+
+    /**
+     * Die Bonbreite, wie sie im Bon selbst steht.
+     *
+     * Die Trennlinien laufen ueber die volle Breite - laenger als sie wird
+     * keine Zeile gedruckt. Findet sich keine, meldet die Methode 0 und der
+     * Inhalt bleibt unangetastet: lieber ungekuerzt als nach falschem Mass
+     * umbrochen. Unter 20 Zeichen ist es keine Trennlinie mehr, sondern ein
+     * Gedankenstrich im Text.
+     */
+    protected function bonbreite(string $inhalt): int
+    {
+        $breite = 0;
+
+        foreach (explode("\n", $inhalt) as $zeile) {
+            $zeile = rtrim($zeile);
+            if ($zeile !== '' && preg_match('/^[=-]+$/', $zeile) === 1) {
+                $breite = max($breite, mb_strlen($zeile));
+            }
+        }
+
+        return $breite >= 20 ? $breite : 0;
     }
 
     /**
@@ -56,32 +130,19 @@ class Show extends Component
      * als den Bon - eine zu lange Fusszeile sah damit in der Vorschau
      * ordentlich aus und fiel erst auf, als der Bon aus dem Geraet kam.
      *
-     * Die Breite steht im Bon selbst: Die Trennlinien laufen genau ueber die
-     * Bonbreite. Findet sich keine, bleibt der Inhalt unveraendert - lieber
-     * unangetastet als nach falschem Mass umbrochen.
+     * Das Mass liefert bonbreite(); 0 heisst "nicht erkannt" und laesst den
+     * Inhalt unangetastet.
      *
      * Nur Darstellung. Gedruckt wird weiterhin, was das Template liefert.
      */
-    protected function aufBonbreite(string $inhalt): string
+    protected function aufBonbreite(string $inhalt, int $breite): string
     {
-        $zeilen = explode("\n", $inhalt);
-
-        $breite = 0;
-        foreach ($zeilen as $zeile) {
-            $zeile = rtrim($zeile);
-            if ($zeile !== '' && preg_match('/^[=-]+$/', $zeile) === 1) {
-                $breite = max($breite, mb_strlen($zeile));
-            }
-        }
-
-        // Unter 20 Zeichen ist das keine Trennlinie mehr, sondern ein
-        // Gedankenstrich oder eine Zeile aus Minuszeichen im Text.
-        if ($breite < 20) {
+        if ($breite < 1) {
             return $inhalt;
         }
 
         $umbrochen = [];
-        foreach ($zeilen as $zeile) {
+        foreach (explode("\n", $inhalt) as $zeile) {
             $zeile = rtrim($zeile);
 
             if (mb_strlen($zeile) <= $breite) {

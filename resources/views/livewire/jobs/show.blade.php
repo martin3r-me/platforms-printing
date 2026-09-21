@@ -137,6 +137,16 @@
                                 Als Bild
                             </div>
                         </x-ui-button>
+                        @if(count($belege) > 1)
+                            {{-- Ein Bild je Beleg: zum Weiterreichen einzelner
+                                 Bons aus einem Sammelauftrag. --}}
+                            <x-ui-button type="button" @click="alsBilder()" size="sm" variant="secondary-outline">
+                                <div class="flex items-center gap-2">
+                                    @svg('heroicon-o-arrow-down-tray', 'w-4 h-4')
+                                    {{ count($belege) }} Bilder einzeln
+                                </div>
+                            </x-ui-button>
+                        @endif
                     @endif
                     <x-ui-button wire:click="reloadPreview" size="sm" variant="secondary-outline">
                         <div class="flex items-center gap-2">
@@ -287,23 +297,31 @@
 // ein scharfes Bild in beliebiger Auflösung und ist unabhängig davon, wie die
 // Vorschau gerade im Fenster skaliert oder gescrollt ist.
 //
-// Ein Sammelauftrag bringt mehrere Blätter mit: Sie kommen untereinander auf
-// dasselbe Bild, jedes mit eigenem weißen Papier, damit man sieht, wo der
-// Drucker abschneidet.
+// Ein Sammelauftrag lässt sich auf zwei Arten mitnehmen: alle Blätter
+// untereinander auf einem Bild - oder je Beleg eine Datei, wenn einzelne Bons
+// an verschiedene Leute gehen.
 Alpine.data('bonBild', (jobId) => ({
-    alsBild() {
+    /** Die Belege der Vorschau als Zeilen-Listen. */
+    belege() {
         const bloecke = this.$refs.papiere
             ? Array.from(this.$refs.papiere.querySelectorAll('pre'))
             : [];
 
-        if (! bloecke.length) return;
-
         // Steuerzeichen (ESC/POS) gehören zum Druckstrom, nicht aufs Bild.
-        const belege = bloecke.map((pre) => (pre.textContent || '')
+        return bloecke.map((pre) => (pre.textContent || '')
             .replace(/[\u0000-\u0008\u000B-\u001F\u007F]/g, '')
             .replace(/\s+$/, '')
             .split('\n'));
+    },
 
+    /**
+     * Zeichnet die übergebenen Belege untereinander auf ein Canvas.
+     *
+     * Alle Blätter bekommen dieselbe Breite - die der längsten Zeile -, damit
+     * sie untereinander bündig stehen. Der graue Grund liegt nur in den
+     * Lücken frei; bei einem einzelnen Beleg deckt das Papier ihn vollständig.
+     */
+    zeichne(belege) {
         const schrift     = 14;                        // CSS-Pixel
         const zeilenhoehe = Math.round(schrift * 1.5);
         const rand        = 28;
@@ -311,8 +329,8 @@ Alpine.data('bonBild', (jobId) => ({
         const skala       = Math.max(2, Math.ceil(window.devicePixelRatio || 1));
         const font        = schrift + 'px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 
-        // Breite aus der längsten Zeile aller Belege: so endet das Papier genau
-        // dort, wo die Trennlinien enden - und alle Blätter sind gleich breit.
+        // Breite aus der längsten Zeile: so endet das Papier genau dort, wo die
+        // Trennlinien enden - wie beim echten Bon.
         const mass = document.createElement('canvas').getContext('2d');
         mass.font = font;
         const textbreite = belege.reduce(
@@ -333,8 +351,6 @@ Alpine.data('bonBild', (jobId) => ({
         ctx.font = font;
         ctx.textBaseline = 'top';
 
-        // Hintergrund liegt nur in den Lücken frei - bei einem einzelnen Beleg
-        // deckt das Papier ihn vollständig ab.
         ctx.fillStyle = '#e5e7eb';
         ctx.fillRect(0, 0, breite, hoehe);
 
@@ -349,17 +365,52 @@ Alpine.data('bonBild', (jobId) => ({
             y += hoehen[i] + luecke;
         });
 
+        return canvas;
+    },
+
+    speichere(canvas, name) {
         canvas.toBlob((blob) => {
             if (! blob) return;
+
             const url  = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href     = url;
-            link.download = 'bon-job-' + jobId + '.png';
+            link.download = name;
             document.body.appendChild(link);
             link.click();
             link.remove();
             URL.revokeObjectURL(url);
         }, 'image/png');
+    },
+
+    /** Alles auf einem Bild. */
+    alsBild() {
+        const belege = this.belege();
+        if (! belege.length) return;
+
+        this.speichere(this.zeichne(belege), 'bon-job-' + jobId + '.png');
+    },
+
+    /**
+     * Je Beleg eine Datei.
+     *
+     * Die Downloads laufen zeitversetzt: Browser werten einen Schwall
+     * gleichzeitiger Downloads als aufdringlich und lassen still nur den
+     * ersten durch. Die führende Null hält die Dateien im Ordner in der
+     * Reihenfolge des Bons.
+     */
+    alsBilder() {
+        const belege = this.belege();
+        if (! belege.length) return;
+
+        belege.forEach((zeilen, i) => {
+            const nummer = String(i + 1).padStart(2, '0');
+
+            window.setTimeout(
+                () => this.speichere(this.zeichne([zeilen]), 'bon-job-' + jobId + '-beleg-' + nummer + '.png'),
+                i * 350
+            );
+        });
     },
 }));
 </script>

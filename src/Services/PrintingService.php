@@ -292,6 +292,13 @@ class PrintingService implements PrintingServiceInterface
                 'module' => $this->getModuleName($printable),
                 'model' => class_basename($printable),
             ]);
+            // ACHTUNG fuer Template-Autoren: Laravels View-Engine gibt jede
+            // gerenderte View durch ltrim() (PhpEngine::evaluatePath). Die
+            // fuehrenden Leerzeichen der ERSTEN Zeile sind also weg, bevor
+            // dieses Modul den Bon sieht - eine zentrierte erste Zeile klebt
+            // links. Ein Bon-Template beginnt deshalb mit einem sichtbaren
+            // Zeichen (z.B. einer Trennlinie). Eine Huelle per @include hilft
+            // nicht: die innere View laeuft durch dieselbe Engine.
             return $this->normalizeContent(view($bladeTemplate, $templateData)->render());
         }
 

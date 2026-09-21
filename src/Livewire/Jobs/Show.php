@@ -38,10 +38,65 @@ class Show extends Component
         $this->previewError = null;
 
         try {
-            $this->preview = app(PrintingService::class)->generateJobContent($this->job);
+            $this->preview = $this->aufBonbreite(
+                app(PrintingService::class)->generateJobContent($this->job)
+            );
         } catch (\Throwable $e) {
             $this->previewError = $e->getMessage();
         }
+    }
+
+    /**
+     * Bricht zu lange Zeilen fuer die Anzeige dort um, wo auch der Drucker
+     * umbricht: an der Bonbreite.
+     *
+     * Auf die Rolle passt nur eine feste Zahl Zeichen; was darueber steht,
+     * setzt der Drucker linksbuendig in die naechste Zeile. Die Vorschau
+     * zeigte solche Zeilen dagegen ungekuerzt und machte das Papier breiter
+     * als den Bon - eine zu lange Fusszeile sah damit in der Vorschau
+     * ordentlich aus und fiel erst auf, als der Bon aus dem Geraet kam.
+     *
+     * Die Breite steht im Bon selbst: Die Trennlinien laufen genau ueber die
+     * Bonbreite. Findet sich keine, bleibt der Inhalt unveraendert - lieber
+     * unangetastet als nach falschem Mass umbrochen.
+     *
+     * Nur Darstellung. Gedruckt wird weiterhin, was das Template liefert.
+     */
+    protected function aufBonbreite(string $inhalt): string
+    {
+        $zeilen = explode("\n", $inhalt);
+
+        $breite = 0;
+        foreach ($zeilen as $zeile) {
+            $zeile = rtrim($zeile);
+            if ($zeile !== '' && preg_match('/^[=-]+$/', $zeile) === 1) {
+                $breite = max($breite, mb_strlen($zeile));
+            }
+        }
+
+        // Unter 20 Zeichen ist das keine Trennlinie mehr, sondern ein
+        // Gedankenstrich oder eine Zeile aus Minuszeichen im Text.
+        if ($breite < 20) {
+            return $inhalt;
+        }
+
+        $umbrochen = [];
+        foreach ($zeilen as $zeile) {
+            $zeile = rtrim($zeile);
+
+            if (mb_strlen($zeile) <= $breite) {
+                $umbrochen[] = $zeile;
+                continue;
+            }
+
+            // Hart trennen, nicht an Wortgrenzen: Der Drucker zaehlt Zeichen,
+            // nicht Woerter.
+            foreach (mb_str_split($zeile, $breite) as $stueck) {
+                $umbrochen[] = $stueck;
+            }
+        }
+
+        return implode("\n", $umbrochen);
     }
 
     public function reloadPreview()

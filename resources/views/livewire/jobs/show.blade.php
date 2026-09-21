@@ -119,7 +119,8 @@
         @endif
 
         {{-- Vorschau --}}
-        <section class="rounded-xl bg-[var(--ui-surface)] border border-[var(--ui-border)] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.03)]">
+        @php $hatVorschau = ! $previewError && trim((string) $preview) !== ''; @endphp
+        <section x-data="bonBild({{ $job->id }})" class="rounded-xl bg-[var(--ui-surface)] border border-[var(--ui-border)] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.03)]">
             <header class="px-4 py-3 border-b border-[var(--ui-border)] flex items-center justify-between gap-3">
                 <div class="min-w-0">
                     <div class="flex items-center gap-2">
@@ -128,12 +129,22 @@
                     </div>
                     <div class="text-xs text-[var(--ui-muted)] mt-0.5">Inhalt, der an den Drucker gesendet wird · Template: {{ config("printing.templates.available.{$job->template}", $job->template) }}</div>
                 </div>
-                <x-ui-button wire:click="reloadPreview" size="sm" variant="secondary-outline">
-                    <div class="flex items-center gap-2">
-                        @svg('heroicon-o-arrow-path', 'w-4 h-4')
-                        Aktualisieren
-                    </div>
-                </x-ui-button>
+                <div class="flex items-center gap-2 shrink-0">
+                    @if($hatVorschau)
+                        <x-ui-button type="button" @click="alsBild()" size="sm" variant="secondary-outline">
+                            <div class="flex items-center gap-2">
+                                @svg('heroicon-o-arrow-down-tray', 'w-4 h-4')
+                                Als Bild
+                            </div>
+                        </x-ui-button>
+                    @endif
+                    <x-ui-button wire:click="reloadPreview" size="sm" variant="secondary-outline">
+                        <div class="flex items-center gap-2">
+                            @svg('heroicon-o-arrow-path', 'w-4 h-4')
+                            Aktualisieren
+                        </div>
+                    </x-ui-button>
+                </div>
             </header>
             <div class="p-4">
                 @if($previewError)
@@ -150,7 +161,7 @@
                          statt der Höhe des Scroll-Bereichs. Nur Darstellung –
                          der gedruckte Inhalt bleibt unverändert. --}}
                     <div class="flex justify-center items-start overflow-auto max-h-96 py-5 rounded-lg bg-[var(--ui-muted-5)] border border-[var(--ui-border)]">
-                        <pre class="shrink-0 w-max bg-[var(--ui-surface)] text-[var(--ui-secondary)] shadow-md rounded-sm px-5 py-4 text-[11px] leading-relaxed font-mono whitespace-pre">{{ $preview }}</pre>
+                        <pre x-ref="papier" class="shrink-0 w-max bg-[var(--ui-surface)] text-[var(--ui-secondary)] shadow-md rounded-sm px-5 py-4 text-[11px] leading-relaxed font-mono whitespace-pre">{{ $preview }}</pre>
                     </div>
                 @endif
             </div>
@@ -255,3 +266,65 @@
         </div>
     </x-ui-page-container>
 </x-ui-page>
+
+@script
+<script>
+// Bon als Bild: Der Beleg ist reiner Text in fester Zeichenbreite, deshalb
+// wird er Zeile für Zeile auf ein Canvas gezeichnet statt mit einer
+// Screenshot-Bibliothek abfotografiert. Das spart eine Abhängigkeit, liefert
+// ein scharfes Bild in beliebiger Auflösung und ist unabhängig davon, wie die
+// Vorschau gerade im Fenster skaliert oder gescrollt ist.
+Alpine.data('bonBild', (jobId) => ({
+    alsBild() {
+        const papier = this.$refs.papier;
+        if (! papier) return;
+
+        // Steuerzeichen (ESC/POS) gehören zum Druckstrom, nicht aufs Bild.
+        const zeilen = (papier.textContent || '')
+            .replace(/[ --]/g, '')
+            .replace(/\s+$/, '')
+            .split('\n');
+
+        const schrift     = 14;                        // CSS-Pixel
+        const zeilenhoehe = Math.round(schrift * 1.5);
+        const rand        = 28;
+        const skala       = Math.max(2, Math.ceil(window.devicePixelRatio || 1));
+        const font        = schrift + 'px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+
+        // Breite aus der längsten Zeile: so endet das Papier genau dort, wo die
+        // Trennlinien enden - wie beim echten Bon.
+        const mass = document.createElement('canvas').getContext('2d');
+        mass.font = font;
+        const textbreite = zeilen.reduce((max, z) => Math.max(max, mass.measureText(z).width), 0);
+
+        const breite = Math.ceil(textbreite) + rand * 2;
+        const hoehe  = zeilen.length * zeilenhoehe + rand * 2;
+
+        const canvas  = document.createElement('canvas');
+        canvas.width  = breite * skala;
+        canvas.height = hoehe * skala;
+
+        const ctx = canvas.getContext('2d');
+        ctx.scale(skala, skala);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, breite, hoehe);
+        ctx.fillStyle = '#111111';
+        ctx.font = font;
+        ctx.textBaseline = 'top';
+        zeilen.forEach((z, i) => ctx.fillText(z, rand, rand + i * zeilenhoehe));
+
+        canvas.toBlob((blob) => {
+            if (! blob) return;
+            const url  = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href     = url;
+            link.download = 'bon-job-' + jobId + '.png';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        }, 'image/png');
+    },
+}));
+</script>
+@endscript

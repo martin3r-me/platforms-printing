@@ -143,8 +143,14 @@
                 @elseif(trim((string) $preview) === '')
                     <div class="text-center py-8 text-sm text-[var(--ui-muted)]">Kein Inhalt vorhanden.</div>
                 @else
-                    <div class="flex justify-center overflow-auto max-h-96 py-5 rounded-lg bg-[var(--ui-muted-5)] border border-[var(--ui-border)]">
-                        <pre class="w-[320px] max-w-full bg-[var(--ui-surface)] text-[var(--ui-secondary)] shadow-md rounded-sm px-5 py-4 text-[11px] leading-relaxed font-mono whitespace-pre-wrap break-words">{{ $preview }}</pre>
+                    {{-- Das Blatt richtet sich nach dem Bon, nicht nach dem
+                         Fenster: w-max/whitespace-pre lässt die Trennlinien in
+                         einer Zeile bis zum Rand laufen statt sie umzubrechen,
+                         items-start gibt dem Papier die Höhe seines Inhalts
+                         statt der Höhe des Scroll-Bereichs. Nur Darstellung –
+                         der gedruckte Inhalt bleibt unverändert. --}}
+                    <div class="flex justify-center items-start overflow-auto max-h-96 py-5 rounded-lg bg-[var(--ui-muted-5)] border border-[var(--ui-border)]">
+                        <pre class="shrink-0 w-max bg-[var(--ui-surface)] text-[var(--ui-secondary)] shadow-md rounded-sm px-5 py-4 text-[11px] leading-relaxed font-mono whitespace-pre">{{ $preview }}</pre>
                     </div>
                 @endif
             </div>

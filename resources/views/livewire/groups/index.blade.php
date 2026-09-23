@@ -1,48 +1,18 @@
 <x-ui-page>
     <x-slot name="navbar">
-        <x-ui-page-navbar title="Printing" />
+        <x-ui-page-navbar title="Gruppen" icon="heroicon-o-folder" />
     </x-slot>
 
     <x-slot name="actionbar">
         <x-ui-page-actionbar :breadcrumbs="[
             ['label' => 'Printing', 'href' => route('printing.dashboard'), 'icon' => 'printer'],
-            ['label' => 'Gruppen', 'icon' => 'folder'],
+            ['label' => 'Gruppen'],
         ]">
-            <x-ui-button variant="primary" size="sm" wire:click="openCreateModal">
-                <div class="flex items-center gap-2">
-                    @svg('heroicon-o-plus', 'w-4 h-4')
-                    <span>Neue Gruppe</span>
-                </div>
-            </x-ui-button>
+            <x-nx-button variant="primary" wire:click="openCreateModal">
+                @svg('heroicon-o-plus', 'w-4 h-4')
+                <span>Neue Gruppe</span>
+            </x-nx-button>
         </x-ui-page-actionbar>
-    </x-slot>
-
-    {{-- Filter --}}
-    <x-slot name="sidebar">
-        <x-ui-page-sidebar title="Filter" icon="heroicon-o-funnel" width="w-72" :defaultOpen="true">
-            <div class="p-4 space-y-6">
-                <section>
-                    <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--ui-muted)] mb-2">Suche</h3>
-                    <div class="relative">
-                        @svg('heroicon-o-magnifying-glass', 'w-4 h-4 text-[var(--ui-muted)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none')
-                        <input type="text" wire:model.live.debounce.300ms="search" placeholder="Name, Beschreibung…"
-                            class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-[var(--ui-border)] bg-[var(--ui-surface)] text-[var(--ui-secondary)] placeholder-[var(--ui-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--ui-primary)]/20 focus:border-[var(--ui-primary)]" />
-                    </div>
-                </section>
-
-                <section>
-                    <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--ui-muted)] mb-2">Status</h3>
-                    <div class="space-y-1">
-                        @foreach(['all' => 'Alle', 'active' => 'Aktiv', 'inactive' => 'Inaktiv'] as $val => $label)
-                            <button type="button" wire:click="$set('statusFilter', '{{ $val }}')"
-                                class="w-full flex items-center px-3 py-2 rounded-lg text-sm transition-colors {{ $statusFilter === $val ? 'bg-[var(--ui-primary)] text-[var(--ui-on-primary)] font-medium' : 'text-[var(--ui-secondary)] hover:bg-[var(--ui-muted-5)]' }}">
-                                {{ $label }}
-                            </button>
-                        @endforeach
-                    </div>
-                </section>
-            </div>
-        </x-ui-page-sidebar>
     </x-slot>
 
     {{-- Aktivitäten --}}
@@ -55,125 +25,137 @@
     </x-slot>
 
     <x-ui-page-container>
-        @if($groups->count() > 0)
-            <x-ui-table>
-                <x-ui-table-header>
-                    <x-ui-table-header-cell>Name</x-ui-table-header-cell>
-                    <x-ui-table-header-cell>Beschreibung</x-ui-table-header-cell>
-                    <x-ui-table-header-cell>Drucker</x-ui-table-header-cell>
-                    <x-ui-table-header-cell>Status</x-ui-table-header-cell>
-                    <x-ui-table-header-cell align="right">Aktionen</x-ui-table-header-cell>
-                </x-ui-table-header>
+    <div class="space-y-5">
 
-                <x-ui-table-body>
-                    @foreach($groups as $group)
-                        <x-ui-table-row
-                            clickable="true"
-                            :href="route('printing.groups.show', ['group' => $group->id])"
-                        >
-                            <x-ui-table-cell>
-                                <span class="font-medium text-[var(--ui-secondary)]">{{ $group->name }}</span>
-                            </x-ui-table-cell>
-                            <x-ui-table-cell>{{ $group->description ?: '–' }}</x-ui-table-cell>
-                            <x-ui-table-cell>{{ $group->printers->count() }}</x-ui-table-cell>
-                            <x-ui-table-cell>
-                                <x-ui-badge variant="{{ $group->is_active ? 'success' : 'secondary' }}" size="sm">
-                                    {{ $group->is_active ? 'Aktiv' : 'Inaktiv' }}
-                                </x-ui-badge>
-                            </x-ui-table-cell>
-                            <x-ui-table-cell align="right">
-                                <div class="flex items-center gap-2 justify-end">
-                                    {{-- Bewusst ein Link auf die Detailseite. Das
-                                         frühere Bearbeiten-Modal war toter Code:
-                                         sein Speichern rief updateGroup() auf, das
-                                         es im Component nie gab. --}}
-                                    <x-ui-button size="sm" variant="secondary"
-                                        :href="route('printing.groups.show', ['group' => $group->id])"
-                                        x-on:click.stop>
-                                        Bearbeiten
-                                    </x-ui-button>
-                                    <x-ui-button size="sm" variant="secondary"
-                                        x-on:click.stop.prevent="$wire.toggleActive({{ $group->id }})">
-                                        {{ $group->is_active ? 'Deaktivieren' : 'Aktivieren' }}
-                                    </x-ui-button>
-                                    <x-ui-button size="sm" variant="danger"
-                                        x-on:click.stop.prevent="$wire.openDeleteModal({{ $group->id }})">
-                                        Löschen
-                                    </x-ui-button>
-                                </div>
-                            </x-ui-table-cell>
-                        </x-ui-table-row>
-                    @endforeach
-                </x-ui-table-body>
-            </x-ui-table>
+    {{-- Filter: rahmenlos, luftig --}}
+    <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
+        <div class="flex flex-wrap items-center gap-1">
+            @foreach (['all' => 'Alle', 'active' => 'Aktiv', 'inactive' => 'Inaktiv'] as $val => $label)
+                <button type="button" wire:click="$set('statusFilter', '{{ $val }}')"
+                    class="rounded-full px-2.5 py-1 transition-colors {{ $statusFilter === $val ? 'bg-[color:var(--nx-active)] font-medium text-[color:var(--nx-text)]' : 'text-[color:var(--nx-muted)] hover:bg-[color:var(--nx-hover)]' }}">{{ $label }}</button>
+            @endforeach
+        </div>
+        <div class="ml-auto w-64">
+            <x-ui-input-text name="search" size="sm" wire:model.live.debounce.300ms="search" placeholder="Name, Beschreibung…" />
+        </div>
+    </div>
 
-            <div>{{ $groups->links() }}</div>
-        @else
-            <div class="rounded-xl bg-[var(--ui-surface)] border border-[var(--ui-border)] shadow-sm p-12 text-center">
-                <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--ui-primary-10)] text-[var(--ui-primary)] mb-4">
-                    @svg('heroicon-o-folder', 'w-7 h-7')
-                </div>
-                <div class="text-base font-medium text-[var(--ui-secondary)]">Keine Gruppen gefunden</div>
-                <div class="text-sm text-[var(--ui-muted)] mt-1 mb-4">Erstellen Sie die erste Gruppe, um zu starten.</div>
-                <x-ui-button variant="primary" size="sm" wire:click="openCreateModal">
-                    <div class="flex items-center gap-2">
-                        @svg('heroicon-o-plus', 'w-4 h-4')
-                        Neue Gruppe
-                    </div>
-                </x-ui-button>
-            </div>
-        @endif
+    {{-- Tabelle: rahmenlos, Hairlines --}}
+    <x-nx-table>
+        <x-nx-table-header>
+            <x-nx-table-header-cell>Name</x-nx-table-header-cell>
+            <x-nx-table-header-cell>Beschreibung</x-nx-table-header-cell>
+            <x-nx-table-header-cell align="center">Drucker</x-nx-table-header-cell>
+            <x-nx-table-header-cell>Status</x-nx-table-header-cell>
+            <x-nx-table-header-cell align="right"><span class="sr-only">Aktionen</span></x-nx-table-header-cell>
+        </x-nx-table-header>
+        <x-nx-table-body>
+            @forelse($groups as $group)
+                <x-nx-table-row wire:key="group-{{ $group->id }}" clickable
+                    :href="route('printing.groups.show', ['group' => $group->id])" class="group">
+                    <x-nx-table-cell>
+                        <span class="font-medium text-[color:var(--nx-text)]">{{ $group->name }}</span>
+                    </x-nx-table-cell>
+                    <x-nx-table-cell class="text-[color:var(--nx-muted)]">{{ $group->description ?: '–' }}</x-nx-table-cell>
+                    <x-nx-table-cell align="center" class="tabular-nums text-[color:var(--nx-muted)]">{{ $group->printers->count() }}</x-nx-table-cell>
+                    <x-nx-table-cell>
+                        <x-nx-badge :variant="$group->is_active ? 'success' : 'neutral'">
+                            {{ $group->is_active ? 'Aktiv' : 'Inaktiv' }}
+                        </x-nx-badge>
+                    </x-nx-table-cell>
+                    {{-- Aktionen erscheinen beim Hover über die Zeile (Notion-Stil).
+                         .stop ist zwingend: die Zeile trägt ein
+                         onclick="window.location.href=…", ohne das blubbert jeder
+                         Klick hoch und die Seite navigiert weg – Deaktivieren und
+                         Löschen landeten so ungewollt auf der Detailseite. --}}
+                    <x-nx-table-cell align="right">
+                        <div class="flex items-center justify-end gap-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 focus-within:opacity-100">
+                            {{-- Bewusst ein Link auf die Detailseite. Das frühere
+                                 Bearbeiten-Modal war toter Code: sein Speichern rief
+                                 updateGroup() auf, das es im Component nie gab. --}}
+                            <x-nx-button icon variant="ghost" title="Bearbeiten"
+                                :href="route('printing.groups.show', ['group' => $group->id])"
+                                x-on:click.stop>
+                                @svg('heroicon-o-pencil-square', 'w-4 h-4')
+                            </x-nx-button>
+                            <x-nx-button icon variant="ghost"
+                                :title="$group->is_active ? 'Deaktivieren' : 'Aktivieren'"
+                                x-on:click.stop.prevent="$wire.toggleActive({{ $group->id }})">
+                                @svg($group->is_active ? 'heroicon-o-pause-circle' : 'heroicon-o-play-circle', 'w-4 h-4')
+                            </x-nx-button>
+                            <button type="button" title="Löschen"
+                                x-on:click.stop.prevent="$wire.openDeleteModal({{ $group->id }})"
+                                class="inline-flex h-8 w-8 items-center justify-center rounded-[6px] text-[color:var(--nx-danger)] transition-colors hover:bg-[rgba(224,49,49,.08)]">
+                                @svg('heroicon-o-trash', 'w-4 h-4')
+                            </button>
+                        </div>
+                    </x-nx-table-cell>
+                </x-nx-table-row>
+            @empty
+                <tr>
+                    <td colspan="5">
+                        <x-nx-empty icon="heroicon-o-folder">
+                            Keine Gruppen gefunden
+                            <x-slot name="action">
+                                <x-nx-button wire:click="openCreateModal">
+                                    @svg('heroicon-o-plus', 'w-4 h-4')
+                                    <span>Neue Gruppe</span>
+                                </x-nx-button>
+                            </x-slot>
+                        </x-nx-empty>
+                    </td>
+                </tr>
+            @endforelse
+        </x-nx-table-body>
+    </x-nx-table>
 
-        {{-- Create Modal --}}
-        <x-ui-modal wire:model="modalShow" size="lg">
-            <x-slot name="header">
-                Gruppe anlegen
-            </x-slot>
+    <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-[color:var(--nx-faint)]">
+        <span class="tabular-nums">
+            @if ($groups->hasPages())
+                {{ $groups->firstItem() }}–{{ $groups->lastItem() }} von {{ $groups->total() }} Gruppen
+            @else
+                {{ $groups->total() }} {{ $groups->total() === 1 ? 'Gruppe' : 'Gruppen' }}
+            @endif
+        </span>
+        {{ $groups->links('printing::partials.pagination') }}
+    </div>
 
-            <div class="space-y-4">
-                <form class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <x-ui-input-text name="name" wire:model.live="name" label="Name" />
-                        <x-ui-input-text name="description" wire:model.live="description" label="Beschreibung" />
-                    </div>
-                </form>
-            </div>
+    {{-- Anlegen --}}
+    <x-nx-modal wire:model="modalShow" size="lg">
+        <x-slot name="header">
+            <h2 class="m-0 text-sm font-semibold text-[color:var(--nx-text)]">Gruppe anlegen</h2>
+        </x-slot>
 
-            <x-slot name="footer">
-                <div class="flex justify-end gap-2">
-                    <x-ui-button type="button" variant="secondary-outline" @click="$wire.closeCreateModal()">
-                        Abbrechen
-                    </x-ui-button>
-                    <x-ui-button type="button" variant="primary" wire:click="createGroup">
-                        Gruppe anlegen
-                    </x-ui-button>
-                </div>
-            </x-slot>
-        </x-ui-modal>
+        <form class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <x-ui-input-text name="name" wire:model.live="name" label="Name" />
+            <x-ui-input-text name="description" wire:model.live="description" label="Beschreibung" />
+        </form>
 
-        {{-- Löschen bestätigen: der Button löschte bisher ohne Rückfrage --}}
-        <x-ui-modal wire:model="deleteModalShow" size="sm">
-            <x-slot name="header">
-                Gruppe löschen
-            </x-slot>
+        <x-slot name="footer">
+            <x-nx-button type="button" @click="$wire.closeCreateModal()">Abbrechen</x-nx-button>
+            <x-nx-button type="button" variant="primary" wire:click="createGroup">Gruppe anlegen</x-nx-button>
+        </x-slot>
+    </x-nx-modal>
 
-            <p class="text-sm text-[var(--ui-secondary)]">
-                @if($this->groupToDelete)
-                    Soll die Gruppe <strong>{{ $this->groupToDelete->name }}</strong> wirklich gelöscht
-                    werden? Das lässt sich nicht rückgängig machen.
-                @endif
-            </p>
+    {{-- Löschen bestätigen: der Knopf löschte bisher ohne Rückfrage --}}
+    <x-nx-modal wire:model="deleteModalShow" size="sm">
+        <x-slot name="header">
+            <h2 class="m-0 text-sm font-semibold text-[color:var(--nx-text)]">Gruppe löschen</h2>
+        </x-slot>
 
-            <x-slot name="footer">
-                <div class="flex justify-end gap-2">
-                    <x-ui-button type="button" variant="secondary-outline" @click="$wire.closeDeleteModal()">
-                        Abbrechen
-                    </x-ui-button>
-                    <x-ui-button type="button" variant="danger" wire:click="confirmDeleteGroup">
-                        Löschen
-                    </x-ui-button>
-                </div>
-            </x-slot>
-        </x-ui-modal>
+        <p class="m-0 text-sm text-[color:var(--nx-text)]">
+            @if($this->groupToDelete)
+                Soll die Gruppe <strong>{{ $this->groupToDelete->name }}</strong> wirklich gelöscht
+                werden? Das lässt sich nicht rückgängig machen.
+            @endif
+        </p>
+
+        <x-slot name="footer">
+            <x-nx-button type="button" @click="$wire.closeDeleteModal()">Abbrechen</x-nx-button>
+            <x-nx-button type="button" variant="danger" wire:click="confirmDeleteGroup">Löschen</x-nx-button>
+        </x-slot>
+    </x-nx-modal>
+
+    </div>
     </x-ui-page-container>
 </x-ui-page>

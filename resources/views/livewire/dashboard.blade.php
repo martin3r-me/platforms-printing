@@ -1,57 +1,26 @@
 <x-ui-page>
     <x-slot name="navbar">
-        <x-ui-page-navbar title="Printing" />
+        <x-ui-page-navbar title="Printing" icon="heroicon-o-printer" />
     </x-slot>
 
     <x-slot name="actionbar">
         <x-ui-page-actionbar :breadcrumbs="[
             ['label' => 'Printing', 'href' => route('printing.dashboard'), 'icon' => 'printer'],
-            ['label' => 'Dashboard', 'icon' => 'chart-bar'],
-        ]" />
-    </x-slot>
-
-    {{-- Ansicht --}}
-    <x-slot name="sidebar">
-        <x-ui-page-sidebar title="Ansicht" icon="heroicon-o-eye" width="w-72" :defaultOpen="true">
-            <div class="p-4 space-y-6">
-                <section>
-                    <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--ui-muted)] mb-2">Perspektive</h3>
-                    <div class="space-y-1">
-                        <button type="button" wire:click="$set('perspective', 'personal')"
-                            class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors {{ $perspective === 'personal' ? 'bg-[var(--ui-primary)] text-[var(--ui-on-primary)] font-medium' : 'text-[var(--ui-secondary)] hover:bg-[var(--ui-muted-5)]' }}">
-                            @svg('heroicon-o-user', 'w-5 h-5 shrink-0')
-                            <span>Persönlich</span>
-                        </button>
-                        <button type="button" wire:click="$set('perspective', 'team')"
-                            class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors {{ $perspective === 'team' ? 'bg-[var(--ui-primary)] text-[var(--ui-on-primary)] font-medium' : 'text-[var(--ui-secondary)] hover:bg-[var(--ui-muted-5)]' }}">
-                            @svg('heroicon-o-users', 'w-5 h-5 shrink-0')
-                            <span>Team</span>
-                        </button>
-                    </div>
-                    <p class="text-xs text-[var(--ui-muted)] mt-2 px-1">
-                        {{ $perspective === 'personal' ? 'Deine eigenen Aufträge und Drucker.' : 'Alle Drucker und Jobs des Teams.' }}
-                    </p>
-                </section>
-
-                <section>
-                    <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--ui-muted)] mb-2">Auf einen Blick</h3>
-                    <dl class="rounded-lg border border-[var(--ui-border)] divide-y divide-[var(--ui-border)] overflow-hidden">
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-xs text-[var(--ui-muted)]">Drucker aktiv</dt>
-                            <dd class="text-sm text-[var(--ui-secondary)] m-0">{{ $activePrinters }} / {{ $totalPrinters }}</dd>
-                        </div>
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-xs text-[var(--ui-muted)]">Gruppen aktiv</dt>
-                            <dd class="text-sm text-[var(--ui-secondary)] m-0">{{ $activeGroups }} / {{ $totalGroups }}</dd>
-                        </div>
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-xs text-[var(--ui-muted)]">Jobs wartend</dt>
-                            <dd class="text-sm text-[var(--ui-secondary)] m-0">{{ $pendingJobs }}</dd>
-                        </div>
-                    </dl>
-                </section>
-            </div>
-        </x-ui-page-sidebar>
+            ['label' => 'Dashboard'],
+        ]">
+            {{-- Der frühere Hero-Balken trug nur diese eine Aussage – und nahm
+                 dafür die halbe erste Bildschirmhöhe. Als Marke in der
+                 Actionbar steht sie dort, wo man ohnehin hinsieht, und die
+                 Kennzahlen beginnen oben. --}}
+            @if($failedJobs > 0)
+                <x-nx-button variant="danger" :href="route('printing.jobs.index')" wire:navigate>
+                    @svg('heroicon-o-exclamation-triangle', 'w-4 h-4')
+                    <span>{{ $failedJobs }} fehlgeschlagen</span>
+                </x-nx-button>
+            @else
+                <x-nx-badge variant="success" dot>Alles im grünen Bereich</x-nx-badge>
+            @endif
+        </x-ui-page-actionbar>
     </x-slot>
 
     {{-- Aktivitäten --}}
@@ -64,128 +33,92 @@
     </x-slot>
 
     <x-ui-page-container>
-        {{-- Hero --}}
-        <div class="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--ui-primary-20)] bg-gradient-to-br from-[var(--ui-primary-10)] to-[var(--ui-primary-5)] px-6 py-5">
-            <div class="flex items-center gap-4">
-                <div class="flex items-center justify-center w-12 h-12 rounded-2xl bg-[var(--ui-primary)] text-[var(--ui-on-primary)] shadow-sm shrink-0">
-                    @svg('heroicon-o-printer', 'w-6 h-6')
-                </div>
-                <div>
-                    <h1 class="text-lg font-semibold text-[var(--ui-secondary)] m-0">Printing Übersicht</h1>
-                    <p class="text-sm text-[var(--ui-muted)] m-0">
-                        {{ $perspective === 'team' ? 'Team-Ansicht' : 'Persönliche Ansicht' }} · {{ $currentDate }}
-                    </p>
-                </div>
-            </div>
-            @if($failedJobs > 0)
-                <a href="{{ route('printing.jobs.index') }}" wire:navigate
-                   class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--ui-danger-10)] text-[var(--ui-danger)] text-sm font-medium hover:bg-[var(--ui-danger-20)] transition-colors">
-                    @svg('heroicon-o-exclamation-triangle', 'w-4 h-4')
-                    {{ $failedJobs }} fehlgeschlagen
-                </a>
-            @else
-                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--ui-success-10)] text-[var(--ui-success)] text-sm font-medium">
-                    @svg('heroicon-o-check-circle', 'w-4 h-4')
-                    Alles im grünen Bereich
-                </div>
-            @endif
+    <div class="space-y-6">
+
+    {{-- Kennzahlen --}}
+    <x-nx-stat-grid>
+        <x-nx-stat label="Drucker" :value="$activePrinters . ' / ' . $totalPrinters"
+            hint="aktiv" icon="heroicon-o-printer" accent="var(--nx-accent)"
+            :href="route('printing.printers.index')" wire:navigate />
+        <x-nx-stat label="Gruppen" :value="$activeGroups . ' / ' . $totalGroups"
+            hint="aktiv" icon="heroicon-o-folder" accent="var(--nx-accent)"
+            :href="route('printing.groups.index')" wire:navigate />
+        <x-nx-stat label="Print Jobs" :value="(string) $totalJobs"
+            :hint="$pendingJobs . ' wartend · ' . $completedJobs . ' gedruckt'"
+            icon="heroicon-o-document-text" accent="var(--nx-info)"
+            :href="route('printing.jobs.index')" wire:navigate />
+        {{-- Der Akzent zieht nur an, wenn wirklich etwas liegt; bei null
+             bleibt die Kachel ruhig, statt mit Warnfarbe Aufmerksamkeit zu
+             fordern. --}}
+        <x-nx-stat label="Fehlgeschlagen" :value="(string) $failedJobs"
+            :hint="$failedJobs === 0 ? 'nichts liegengeblieben' : 'warten auf einen zweiten Versuch'"
+            icon="heroicon-o-exclamation-triangle"
+            :accent="$failedJobs > 0 ? 'var(--nx-danger)' : 'var(--nx-muted)'"
+            :href="route('printing.jobs.index')" wire:navigate />
+    </x-nx-stat-grid>
+
+    {{-- Drucker-Status: gezählt wird nach anstehenden Aufträgen, nicht nach
+         einer Rückmeldung des Geräts – CloudPRNT-Drucker fragen nur an, sie
+         melden von sich aus nichts. --}}
+    <x-nx-section icon="heroicon-o-signal" title="Drucker-Status" description="Aktive Drucker nach anstehenden Aufträgen">
+        <x-nx-stat-grid cols="3">
+            <x-nx-stat label="Bereit" :value="(string) $printerStatus['ready']" icon="heroicon-o-check-circle" accent="var(--nx-success)" />
+            <x-nx-stat label="Beschäftigt" :value="(string) $printerStatus['busy']" icon="heroicon-o-clock" accent="var(--nx-warning)" />
+            <x-nx-stat label="Fehler" :value="(string) $printerStatus['error']" icon="heroicon-o-x-circle"
+                :accent="$printerStatus['error'] > 0 ? 'var(--nx-danger)' : 'var(--nx-muted)'" />
+        </x-nx-stat-grid>
+    </x-nx-section>
+
+    {{-- Neueste Jobs --}}
+    <x-nx-card flush>
+        <div class="flex items-center gap-2 border-b border-[color:var(--nx-line)] px-4 py-3">
+            @svg('heroicon-o-queue-list', 'w-4 h-4 text-[color:var(--nx-muted)]')
+            <h2 class="m-0 text-xs font-semibold text-[color:var(--nx-muted)]">Neueste Print Jobs</h2>
+            <span class="text-xs text-[color:var(--nx-faint)]">letzte {{ $recentJobs->count() }} im Team</span>
+            <a href="{{ route('printing.jobs.index') }}" wire:navigate class="ml-auto text-xs text-[color:var(--nx-muted)] transition-colors hover:text-[color:var(--nx-text)]">Alle</a>
         </div>
 
-        {{-- Kennzahlen --}}
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <x-ui-dashboard-tile
-                title="Drucker"
-                :count="$totalPrinters"
-                subtitle="aktiv: {{ $activePrinters }}"
-                icon="printer"
-                variant="primary"
-                size="lg"
-                :href="route('printing.printers.index')"
-            />
-            <x-ui-dashboard-tile
-                title="Gruppen"
-                :count="$totalGroups"
-                subtitle="aktiv: {{ $activeGroups }}"
-                icon="folder"
-                variant="secondary"
-                size="lg"
-                :href="route('printing.groups.index')"
-            />
-            <x-ui-dashboard-tile
-                title="Print Jobs"
-                :count="$totalJobs"
-                subtitle="wartend: {{ $pendingJobs }}"
-                icon="document-text"
-                variant="warning"
-                size="lg"
-                :href="route('printing.jobs.index')"
-            />
-        </div>
+        @if($recentJobs->count() > 0)
+            <x-nx-table>
+                <x-nx-table-header>
+                    <x-nx-table-header-cell>Template</x-nx-table-header-cell>
+                    <x-nx-table-header-cell>Status</x-nx-table-header-cell>
+                    <x-nx-table-header-cell>Ziel</x-nx-table-header-cell>
+                    <x-nx-table-header-cell>Erstellt</x-nx-table-header-cell>
+                </x-nx-table-header>
+                <x-nx-table-body>
+                    @foreach($recentJobs as $job)
+                        <x-nx-table-row wire:key="dash-job-{{ $job->id }}" clickable :href="route('printing.jobs.show', ['job' => $job->id])">
+                            <x-nx-table-cell>
+                                <span class="font-medium text-[color:var(--nx-text)]">{{ $job->template }}</span>
+                            </x-nx-table-cell>
+                            <x-nx-table-cell>
+                                <x-nx-badge :variant="$job->status_color">{{ $job->status_description }}</x-nx-badge>
+                            </x-nx-table-cell>
+                            <x-nx-table-cell class="text-[color:var(--nx-muted)]">
+                                @if($job->printer)
+                                    {{ $job->printer->name }}
+                                @elseif($job->printerGroup)
+                                    Gruppe: {{ $job->printerGroup->name }}
+                                @else
+                                    <span class="text-[color:var(--nx-faint)]">–</span>
+                                @endif
+                            </x-nx-table-cell>
+                            <x-nx-table-cell class="whitespace-nowrap text-[color:var(--nx-muted)]">{{ $job->created_at->diffForHumans() }}</x-nx-table-cell>
+                        </x-nx-table-row>
+                    @endforeach
+                </x-nx-table-body>
+            </x-nx-table>
+        @else
+            <x-nx-empty icon="heroicon-o-queue-list">
+                Noch keine Print Jobs
+                <x-slot name="action">
+                    <span class="text-xs text-[color:var(--nx-faint)]">Sobald Aufträge erstellt werden, erscheinen sie hier.</span>
+                </x-slot>
+            </x-nx-empty>
+        @endif
+    </x-nx-card>
 
-        {{-- Status-Übersicht --}}
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <x-ui-dashboard-tile title="Bereit" :count="$printerStatus['ready']" icon="check-circle" variant="success" size="sm" />
-            <x-ui-dashboard-tile title="Beschäftigt" :count="$printerStatus['busy']" icon="clock" variant="warning" size="sm" />
-            <x-ui-dashboard-tile title="Fehler" :count="$printerStatus['error']" icon="x-circle" variant="danger" size="sm" />
-            <x-ui-dashboard-tile title="Abgeschlossen" :count="$completedJobs" icon="check" variant="success" size="sm" />
-        </div>
-
-        {{-- Neueste Jobs --}}
-        <div class="space-y-3">
-            <div class="flex items-center gap-2">
-                @svg('heroicon-o-queue-list', 'w-5 h-5 text-[var(--ui-secondary)]')
-                <h3 class="text-base font-semibold text-[var(--ui-secondary)] m-0">Neueste Print Jobs</h3>
-                <x-ui-badge variant="secondary" size="sm">{{ $recentJobs->count() }}</x-ui-badge>
-                <span class="text-xs text-[var(--ui-muted)] ml-1">letzte 10 Aufträge im Team</span>
-            </div>
-
-            @if($recentJobs->count() > 0)
-                <x-ui-table>
-                    <x-ui-table-header>
-                        <x-ui-table-header-cell>Template</x-ui-table-header-cell>
-                        <x-ui-table-header-cell>Status</x-ui-table-header-cell>
-                        <x-ui-table-header-cell>Ziel</x-ui-table-header-cell>
-                        <x-ui-table-header-cell>Erstellt</x-ui-table-header-cell>
-                    </x-ui-table-header>
-
-                    <x-ui-table-body>
-                        @foreach($recentJobs as $job)
-                            <x-ui-table-row
-                                clickable="true"
-                                :href="route('printing.jobs.show', ['job' => $job->id])"
-                            >
-                                <x-ui-table-cell>
-                                    <span class="font-medium text-[var(--ui-secondary)]">{{ $job->template }}</span>
-                                </x-ui-table-cell>
-                                <x-ui-table-cell>
-                                    <x-ui-badge
-                                        variant="{{ $job->status_color }}"
-                                        size="sm"
-                                    >
-                                        {{ $job->status_description }}
-                                    </x-ui-badge>
-                                </x-ui-table-cell>
-                                <x-ui-table-cell>
-                                    @if($job->printer)
-                                        {{ $job->printer->name }}
-                                    @elseif($job->printerGroup)
-                                        Gruppe: {{ $job->printerGroup->name }}
-                                    @else
-                                        –
-                                    @endif
-                                </x-ui-table-cell>
-                                <x-ui-table-cell>{{ $job->created_at->diffForHumans() }}</x-ui-table-cell>
-                            </x-ui-table-row>
-                        @endforeach
-                    </x-ui-table-body>
-                </x-ui-table>
-            @else
-                <div class="rounded-xl bg-[var(--ui-surface)] border border-[var(--ui-border)] shadow-sm p-12 text-center">
-                    @svg('heroicon-o-queue-list', 'w-10 h-10 mx-auto text-[var(--ui-muted)] opacity-40 mb-3')
-                    <div class="text-base font-medium text-[var(--ui-secondary)]">Keine Print Jobs</div>
-                    <div class="text-sm text-[var(--ui-muted)] mt-1">Sobald Aufträge erstellt werden, erscheinen sie hier.</div>
-                </div>
-            @endif
-        </div>
+    </div>
     </x-ui-page-container>
 </x-ui-page>

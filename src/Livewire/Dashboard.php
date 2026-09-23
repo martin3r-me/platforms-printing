@@ -7,10 +7,17 @@ use Platform\Printing\Models\Printer;
 use Platform\Printing\Models\PrinterGroup;
 use Platform\Printing\Models\PrintJob;
 
+/**
+ * Die Startseite des Moduls: Drucker, Gruppen, Auftraege auf einen Blick.
+ *
+ * Die frueher hier sitzende Umschaltung "Persoenlich / Team" ist weg. Sie sah
+ * aus wie ein Filter, war aber keiner: Jede Zahl auf dieser Seite kam aus
+ * currentTeam() und blieb beim Umschalten gleich - nur die Unterzeile im Kopf
+ * wechselte den Text. Ein Schalter, der nichts schaltet, ist schlimmer als
+ * keiner, denn er laesst einen die falschen Zahlen fuer die richtigen halten.
+ */
 class Dashboard extends Component
 {
-    public $perspective = 'team';
-
     public function render()
     {
         // Statistiken für Dashboard
@@ -45,9 +52,6 @@ class Dashboard extends Component
         ];
 
         return view('printing::livewire.dashboard', [
-            'currentDate' => now()->format('d.m.Y'),
-            'currentDay' => now()->format('l'),
-            'perspective' => $this->perspective,
             'totalPrinters' => $totalPrinters,
             'activePrinters' => $activePrinters,
             'totalGroups' => $totalGroups,

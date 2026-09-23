@@ -1,6 +1,6 @@
 <x-ui-page>
     <x-slot name="navbar">
-        <x-ui-page-navbar title="Printing" />
+        <x-ui-page-navbar title="Gruppe" icon="heroicon-o-folder" />
     </x-slot>
 
     <x-slot name="actionbar">
@@ -10,68 +10,60 @@
             ['label' => $group->name],
         ]">
             @if($this->isDirty)
-                <x-ui-button variant="primary" size="sm" wire:click="save">
-                    <div class="flex items-center gap-2">
-                        @svg('heroicon-o-check', 'w-4 h-4')
-                        Speichern
-                    </div>
-                </x-ui-button>
+                <x-nx-button variant="primary" wire:click="save">
+                    @svg('heroicon-o-check', 'w-4 h-4')
+                    <span>Speichern</span>
+                </x-nx-button>
             @endif
         </x-ui-page-actionbar>
     </x-slot>
 
-    {{-- Rechte Spalte: Einstellungen --}}
+    {{-- Linke Spalte: Überblick und Drucker --}}
     <x-slot name="sidebar">
         <x-ui-page-sidebar title="Einstellungen" icon="heroicon-o-cog-6-tooth" width="w-80" :defaultOpen="true">
-            <div class="p-4 space-y-6">
+            <div class="space-y-6 p-4">
                 {{-- Übersicht --}}
                 <section>
-                    <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--ui-muted)] mb-2">Übersicht</h3>
-                    <dl class="rounded-lg border border-[var(--ui-border)] divide-y divide-[var(--ui-border)] overflow-hidden">
+                    <h3 class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[color:var(--nx-faint)]">Übersicht</h3>
+                    <div class="rounded-[8px] border border-[color:var(--nx-line)] divide-y divide-[color:var(--nx-line)]">
                         <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-xs text-[var(--ui-muted)]">Name</dt>
-                            <dd class="text-sm text-[var(--ui-secondary)] m-0 truncate">{{ $group->name }}</dd>
+                            <span class="text-xs text-[color:var(--nx-muted)]">Name</span>
+                            <span class="truncate text-sm text-[color:var(--nx-text)]">{{ $group->name }}</span>
                         </div>
                         <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-xs text-[var(--ui-muted)]">Beschreibung</dt>
-                            <dd class="text-sm text-[var(--ui-secondary)] m-0 truncate">{{ $group->description ?: '–' }}</dd>
+                            <span class="text-xs text-[color:var(--nx-muted)]">Beschreibung</span>
+                            <span class="truncate text-sm text-[color:var(--nx-text)]">{{ $group->description ?: '–' }}</span>
                         </div>
                         <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-xs text-[var(--ui-muted)]">Drucker</dt>
-                            <dd class="text-sm text-[var(--ui-secondary)] m-0">{{ $group->printers->count() }}</dd>
+                            <span class="text-xs text-[color:var(--nx-muted)]">Drucker</span>
+                            <span class="text-sm tabular-nums text-[color:var(--nx-text)]">{{ $group->printers->count() }}</span>
                         </div>
                         <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-xs text-[var(--ui-muted)]">Status</dt>
-                            <dd class="m-0">
-                                <x-ui-badge variant="{{ $group->is_active ? 'success' : 'secondary' }}" size="xs">
-                                    {{ $group->is_active ? 'Aktiv' : 'Inaktiv' }}
-                                </x-ui-badge>
-                            </dd>
+                            <span class="text-xs text-[color:var(--nx-muted)]">Status</span>
+                            <x-nx-badge :variant="$group->is_active ? 'success' : 'neutral'">{{ $group->is_active ? 'Aktiv' : 'Inaktiv' }}</x-nx-badge>
                         </div>
-                    </dl>
+                    </div>
                 </section>
 
                 {{-- Drucker --}}
                 <section>
-                    <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--ui-muted)] mb-2">Drucker</h3>
+                    <h3 class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[color:var(--nx-faint)]">Drucker</h3>
                     <div class="space-y-2">
                         @forelse($group->printers as $printer)
-                            <div class="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--ui-border)] hover:bg-[var(--ui-muted-5)] transition-colors cursor-pointer" wire:click="editPrinter({{ $printer->id }})">
-                                <span class="flex-1 min-w-0 truncate text-sm text-[var(--ui-secondary)]">{{ $printer->name }}</span>
-                                <x-ui-badge variant="{{ $printer->is_active ? 'success' : 'secondary' }}" size="xs">{{ $printer->is_active ? 'Aktiv' : 'Inaktiv' }}</x-ui-badge>
-                                <button type="button" class="shrink-0 text-[var(--ui-muted)] hover:text-[var(--ui-danger)] transition-colors" x-on:click.stop.prevent="$wire.openRemovePrinterModal({{ $printer->id }})" title="Entfernen">
+                            <div class="flex cursor-pointer items-center gap-2 rounded-[6px] border border-[color:var(--nx-line)] px-3 py-2 transition-colors hover:bg-[color:var(--nx-hover)]" wire:click="editPrinter({{ $printer->id }})">
+                                <span class="min-w-0 flex-1 truncate text-sm text-[color:var(--nx-text)]">{{ $printer->name }}</span>
+                                <x-nx-badge :variant="$printer->is_active ? 'success' : 'neutral'">{{ $printer->is_active ? 'Aktiv' : 'Inaktiv' }}</x-nx-badge>
+                                <button type="button" class="shrink-0 text-[color:var(--nx-faint)] transition-colors hover:text-[color:var(--nx-danger)]" x-on:click.stop.prevent="$wire.openRemovePrinterModal({{ $printer->id }})" title="Entfernen">
                                     @svg('heroicon-o-x-mark', 'w-4 h-4')
                                 </button>
                             </div>
                         @empty
-                            <p class="text-sm text-[var(--ui-muted)]">Noch keine Drucker zugewiesen.</p>
+                            <p class="m-0 text-xs text-[color:var(--nx-faint)]">Noch keine Drucker zugewiesen.</p>
                         @endforelse
-                        <x-ui-button size="sm" variant="secondary-outline" wire:click="addPrinter" class="w-full">
-                            <div class="flex items-center justify-center gap-2">
-                                @svg('heroicon-o-plus', 'w-4 h-4')
-                                Drucker zuweisen
-                            </div>
-                        </x-ui-button>
+                        <x-nx-button wire:click="addPrinter" class="w-full">
+                            @svg('heroicon-o-plus', 'w-4 h-4')
+                            <span>Drucker zuweisen</span>
+                        </x-nx-button>
                     </div>
                 </section>
             </div>
@@ -91,157 +83,140 @@
     </x-slot>
 
     <x-ui-page-container>
-        {{-- Gruppen-Daten --}}
-        <x-ui-panel title="Gruppen-Daten">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <x-ui-input-text
-                    name="group_name"
-                    label="Name"
-                    wire:model.live.debounce.500ms="group_name"
-                    placeholder="Gruppenname eingeben..."
-                    required
-                    :errorKey="'group_name'"
-                />
-                <x-ui-input-text
-                    name="group_description"
-                    label="Beschreibung"
-                    wire:model.live.debounce.500ms="group_description"
-                    placeholder="Beschreibung eingeben..."
-                    :errorKey="'group_description'"
-                />
-            </div>
+    <div class="space-y-5">
 
-            <div class="mt-4 pt-4 border-t border-[var(--ui-border)]">
-                <x-ui-input-checkbox
-                    model="group_is_active"
-                    checked-label="Aktiv"
-                    unchecked-label="Gruppe ist aktiv"
-                    size="md"
-                    block="true"
-                />
-            </div>
-        </x-ui-panel>
+        {{-- Gruppen-Daten --}}
+        <x-nx-section icon="heroicon-o-folder" title="Gruppen-Daten">
+            <x-nx-card>
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <x-ui-input-text
+                        name="group_name"
+                        label="Name"
+                        wire:model.live.debounce.500ms="group_name"
+                        placeholder="Gruppenname eingeben..."
+                        required
+                        :errorKey="'group_name'"
+                    />
+                    <x-ui-input-text
+                        name="group_description"
+                        label="Beschreibung"
+                        wire:model.live.debounce.500ms="group_description"
+                        placeholder="Beschreibung eingeben..."
+                        :errorKey="'group_description'"
+                    />
+                </div>
+
+                <div class="mt-4 border-t border-[color:var(--nx-line)] pt-4">
+                    <x-ui-input-checkbox
+                        model="group_is_active"
+                        checked-label="Aktiv"
+                        unchecked-label="Gruppe ist aktiv"
+                        size="md"
+                        block="true"
+                    />
+                </div>
+            </x-nx-card>
+        </x-nx-section>
 
         {{-- Statistiken --}}
-        <x-ui-panel title="Statistiken">
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <x-ui-dashboard-tile title="Gesamt Jobs" :count="$stats['total']" icon="document-text" variant="primary" size="sm" />
-                <x-ui-dashboard-tile title="Wartend" :count="$stats['pending']" icon="clock" variant="warning" size="sm" />
-                <x-ui-dashboard-tile title="Abgeschlossen" :count="$stats['completed']" icon="check-circle" variant="success" size="sm" />
-                <x-ui-dashboard-tile title="Fehlgeschlagen" :count="$stats['failed']" icon="x-circle" variant="danger" size="sm" />
-            </div>
-        </x-ui-panel>
+        <x-nx-stat-grid>
+            <x-nx-stat label="Gesamt Jobs" :value="(string) $stats['total']" icon="heroicon-o-document-text" accent="var(--nx-accent)" />
+            <x-nx-stat label="Wartend" :value="(string) $stats['pending']" icon="heroicon-o-clock"
+                :accent="$stats['pending'] > 0 ? 'var(--nx-warning)' : 'var(--nx-muted)'" />
+            <x-nx-stat label="Abgeschlossen" :value="(string) $stats['completed']" icon="heroicon-o-check-circle" accent="var(--nx-success)" />
+            <x-nx-stat label="Fehlgeschlagen" :value="(string) $stats['failed']" icon="heroicon-o-x-circle"
+                :accent="$stats['failed'] > 0 ? 'var(--nx-danger)' : 'var(--nx-muted)'" />
+        </x-nx-stat-grid>
 
         {{-- Print Jobs --}}
-        <div class="space-y-3">
-            <h3 class="text-base font-semibold text-[var(--ui-secondary)] m-0">Print Jobs</h3>
-            @if($jobs->count() > 0)
-                <x-ui-table>
-                    <x-ui-table-header>
-                        <x-ui-table-header-cell>Template</x-ui-table-header-cell>
-                        <x-ui-table-header-cell>Status</x-ui-table-header-cell>
-                        <x-ui-table-header-cell>Ziel</x-ui-table-header-cell>
-                        <x-ui-table-header-cell>Erstellt</x-ui-table-header-cell>
-                    </x-ui-table-header>
+        <x-nx-card flush>
+            <div class="flex items-center gap-2 border-b border-[color:var(--nx-line)] px-4 py-3">
+                @svg('heroicon-o-queue-list', 'w-4 h-4 text-[color:var(--nx-muted)]')
+                <h2 class="m-0 text-xs font-semibold text-[color:var(--nx-muted)]">Print Jobs</h2>
+                <a href="{{ route('printing.jobs.index') }}" wire:navigate class="ml-auto text-xs text-[color:var(--nx-muted)] transition-colors hover:text-[color:var(--nx-text)]">Alle</a>
+            </div>
 
-                    <x-ui-table-body>
+            @if($jobs->count() > 0)
+                <x-nx-table>
+                    <x-nx-table-header>
+                        <x-nx-table-header-cell>Template</x-nx-table-header-cell>
+                        <x-nx-table-header-cell>Status</x-nx-table-header-cell>
+                        <x-nx-table-header-cell>Ziel</x-nx-table-header-cell>
+                        <x-nx-table-header-cell>Erstellt</x-nx-table-header-cell>
+                    </x-nx-table-header>
+                    <x-nx-table-body>
                         @foreach($jobs as $job)
-                            <x-ui-table-row
-                                clickable="true"
-                                :href="route('printing.jobs.show', ['job' => $job->id])"
-                            >
-                                <x-ui-table-cell>
-                                    <span class="font-medium text-[var(--ui-secondary)]">{{ $job->template }}</span>
-                                </x-ui-table-cell>
-                                <x-ui-table-cell>
-                                    <x-ui-badge
-                                        variant="{{ $job->status_color }}"
-                                        size="sm"
-                                    >
-                                        {{ $job->status_description }}
-                                    </x-ui-badge>
-                                </x-ui-table-cell>
-                                <x-ui-table-cell>
+                            <x-nx-table-row wire:key="group-job-{{ $job->id }}" clickable :href="route('printing.jobs.show', ['job' => $job->id])">
+                                <x-nx-table-cell>
+                                    <span class="font-medium text-[color:var(--nx-text)]">{{ $job->template }}</span>
+                                </x-nx-table-cell>
+                                <x-nx-table-cell>
+                                    <x-nx-badge :variant="$job->status_color">{{ $job->status_description }}</x-nx-badge>
+                                </x-nx-table-cell>
+                                <x-nx-table-cell class="text-[color:var(--nx-muted)]">
                                     @if($job->printer)
                                         {{ $job->printer->name }}
                                     @elseif($job->printerGroup)
                                         Gruppe: {{ $job->printerGroup->name }}
                                     @else
-                                        –
+                                        <span class="text-[color:var(--nx-faint)]">–</span>
                                     @endif
-                                </x-ui-table-cell>
-                                <x-ui-table-cell>{{ $job->created_at->diffForHumans() }}</x-ui-table-cell>
-                            </x-ui-table-row>
+                                </x-nx-table-cell>
+                                <x-nx-table-cell class="whitespace-nowrap text-[color:var(--nx-muted)]">{{ $job->created_at->diffForHumans() }}</x-nx-table-cell>
+                            </x-nx-table-row>
                         @endforeach
-                    </x-ui-table-body>
-                </x-ui-table>
-                <div>{{ $jobs->links() }}</div>
+                    </x-nx-table-body>
+                </x-nx-table>
             @else
-                <div class="rounded-xl bg-[var(--ui-surface)] border border-[var(--ui-border)] shadow-sm p-12 text-center">
-                    @svg('heroicon-o-queue-list', 'w-10 h-10 mx-auto text-[var(--ui-muted)] opacity-40 mb-3')
-                    <div class="text-base font-medium text-[var(--ui-secondary)]">Keine Jobs gefunden</div>
-                    <div class="text-sm text-[var(--ui-muted)] mt-1">Für diese Gruppe sind aktuell keine Jobs vorhanden.</div>
-                </div>
+                <x-nx-empty icon="heroicon-o-queue-list">Für diese Gruppe sind aktuell keine Jobs vorhanden.</x-nx-empty>
             @endif
-        </div>
+        </x-nx-card>
 
-        {{-- Printer Assignment Modal --}}
-        <x-ui-modal model="printerAssignmentModalShow" size="md">
+        @if($jobs->hasPages())
+            <div class="flex justify-end">{{ $jobs->links('printing::partials.pagination') }}</div>
+        @endif
+
+        {{-- Drucker zuweisen --}}
+        <x-nx-modal model="printerAssignmentModalShow" size="md">
             <x-slot name="header">
-                Drucker zuweisen
+                <h2 class="m-0 text-sm font-semibold text-[color:var(--nx-text)]">Drucker zuweisen</h2>
             </x-slot>
 
-            <div class="space-y-4">
-                <form class="space-y-4">
-                    <x-ui-input-select
-                        name="selectedPrinterId"
-                        label="Drucker auswählen"
-                        :options="$availablePrinters"
-                        optionValue="id"
-                        optionLabel="name"
-                        :nullable="true"
-                        nullLabel="– Drucker auswählen –"
-                        wire:model.live="selectedPrinterId"
-                    />
-                </form>
-            </div>
+            <form>
+                <x-ui-input-select
+                    name="selectedPrinterId"
+                    label="Drucker auswählen"
+                    :options="$availablePrinters"
+                    optionValue="id"
+                    optionLabel="name"
+                    :nullable="true"
+                    nullLabel="– Drucker auswählen –"
+                    wire:model.live="selectedPrinterId"
+                />
+            </form>
 
             <x-slot name="footer">
-                <div class="flex justify-end gap-2">
-                    <x-ui-button type="button" variant="secondary-outline" @click="$wire.closePrinterAssignmentModal()">
-                        Abbrechen
-                    </x-ui-button>
-                    <x-ui-button type="button" variant="primary" wire:click="assignPrinter">
-                        Zuweisen
-                    </x-ui-button>
-                </div>
+                <x-nx-button type="button" @click="$wire.closePrinterAssignmentModal()">Abbrechen</x-nx-button>
+                <x-nx-button type="button" variant="primary" wire:click="assignPrinter">Zuweisen</x-nx-button>
             </x-slot>
-        </x-ui-modal>
+        </x-nx-modal>
 
-        {{-- Remove Printer Confirm Modal --}}
-        <x-ui-modal model="removePrinterModalShow" size="sm">
+        {{-- Drucker entfernen --}}
+        <x-nx-modal model="removePrinterModalShow" size="sm">
             <x-slot name="header">
-                Drucker entfernen
+                <h2 class="m-0 text-sm font-semibold text-[color:var(--nx-text)]">Drucker entfernen</h2>
             </x-slot>
 
-            <div class="space-y-2">
-                <p class="text-sm text-[var(--ui-secondary)]">Soll dieser Drucker wirklich entfernt werden?</p>
-            </div>
+            <p class="m-0 text-sm text-[color:var(--nx-text)]">Soll dieser Drucker wirklich aus der Gruppe entfernt werden?</p>
 
             <x-slot name="footer">
-                <div class="flex justify-end gap-2">
-                    <x-ui-button type="button" variant="secondary-outline" @click="$wire.closeRemovePrinterModal()">
-                        Abbrechen
-                    </x-ui-button>
-                    <x-ui-confirm-button
-                        action="confirmRemovePrinter"
-                        text="Entfernen"
-                        confirmText="Jetzt entfernen?"
-                        variant="danger"
-                        size="sm"
-                    />
-                </div>
+                <x-nx-button type="button" @click="$wire.closeRemovePrinterModal()">Abbrechen</x-nx-button>
+                {{-- Das Fenster IST die Rückfrage; der frühere Zwei-Klick-Knopf
+                     verlangte darin eine zweite. --}}
+                <x-nx-button type="button" variant="danger" wire:click="confirmRemovePrinter">Entfernen</x-nx-button>
             </x-slot>
-        </x-ui-modal>
+        </x-nx-modal>
+
+    </div>
     </x-ui-page-container>
 </x-ui-page>

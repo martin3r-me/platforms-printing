@@ -1,6 +1,6 @@
 <x-ui-page>
     <x-slot name="navbar">
-        <x-ui-page-navbar title="Printing" />
+        <x-ui-page-navbar title="Print Job" icon="heroicon-o-document-text" />
     </x-slot>
 
     <x-slot name="actionbar">
@@ -9,23 +9,16 @@
             ['label' => 'Print Jobs', 'href' => route('printing.jobs.index'), 'icon' => 'document-text'],
             ['label' => 'Job #' . $job->id],
         ]">
-            <x-ui-badge
-                variant="{{ $job->status_color }}"
-                size="sm"
-            >
-                {{ $job->status_description }}
-            </x-ui-badge>
-            <x-ui-button wire:click="reloadPreview" size="sm" variant="secondary-outline">
-                <div class="flex items-center gap-2">
-                    @svg('heroicon-o-arrow-path', 'w-4 h-4')
-                    Vorschau
-                </div>
-            </x-ui-button>
+            <x-nx-badge :variant="$job->status_color">{{ $job->status_description }}</x-nx-badge>
+            <x-nx-button wire:click="reloadPreview" title="Vorschau neu erzeugen">
+                @svg('heroicon-o-arrow-path', 'w-4 h-4')
+                <span>Vorschau</span>
+            </x-nx-button>
             @if($job->status === 'failed')
-                <x-ui-button wire:click="retryJob" size="sm" variant="secondary">Wiederholen</x-ui-button>
+                <x-nx-button wire:click="retryJob">Wiederholen</x-nx-button>
             @endif
             @if(in_array($job->status, ['pending', 'processing']))
-                <x-ui-button variant="danger-outline" wire:click="cancelJob" size="sm">Abbrechen</x-ui-button>
+                <x-nx-button variant="danger" wire:click="cancelJob">Abbrechen</x-nx-button>
             @endif
         </x-ui-page-actionbar>
     </x-slot>
@@ -43,6 +36,8 @@
     </x-slot>
 
     <x-ui-page-container>
+    <div class="space-y-5">
+
         {{-- Lifecycle-Stepper --}}
         @php
             $stepStates = match($job->status) {
@@ -70,99 +65,86 @@
                 ['label' => $lastLabel,   'icon' => $lastIcon,                    'time' => $job->printed_at?->format('d.m.Y H:i')],
             ];
         @endphp
-        <div class="rounded-xl bg-[var(--ui-surface)] border border-[var(--ui-border)] shadow-sm p-6">
-            {{-- Knoten + Verbinder --}}
+        <x-nx-card>
+            {{-- Knoten + Verbinder. Die Farbe steckt im Inhalt, der Rahmen
+                 bleibt neutral – dieselbe Aufteilung wie bei den nx-Kacheln. --}}
             <div class="flex items-center">
                 @foreach($steps as $i => $step)
                     @php
-                        $nodeClass = match($stepStates[$i]) {
-                            'done'    => 'bg-[var(--ui-success)] text-[var(--ui-on-success)] border-transparent',
-                            'current' => 'bg-[var(--ui-primary)] text-[var(--ui-on-primary)] border-transparent ring-4 ring-[var(--ui-primary-10)]',
-                            'error'   => 'bg-[var(--ui-danger)] text-[var(--ui-on-danger)] border-transparent',
-                            default   => 'bg-[var(--ui-surface)] text-[var(--ui-muted)] border-[var(--ui-border)]',
+                        $nodeStyle = match($stepStates[$i]) {
+                            'done'    => 'background:var(--nx-success);color:#fff;border-color:transparent',
+                            'current' => 'background:var(--nx-accent);color:var(--nx-on-accent);border-color:transparent',
+                            'error'   => 'background:var(--nx-danger);color:#fff;border-color:transparent',
+                            default   => 'background:var(--nx-surface);color:var(--nx-faint);border-color:var(--nx-line-strong)',
                         };
+                        $verbinder = $stepStates[$i] === 'done' ? 'background:var(--nx-success)' : 'background:var(--nx-line)';
                     @endphp
-                    <div class="flex items-center justify-center w-11 h-11 rounded-full border-2 shrink-0 transition-colors {{ $nodeClass }}">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 transition-colors" style="{{ $nodeStyle }}">
                         @svg($step['icon'], 'w-5 h-5')
                     </div>
                     @if(!$loop->last)
-                        <div class="flex-1 h-0.5 mx-1.5 rounded-full {{ $stepStates[$i] === 'done' ? 'bg-[var(--ui-success)]' : 'bg-[var(--ui-border)]' }}"></div>
+                        <div class="mx-1.5 h-0.5 flex-1 rounded-full" style="{{ $verbinder }}"></div>
                     @endif
                 @endforeach
             </div>
             {{-- Beschriftungen --}}
-            <div class="flex mt-3">
+            <div class="mt-3 flex">
                 @foreach($steps as $i => $step)
                     <div class="flex-1 {{ $loop->first ? 'text-left' : ($loop->last ? 'text-right' : 'text-center') }}">
-                        <div class="text-xs font-medium {{ in_array($stepStates[$i], ['done','current','error']) ? 'text-[var(--ui-secondary)]' : 'text-[var(--ui-muted)]' }}">{{ $step['label'] }}</div>
-                        <div class="text-[11px] text-[var(--ui-muted)] tabular-nums">{{ $step['time'] ?? '—' }}</div>
+                        <div class="text-xs font-medium {{ in_array($stepStates[$i], ['done','current','error']) ? 'text-[color:var(--nx-text)]' : 'text-[color:var(--nx-faint)]' }}">{{ $step['label'] }}</div>
+                        <div class="text-[11px] tabular-nums text-[color:var(--nx-faint)]">{{ $step['time'] ?? '—' }}</div>
                     </div>
                 @endforeach
             </div>
             @if($job->retry_count > 0)
-                <div class="mt-5 pt-4 border-t border-[var(--ui-border)] flex items-center gap-2 text-xs text-[var(--ui-muted)]">
+                <div class="mt-5 flex items-center gap-2 border-t border-[color:var(--nx-line)] pt-4 text-xs text-[color:var(--nx-muted)]">
                     @svg('heroicon-o-arrow-path', 'w-3.5 h-3.5')
                     {{ $job->retry_count }} Wiederholung(en) · max. {{ config('printing.jobs.max_retries', 3) }}
                 </div>
             @endif
-        </div>
+        </x-nx-card>
 
         {{-- Fehlermeldung --}}
         @if($job->error_message)
-            <div class="rounded-xl bg-[var(--ui-danger-5)] border border-[var(--ui-danger-20)] p-4">
-                <div class="flex items-center gap-2 mb-1">
-                    @svg('heroicon-o-exclamation-triangle', 'w-5 h-5 text-[var(--ui-danger)]')
-                    <h3 class="text-sm font-semibold text-[var(--ui-danger)] m-0">Fehlermeldung</h3>
-                </div>
-                <p class="text-sm text-[var(--ui-danger)] m-0">{{ $job->error_message }}</p>
-            </div>
+            <x-nx-callout variant="danger" title="Fehlermeldung">{{ $job->error_message }}</x-nx-callout>
         @endif
 
         {{-- Vorschau --}}
         @php $hatVorschau = ! $previewError && $belege !== []; @endphp
-        <section x-data="bonBild({{ $job->id }})" class="rounded-xl bg-[var(--ui-surface)] border border-[var(--ui-border)] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.03)]">
-            <header class="px-4 py-3 border-b border-[var(--ui-border)] flex items-center justify-between gap-3">
+        <x-nx-card flush x-data="bonBild({{ $job->id }})">
+            <header class="flex items-center justify-between gap-3 border-b border-[color:var(--nx-line)] px-4 py-3">
                 <div class="min-w-0">
                     <div class="flex items-center gap-2">
-                        @svg('heroicon-o-document-magnifying-glass', 'w-4 h-4 text-[var(--ui-muted)]')
-                        <h3 class="text-base font-semibold text-[var(--ui-secondary)] m-0">Vorschau</h3>
+                        @svg('heroicon-o-document-magnifying-glass', 'w-4 h-4 text-[color:var(--nx-muted)]')
+                        <h2 class="m-0 text-xs font-semibold text-[color:var(--nx-muted)]">Vorschau</h2>
                     </div>
-                    <div class="text-xs text-[var(--ui-muted)] mt-0.5">Inhalt, der an den Drucker gesendet wird · Template: {{ config("printing.templates.available.{$job->template}", $job->template) }}</div>
+                    <div class="mt-0.5 text-xs text-[color:var(--nx-faint)]">Inhalt, der an den Drucker gesendet wird · Template: {{ config("printing.templates.available.{$job->template}", $job->template) }}</div>
                 </div>
-                <div class="flex items-center gap-2 shrink-0">
+                <div class="flex shrink-0 items-center gap-2">
                     @if($hatVorschau)
-                        <x-ui-button type="button" @click="alsBild()" size="sm" variant="secondary-outline">
-                            <div class="flex items-center gap-2">
-                                @svg('heroicon-o-arrow-down-tray', 'w-4 h-4')
-                                Als Bild
-                            </div>
-                        </x-ui-button>
+                        <x-nx-button type="button" @click="alsBild()">
+                            @svg('heroicon-o-arrow-down-tray', 'w-4 h-4')
+                            <span>Als Bild</span>
+                        </x-nx-button>
                         @if(count($belege) > 1)
                             {{-- Ein Bild je Beleg: zum Weiterreichen einzelner
                                  Bons aus einem Sammelauftrag. --}}
-                            <x-ui-button type="button" @click="alsBilder()" size="sm" variant="secondary-outline">
-                                <div class="flex items-center gap-2">
-                                    @svg('heroicon-o-arrow-down-tray', 'w-4 h-4')
-                                    {{ count($belege) }} Bilder einzeln
-                                </div>
-                            </x-ui-button>
+                            <x-nx-button type="button" @click="alsBilder()">
+                                @svg('heroicon-o-arrow-down-tray', 'w-4 h-4')
+                                <span>{{ count($belege) }} Bilder einzeln</span>
+                            </x-nx-button>
                         @endif
                     @endif
-                    <x-ui-button wire:click="reloadPreview" size="sm" variant="secondary-outline">
-                        <div class="flex items-center gap-2">
-                            @svg('heroicon-o-arrow-path', 'w-4 h-4')
-                            Aktualisieren
-                        </div>
-                    </x-ui-button>
+                    <x-nx-button icon variant="ghost" wire:click="reloadPreview" title="Aktualisieren">
+                        @svg('heroicon-o-arrow-path', 'w-4 h-4')
+                    </x-nx-button>
                 </div>
             </header>
             <div class="p-4">
                 @if($previewError)
-                    <div class="rounded-lg bg-[var(--ui-danger-5)] border border-[var(--ui-danger-20)] p-4 text-sm text-[var(--ui-danger)]">
-                        Vorschau konnte nicht erzeugt werden: {{ $previewError }}
-                    </div>
+                    <x-nx-callout variant="danger">Vorschau konnte nicht erzeugt werden: {{ $previewError }}</x-nx-callout>
                 @elseif($belege === [])
-                    <div class="text-center py-8 text-sm text-[var(--ui-muted)]">Kein Inhalt vorhanden.</div>
+                    <x-nx-empty icon="heroicon-o-document-magnifying-glass">Kein Inhalt vorhanden.</x-nx-empty>
                 @else
                     {{-- Ein Blatt je Beleg: Ein Sammelauftrag enthält mehrere
                          Bons, zwischen denen der Drucker abschneidet. Genauso
@@ -175,120 +157,112 @@
                          items-start gibt dem Papier die Höhe seines Inhalts
                          statt der Höhe des Scroll-Bereichs. Nur Darstellung –
                          der gedruckte Inhalt bleibt unverändert. --}}
-                    <div x-ref="papiere" class="flex flex-col items-center gap-5 overflow-auto max-h-96 py-5 rounded-lg bg-[var(--ui-muted-5)] border border-[var(--ui-border)]">
+                    <div x-ref="papiere" class="flex max-h-96 flex-col items-center gap-5 overflow-auto rounded-[8px] border border-[color:var(--nx-line)] bg-[color:var(--nx-bg)] py-5">
                         @foreach($belege as $beleg)
-                            <div class="shrink-0 w-max">
+                            <div class="w-max shrink-0">
                                 @if(count($belege) > 1)
-                                    <div class="text-[11px] text-[var(--ui-muted)] mb-1 text-center">Beleg {{ $loop->iteration }} von {{ count($belege) }}</div>
+                                    <div class="mb-1 text-center text-[11px] text-[color:var(--nx-faint)]">Beleg {{ $loop->iteration }} von {{ count($belege) }}</div>
                                 @endif
-                                <pre class="bg-[var(--ui-surface)] text-[var(--ui-secondary)] shadow-md rounded-sm px-5 py-4 text-[11px] leading-relaxed font-mono whitespace-pre">{{ $beleg }}</pre>
+                                <pre class="whitespace-pre rounded-sm bg-[color:var(--nx-surface)] px-5 py-4 font-mono text-[11px] leading-relaxed text-[color:var(--nx-text)] shadow-[var(--nx-shadow-card)]">{{ $beleg }}</pre>
                             </div>
                         @endforeach
                     </div>
                 @endif
             </div>
-        </section>
+        </x-nx-card>
 
         {{-- Informationen --}}
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <x-ui-panel title="Job Informationen">
-                <dl class="rounded-lg border border-[var(--ui-border)] divide-y divide-[var(--ui-border)] overflow-hidden">
-                    <div class="flex items-center justify-between gap-3 px-3 py-2">
-                        <dt class="text-xs text-[var(--ui-muted)]">Template</dt>
-                        <dd class="text-sm text-[var(--ui-secondary)] m-0 truncate">{{ config("printing.templates.available.{$job->template}", $job->template) }}</dd>
-                    </div>
-                    <div class="flex items-center justify-between gap-3 px-3 py-2">
-                        <dt class="text-xs text-[var(--ui-muted)]">UUID</dt>
-                        <dd class="text-xs font-mono text-[var(--ui-secondary)] m-0 truncate">{{ $job->uuid }}</dd>
-                    </div>
-                    <div class="flex items-center justify-between gap-3 px-3 py-2">
-                        <dt class="text-xs text-[var(--ui-muted)]">Erstellt</dt>
-                        <dd class="text-sm text-[var(--ui-secondary)] m-0">{{ $job->created_at->format('d.m.Y H:i:s') }}</dd>
-                    </div>
+        <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <x-nx-card flush>
+                <div class="flex items-center gap-2 border-b border-[color:var(--nx-line)] px-4 py-3">
+                    @svg('heroicon-o-information-circle', 'w-4 h-4 text-[color:var(--nx-muted)]')
+                    <h2 class="m-0 text-xs font-semibold text-[color:var(--nx-muted)]">Job-Informationen</h2>
+                </div>
+                <div class="p-2">
+                    <x-nx-property-row icon="heroicon-o-document-text" label="Template">
+                        {{ config("printing.templates.available.{$job->template}", $job->template) }}
+                    </x-nx-property-row>
+                    <x-nx-property-row icon="heroicon-o-hashtag" label="UUID">
+                        <span class="block truncate font-mono text-xs">{{ $job->uuid }}</span>
+                    </x-nx-property-row>
+                    <x-nx-property-row icon="heroicon-o-calendar" label="Erstellt">
+                        <span class="tabular-nums">{{ $job->created_at->format('d.m.Y H:i:s') }}</span>
+                    </x-nx-property-row>
                     @php $angeboten = ($job->data ?? [])['angeboten_um'] ?? null; @endphp
                     @if($angeboten)
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-xs text-[var(--ui-muted)]">Gemeldet</dt>
-                            <dd class="text-sm text-[var(--ui-secondary)] m-0">
-                                {{ \Illuminate\Support\Carbon::parse($angeboten)->format('d.m.Y H:i:s') }}
-                                <span class="text-xs text-[var(--ui-muted)]">(+{{ round(abs(\Illuminate\Support\Carbon::parse($angeboten)->diffInSeconds($job->created_at))) }}s)</span>
-                            </dd>
-                        </div>
+                        <x-nx-property-row icon="heroicon-o-megaphone" label="Gemeldet">
+                            <span class="tabular-nums">{{ \Illuminate\Support\Carbon::parse($angeboten)->format('d.m.Y H:i:s') }}</span>
+                            <span class="text-xs text-[color:var(--nx-faint)]">(+{{ round(abs(\Illuminate\Support\Carbon::parse($angeboten)->diffInSeconds($job->created_at))) }}s)</span>
+                        </x-nx-property-row>
                     @endif
                     @if($job->fetched_at)
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-xs text-[var(--ui-muted)]">Abgeholt</dt>
-                            <dd class="text-sm text-[var(--ui-secondary)] m-0">
-                                {{ $job->fetched_at->format('d.m.Y H:i:s') }}
-                                <span class="text-xs text-[var(--ui-muted)]">(+{{ round(abs($job->fetched_at->diffInSeconds($job->created_at))) }}s)</span>
-                            </dd>
-                        </div>
+                        <x-nx-property-row icon="heroicon-o-arrow-down-tray" label="Abgeholt">
+                            <span class="tabular-nums">{{ $job->fetched_at->format('d.m.Y H:i:s') }}</span>
+                            <span class="text-xs text-[color:var(--nx-faint)]">(+{{ round(abs($job->fetched_at->diffInSeconds($job->created_at))) }}s)</span>
+                        </x-nx-property-row>
                     @endif
                     @if($job->printed_at)
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-xs text-[var(--ui-muted)]">Gedruckt</dt>
-                            <dd class="text-sm text-[var(--ui-secondary)] m-0">{{ $job->printed_at->format('d.m.Y H:i:s') }}</dd>
-                        </div>
+                        <x-nx-property-row icon="heroicon-o-printer" label="Gedruckt">
+                            <span class="tabular-nums">{{ $job->printed_at->format('d.m.Y H:i:s') }}</span>
+                        </x-nx-property-row>
                     @endif
-                    <div class="flex items-center justify-between gap-3 px-3 py-2">
-                        <dt class="text-xs text-[var(--ui-muted)]">Versuche</dt>
-                        <dd class="text-sm text-[var(--ui-secondary)] m-0">{{ $job->retry_count }}</dd>
-                    </div>
-                </dl>
-            </x-ui-panel>
+                    <x-nx-property-row icon="heroicon-o-arrow-path" label="Versuche">
+                        <span class="tabular-nums">{{ $job->retry_count }}</span>
+                    </x-nx-property-row>
+                </div>
+            </x-nx-card>
 
-            <x-ui-panel title="Ziel-Informationen">
-                <dl class="rounded-lg border border-[var(--ui-border)] divide-y divide-[var(--ui-border)] overflow-hidden">
-                    <div class="flex items-center justify-between gap-3 px-3 py-2">
-                        <dt class="text-xs text-[var(--ui-muted)]">Drucker</dt>
-                        <dd class="text-sm m-0 truncate">
-                            @if($job->printer)
-                                <a href="{{ route('printing.printers.show', $job->printer) }}" class="text-[var(--ui-primary)] hover:underline" wire:navigate>{{ $job->printer->name }}</a>
-                            @elseif($job->printerGroup)
-                                <a href="{{ route('printing.groups.show', $job->printerGroup) }}" class="text-[var(--ui-primary)] hover:underline" wire:navigate>Gruppe: {{ $job->printerGroup->name }}</a>
-                            @else
-                                <span class="text-[var(--ui-muted)]">Nicht zugewiesen</span>
-                            @endif
-                        </dd>
-                    </div>
-                    <div class="flex items-center justify-between gap-3 px-3 py-2">
-                        <dt class="text-xs text-[var(--ui-muted)]">Objekt</dt>
-                        <dd class="text-sm text-[var(--ui-secondary)] m-0 truncate">{{ $job->printable_name }} #{{ $job->printable_id }}</dd>
-                    </div>
-                    <div class="flex items-center justify-between gap-3 px-3 py-2">
-                        <dt class="text-xs text-[var(--ui-muted)]">Objekt-Typ</dt>
-                        <dd class="text-xs font-mono text-[var(--ui-muted)] m-0 truncate">{{ $job->printable_type }}</dd>
-                    </div>
+            <x-nx-card flush>
+                <div class="flex items-center gap-2 border-b border-[color:var(--nx-line)] px-4 py-3">
+                    @svg('heroicon-o-map-pin', 'w-4 h-4 text-[color:var(--nx-muted)]')
+                    <h2 class="m-0 text-xs font-semibold text-[color:var(--nx-muted)]">Ziel</h2>
+                </div>
+                <div class="p-2">
+                    <x-nx-property-row icon="heroicon-o-printer" label="Drucker">
+                        @if($job->printer)
+                            <a href="{{ route('printing.printers.show', $job->printer) }}" wire:navigate class="hover:underline">{{ $job->printer->name }}</a>
+                        @elseif($job->printerGroup)
+                            <a href="{{ route('printing.groups.show', $job->printerGroup) }}" wire:navigate class="hover:underline">Gruppe: {{ $job->printerGroup->name }}</a>
+                        @else
+                            <span class="text-[color:var(--nx-faint)]">Nicht zugewiesen</span>
+                        @endif
+                    </x-nx-property-row>
+                    <x-nx-property-row icon="heroicon-o-cube" label="Objekt">
+                        {{ $job->printable_name }} #{{ $job->printable_id }}
+                    </x-nx-property-row>
+                    <x-nx-property-row icon="heroicon-o-code-bracket" label="Objekt-Typ">
+                        <span class="block truncate font-mono text-xs text-[color:var(--nx-muted)]">{{ $job->printable_type }}</span>
+                    </x-nx-property-row>
                     @if($job->user)
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-xs text-[var(--ui-muted)]">Erstellt von</dt>
-                            <dd class="text-sm text-[var(--ui-secondary)] m-0 truncate">{{ $job->user->name }}</dd>
-                        </div>
+                        <x-nx-property-row icon="heroicon-o-user" label="Erstellt von">
+                            {{ $job->user->name }}
+                        </x-nx-property-row>
                     @endif
-                </dl>
-            </x-ui-panel>
+                </div>
+            </x-nx-card>
         </div>
 
         {{-- Job-Daten --}}
         @if($job->data)
-            <x-ui-panel title="Job-Daten" subtitle="Die Rohdaten, aus denen die Vorschau erzeugt wird">
-                <div class="rounded-lg bg-[var(--ui-muted-5)] border border-[var(--ui-border)] overflow-auto max-h-96">
-                    <pre class="p-4 text-xs font-mono text-[var(--ui-secondary)]">{{ json_encode($job->data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
-                </div>
-            </x-ui-panel>
+            <x-nx-section icon="heroicon-o-code-bracket-square" title="Job-Daten" description="Die Rohdaten, aus denen die Vorschau erzeugt wird">
+                <x-nx-card flush>
+                    <div class="max-h-96 overflow-auto rounded-[8px]">
+                        <pre class="m-0 p-4 font-mono text-xs text-[color:var(--nx-text)]">{{ json_encode($job->data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                    </div>
+                </x-nx-card>
+            </x-nx-section>
         @endif
 
         <div class="flex justify-end">
-            <x-ui-button variant="secondary-outline" :href="route('printing.jobs.index')" wire:navigate>
-                <div class="flex items-center gap-2">
-                    @svg('heroicon-o-arrow-left', 'w-4 h-4')
-                    Zurück zur Übersicht
-                </div>
-            </x-ui-button>
+            <x-nx-button :href="route('printing.jobs.index')" wire:navigate>
+                @svg('heroicon-o-arrow-left', 'w-4 h-4')
+                <span>Zurück zur Übersicht</span>
+            </x-nx-button>
         </div>
+
+    </div>
     </x-ui-page-container>
 </x-ui-page>
-
 @script
 <script>
 // Bon als Bild: Der Beleg ist reiner Text in fester Zeichenbreite, deshalb

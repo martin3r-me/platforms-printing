@@ -55,6 +55,7 @@ class PrintingServiceProvider extends ServiceProvider
             PlatformCore::registerModule([
                 'key'        => 'printing',
                 'title'      => 'Printing',
+                'group'      => 'tools',
                 'routing'    => config('printing.routing'),
                 'guard'      => config('printing.guard'),
                 'navigation' => config('printing.navigation'),
